@@ -106,9 +106,11 @@ const Home = () => {
                                         cursor={'default'}
                                         fontWeight={'normal'}
                                         gap={'0px'}>
-                                        <Text>Trustless cross-chain swaps between</Text>
                                         <Text>
-                                            <OrangeText>Bitcoin</OrangeText> and <BlueText>Ethereum</BlueText>. See{' '}
+                                            The first trustless <OrangeText>Bitcoin</OrangeText> exchange
+                                        </Text>
+                                        <Text>
+                                            See{' '}
                                             <Box
                                                 as='span'
                                                 // go to https://rift.exchange
