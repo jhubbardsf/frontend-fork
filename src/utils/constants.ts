@@ -30,7 +30,7 @@ export const MAX_SWAP_AMOUNT_MICRO_USDT = MAX_SWAP_AMOUNT_USDT * 10 ** 6;
 export const MIN_SWAP_AMOUNT_MICRO_USDT = MIN_SWAP_AMOUNT_USDT * 10 ** 6;
 export const MAX_SWAP_LP_OUTPUTS = 175;
 export const REQUIRED_BLOCK_CONFIRMATIONS = 2;
-export const PROTOCOL_FEE = BigNumber.from(1); // 0.1%
+export const PROTOCOL_FEE = BigNumber.from(1); // 0.1% -
 export const PROTOCOL_FEE_DENOMINATOR = BigNumber.from(1000); // 100% / 0.1% = 1000
 export const CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS = 4 * 60 * 60; // 4 hours
 export const FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS = 1 * 60 * 60; // 1 hour
