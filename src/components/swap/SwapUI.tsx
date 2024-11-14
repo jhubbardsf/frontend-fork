@@ -907,7 +907,7 @@ export const SwapUI = () => {
                         <Spacer />
                         <Flex mr='6px'>
                             <WebAssetTag
-                                asset='USDT'
+                                asset='USDC'
                                 cursor='pointer'
                                 onDropDown={() => {
                                     console.log('CALLING');

@@ -51,7 +51,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 justify='center'
                 // cursor={onDropDown || pointer ? 'pointer' : 'auto'}
                 onClick={onDropDown}>
-                <Image src={`/images/assets/icons/${imgKey}.svg`} h={asset == 'WBTC' ? adjustedH : `calc(${adjustedH} - 14px)`} userSelect='none' />
+                <Image src={`/images/assets/icons/${imgKey}.svg`} h={asset == 'WBTC' ? adjustedH : asset == 'USDC' ? `calc(${adjustedH} - 1px)` : `calc(${adjustedH} - 14px)`} userSelect='none' />
             </Flex>
             <Flex
                 userSelect='none'
