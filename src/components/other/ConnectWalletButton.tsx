@@ -1,7 +1,7 @@
 import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
 import { useStore } from '../../store';
 import useWindowSize from '../../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon, ARBITRUM_LOGO } from './SVGs'; // Assuming you also have a BTC logo
+import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon, ARBITRUM_LOGO, USDC_Icon, BASE_LOGO } from './SVGs'; // Assuming you also have a BTC logo
 import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
 import { colors } from '../../utils/colors';
 import { useEffect, useState } from 'react';
@@ -77,11 +77,11 @@ export const ConnectWalletButton = ({}) => {
                             return (
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <Button
-                                        border={`2.5px solid ${selectedInputAsset.name === 'WETH' ? colors.purpleBorder : selectedInputAsset.border_color}`}
+                                        border={`2.5px solid ${selectedInputAsset.border_color}`}
                                         h='42px'
                                         color={colors.offWhite}
                                         pt='2px'
-                                        bg={selectedInputAsset.name === 'WETH' ? colors.purpleBackground : selectedInputAsset.dark_bg_color}
+                                        bg={selectedInputAsset.dark_bg_color}
                                         mr='2px'
                                         _hover={{ bg: selectedInputAsset.bg_color }}
                                         _active={{ bg: selectedInputAsset.bg_color }}
@@ -101,8 +101,18 @@ export const ConnectWalletButton = ({}) => {
                                                             return (
                                                                 <Flex mt='-2px' mr='0px'>
                                                                     <USDT_Icon width='22' height='22' viewBox='0 0 80 80' />
-                                                                     <Flex ml='8px' mr='-1px' mt='0px' ><ARBITRUM_LOGO />
-                                                </Flex>
+                                                                    <Flex ml='8px' mr='-1px' mt='0px'>
+                                                                        <ARBITRUM_LOGO />
+                                                                    </Flex>
+                                                                </Flex>
+                                                            );
+                                                        case 'BASE_USDC':
+                                                            return (
+                                                                <Flex mt='-1px' ml='-5px' mr='0px'>
+                                                                    <USDC_Icon width='26' height='26' />
+                                                                    <Flex ml='8px' mr='-1px' mt='1px'>
+                                                                        <BASE_LOGO width='24' height='24' />
+                                                                    </Flex>
                                                                 </Flex>
                                                             );
                                                         default:
@@ -111,9 +121,10 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex mt='-2px' mr='-2px' fontSize='17px' paddingX='22px' fontFamily={'aux'}>
-                                               
-                                              
-                                                 {`${parseFloat(localBalance).toFixed(2).toString()} ${selectedInputAsset.name}`}
+                                                {parseFloat(localBalance).toFixed(2).toString()}
+                                                <Text color={colors.offWhite} ml='8px'>
+                                                    {selectedInputAsset.display_name}
+                                                </Text>
                                             </Flex>
                                         </>
                                     </Button>
@@ -123,7 +134,7 @@ export const ConnectWalletButton = ({}) => {
                                         _hover={{ bg: colors.purpleHover }}
                                         _active={{ bg: colors.purpleBackground }}
                                         bg={colors.purpleBackground}
-                                        borderRadius={'12px'}
+                                        borderRadius={'11px'}
                                         fontFamily={'aux'}
                                         fontSize={'17px'}
                                         fontWeight={'bold'}

@@ -772,7 +772,7 @@ export const SwapUI = () => {
                                 {loading ? `Loading contract data${dots}` : 'You Receive'}
                             </Text>
                             {loading && !isMobile ? (
-                                <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
+                                <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#255283'} endColor={'#255283'} />
                             ) : (
                                 <Input
                                     value={usdtOutputSwapAmount}
@@ -926,7 +926,7 @@ export const SwapUI = () => {
                                   maximumFractionDigits: 4,
                               })
                             : 'N/A'}{' '}
-                        {selectedInputAsset.name} {/* TODO: implemnt above where its based on the selected asset */}
+                        {selectedInputAsset.display_name} {/* TODO: implemnt above where its based on the selected asset */}
                         <Box
                             as='span'
                             color={colors.textGray}

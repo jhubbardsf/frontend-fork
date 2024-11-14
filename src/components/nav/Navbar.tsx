@@ -203,7 +203,7 @@ export const Navbar = ({}) => {
                     {navItem('Swap', '/')}
                     {/* {navItem('Lending', '/lending')} */}
                     {/* {navItem('OTC', '/otc')} */}
-                    {navItem('Manage', '/manage')}
+                    {/* {navItem('Manage', '/manage')} */}
                     {navItem('Activity', '/activity')}
                     {navItem('About', '/about')}
                 </Flex>

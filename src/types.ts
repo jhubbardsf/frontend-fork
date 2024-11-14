@@ -66,6 +66,7 @@ export type DepositVault = {
 
 export type ValidAsset = {
     name: string;
+    display_name?: string;
     tokenAddress?: string;
     decimals: number;
     riftExchangeContractAddress?: string;
@@ -106,7 +107,7 @@ export interface ProxyWalletSwapArgs {
     liquidityProviders: Array<ProxyWalletLiquidityProvider>;
 }
 
-export type AssetType = 'BTC' | 'USDT' | 'ETH' | 'WETH' | 'WBTC';
+export type AssetType = 'BTC' | 'USDT' | 'USDC' | 'ETH' | 'WETH' | 'WBTC';
 
 export type CurrencyModalTitle = 'send' | 'recieve' | 'deposit' | 'close';
 

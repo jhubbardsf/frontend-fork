@@ -83,7 +83,7 @@ const Activity = () => {
 
                     {/* CHARTS */}
                     <Flex w='100%' maxW='1200px' gap='12px' px='20px' align='center' justify='center'>
-                        <Flex
+                        {/* <Flex
                             letterSpacing={'-2px'}
                             bg={colors.offBlack}
                             mb='10px'
@@ -106,7 +106,7 @@ const Activity = () => {
                                 availableLiquidity,
                                 selectedInputAsset.decimals,
                             )} ${selectedInputAsset.name}`}</Text>
-                        </Flex>
+                        </Flex> */}
 
                         {/* <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
                             <ActiveLiquidityRawChart />

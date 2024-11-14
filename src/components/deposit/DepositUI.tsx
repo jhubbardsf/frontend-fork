@@ -270,10 +270,10 @@ export const DepositUI = () => {
                                             fontWeight={'normal'}
                                             fontFamily={'Aux'}
                                             userSelect='none'>
-                                            {loading ? `Loading contract data${dots}` : 'You Deposit'}
+                                            {loading ? `Loading contract data${dots}` : 'You Send'}
                                         </Text>
                                         {loading && !isMobile ? (
-                                            <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#2E5F50'} endColor={'#0F4534'} />
+                                            <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#255283'} endColor={'#255283'} />
                                         ) : (
                                             <Input
                                                 value={usdtDepositAmount}
@@ -359,7 +359,7 @@ export const DepositUI = () => {
 
                                     <Spacer />
                                     <Flex mr='6px'>
-                                        <WebAssetTag cursor='pointer' asset='USDT' onDropDown={() => setCurrencyModalTitle('deposit')} />
+                                        <WebAssetTag cursor='pointer' asset='USDC' onDropDown={() => setCurrencyModalTitle('deposit')} />
                                     </Flex>
                                 </Flex>
                                 {/* Switch Button */}
@@ -496,7 +496,7 @@ export const DepositUI = () => {
                                               maximumFractionDigits: 4,
                                           })
                                         : 'N/A'}{' '}
-                                    {selectedInputAsset.name}
+                                    {selectedInputAsset.display_name}
                                     <Box
                                         as='span'
                                         color={colors.textGray}
@@ -566,7 +566,7 @@ export const DepositUI = () => {
                                             : colors.darkerGray
                                     }
                                     fontFamily='Nostromo'>
-                                    {areNewDepositsPaused ? 'NEW SWAPS ARE DISABLED FOR TESTING' : isConnected ? 'Create Sell Order' : 'Connect Wallet'}
+                                    {areNewDepositsPaused ? 'NEW SWAPS ARE DISABLED FOR TESTING' : isConnected ? 'Exchange' : 'Connect Wallet'}
                                 </Text>
                             </Flex>
                         </>

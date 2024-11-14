@@ -81,6 +81,10 @@ export const colors = {
             background: '#125641',
             border: '#26A17B',
         },
+        usdc: {
+            background: '#234C79',
+            border: '#2775CA',
+        },
         eth: {
             background: '#2E40B7',
             border: '#627EEA',
