@@ -971,7 +971,7 @@ export const SwapUI = () => {
                     h='48px'
                     onClick={
                         areNewDepositsPaused
-                            ? null
+                            ? () => toastInfo({ title: 'New swaps paused', description: 'in preparation for our upcoming Base launch!' })
                             : isMobile
                             ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
                             : usdtOutputSwapAmount && btcInputSwapAmount
@@ -986,7 +986,7 @@ export const SwapUI = () => {
                     justify={'center'}
                     border={usdtOutputSwapAmount && btcInputSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
                     <Text color={usdtOutputSwapAmount && btcInputSwapAmount && !areNewDepositsPaused ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
-                        {areNewDepositsPaused ? 'NEW SWAPS ARE DISABLED FOR TESTING' : 'Exchange'}
+                        {areNewDepositsPaused ? 'NEW SWAPS DISABLED' : 'Exchange'}
                     </Text>
                 </Flex>
             </Flex>

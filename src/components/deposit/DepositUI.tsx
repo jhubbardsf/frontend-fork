@@ -541,7 +541,7 @@ export const DepositUI = () => {
                                 h='48px'
                                 onClick={
                                     areNewDepositsPaused
-                                        ? null
+                                        ? () => toastInfo({ title: 'New swaps paused', description: 'in preparation for our upcoming Base launch!' })
                                         : isMobile
                                         ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
                                         : usdtDepositAmount && !isAboveMaxSwapLimitUsdtDeposit && !isBelowMinUsdtDeposit && !userBalanceExceeded && btcOutputAmount
@@ -566,7 +566,7 @@ export const DepositUI = () => {
                                             : colors.darkerGray
                                     }
                                     fontFamily='Nostromo'>
-                                    {areNewDepositsPaused ? 'NEW SWAPS ARE DISABLED FOR TESTING' : isConnected ? 'Create Sell Order' : 'Connect Wallet'}
+                                    {areNewDepositsPaused ? 'NEW SWAPS DISABLED' : isConnected ? 'Create Sell Order' : 'Connect Wallet'}
                                 </Text>
                             </Flex>
                         </>
