@@ -11,9 +11,6 @@ import { getPrices } from '../../utils/fetchUniswapPrices';
 
 interface ContractDataContextType {
     allDepositVaults: any;
-    userActiveDepositVaults: any;
-    userCompletedDepositVaults: any;
-    allSwapReservations: any;
     loading: boolean;
     error: any;
     refreshAllDepositData: () => Promise<void>;
@@ -34,8 +31,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // set ethers provider when selectedInputAsset changes
+    // [0] set ethers provider when selectedInputAsset changes
     useEffect(() => {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
             const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.chainDetails.id, name: selectedInputAsset.chainDetails.name });
@@ -44,9 +42,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         }
     }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
 
-    // reference to store the interval ID
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
+    // [1] fetch selected asset user balance
     const fetchSelectedAssetUserBalance = async () => {
         if (!address || !selectedInputAsset || !ethersRpcProvider) return;
 
@@ -57,19 +53,19 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
     };
 
+    // [2] refresh connected user balance
     const refreshConnectedUserBalance = async () => {
         await fetchSelectedAssetUserBalance();
     };
 
-    // fetch price data, user balance, and check for new deposits paused
+    // [3] continuously fetch price data, user balance, and check for new deposits paused every 12 seconds
     useEffect(() => {
+        // [0] fetch price data
         const fetchPriceData = async () => {
             try {
-                const [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
-
+                let [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
                 const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
                 const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
-
                 setBitcoinPriceUSD(parseFloat(btcPriceUSD));
                 updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
             } catch (e) {
@@ -78,13 +74,15 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         };
 
+        // [1] check if new deposits are paused in the contract
         const checkIfNewDepositsArePausedFromContract = async () => {
             if (!ethersRpcProvider || !selectedInputAsset) return;
-
-            const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
-            setAreNewDepositsPaused(areNewDepositsPausedBool || IS_FRONTEND_PAUSED);
+            // TODO - update this with new contract pause functionality if we have it
+            // const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
+            setAreNewDepositsPaused(IS_FRONTEND_PAUSED);
         };
 
+        // [2] set user eth address and fetch user balance
         if (address) {
             setUserEthAddress(address);
             if (selectedInputAsset && window.ethereum) {
@@ -92,16 +90,19 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         }
 
+        // [3] call fetch price data
         fetchPriceData();
-        fetchSelectedAssetUserBalance();
+
+        // [4] call check if new deposits are paused in the contract
         checkIfNewDepositsArePausedFromContract();
 
+        // [5] set interval repeat useEffect every 12 seconds
         if (!intervalRef.current) {
             intervalRef.current = setInterval(() => {
                 fetchPriceData();
                 fetchSelectedAssetUserBalance();
                 checkIfNewDepositsArePausedFromContract();
-            }, 12000); // get data every 12 seconds
+            }, 12000);
         }
     }, [
         selectedInputAsset?.tokenAddress,
@@ -117,10 +118,11 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         selectedInputAsset,
     ]);
 
-    // fetch deposit vaults
+    // [4] fetch deposit vaults
     const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
+    const isLoading = false; // todo make a new hook for the above to get deposit vaults with event logs with a new loading state
 
-    // continuously refresh deposit data
+    // [5] continuously refresh deposit data every 10 seconds
     useEffect(() => {
         const continuouslyRefreshDepositData = async () => {
             await refreshAllDepositData();
@@ -130,17 +132,12 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         };
 
         continuouslyRefreshDepositData();
-        const intervalId = setInterval(continuouslyRefreshDepositData, 3000); // 3 seconds
+        const intervalId = setInterval(continuouslyRefreshDepositData, 10000); // 10 seconds
         return () => clearInterval(intervalId);
     }, [isConnected, address]);
 
-    const isLoading = loading || bitcoinPriceUSD === 0;
-
     const value = {
-        allDepositVaults: allFetchedDepositVaults,
-        userActiveDepositVaults: userActiveDepositVaults,
-        userCompletedDepositVaults: userCompletedDepositVaults,
-        allSwapReservations: allFetchedSwapReservations,
+        allDepositVaults: [],
         loading: isLoading,
         error,
         refreshAllDepositData,

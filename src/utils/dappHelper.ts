@@ -29,12 +29,13 @@ export function ethToWei(eth: string): BigNumber {
     return ethers.utils.parseEther(eth);
 }
 
-export function satsToBtc(sats: number): number {
-    return sats / SATS_PER_BTC;
+export function satsToBtc(sats: BigNumber): string {
+    const satsValue = BigNumber.from(sats);
+    return formatUnits(satsValue, BITCOIN_DECIMALS);
 }
 
 export function btcToSats(btc: number): BigNumber {
-    return BigNumber.from(SATS_PER_BTC * btc);
+    return parseUnits(btc.toString(), BITCOIN_DECIMALS);
 }
 
 export function bufferTo18Decimals(amount, tokenDecimals) {
@@ -77,16 +78,6 @@ export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo1
     const exchangeRateInStandardUnitsPerBtc = formatUnits(exchangeRateInSmallestTokenUnitPerBtc, depositAssetDecimals);
 
     return exchangeRateInStandardUnitsPerBtc;
-}
-
-export function calculateAmountBitcoinOutput(vault: DepositVault): BigNumber {
-    const btcExchangeRate = 1 / satsToBtc(BigNumber.from(vault.btcExchangeRate).toNumber());
-    console.log('btcExchangeRate:', btcExchangeRate);
-    console.log('vault.initialBalance:', vault.initialBalance);
-    console.log('BigNumber.from(vault.initialBalance):', BigNumber.from(vault.initialBalance));
-    console.log('BigNumber.from(btcExchangeRate):', BigNumber.from(btcExchangeRate));
-    const amountBitcoinOutput = BigNumber.from(vault.initialBalance).mul(BigNumber.from(btcExchangeRate));
-    return amountBitcoinOutput;
 }
 
 export function findVaultIndexToOverwrite(): number {

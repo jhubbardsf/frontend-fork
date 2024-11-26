@@ -19,6 +19,7 @@ import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
 import { DepositAmounts } from './DepositAmounts';
 import { MAX_SWAP_AMOUNT_MICRO_USDT, MAX_SWAP_AMOUNT_USDT } from '../../utils/constants';
+import { findOptimalSwapsUsdcInput, btcLimitOrders, usdcLimitOrders, OptimalSwapsResult } from '../../utils/LimitOrderPriceFunctions';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -122,9 +123,10 @@ export const DepositUI = () => {
 
             setUsdtDepositAmount(usdtValue);
             setUsdtOutputSwapAmount(usdtValue);
-            const btcOutputValue = usdtValue && parseFloat(usdtValue) > 0 ? parseFloat(usdtValue) / useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC : 0;
-            setBtcOutputAmount(formatAmountToString(selectedInputAsset, btcOutputValue));
-            setBtcInputSwapAmount(formatAmountToString(selectedInputAsset, btcOutputValue));
+            const optimalSwapsResult: OptimalSwapsResult = findOptimalSwapsUsdcInput(parseFloat(usdtValue), btcLimitOrders);
+            console.log('test optimal swaps result', optimalSwapsResult);
+            setBtcOutputAmount(formatAmountToString(selectedInputAsset, optimalSwapsResult.totalOutputAmount));
+            setBtcInputSwapAmount(formatAmountToString(selectedInputAsset, optimalSwapsResult.totalOutputAmount));
 
             // check if exceeds user balance
             if (isConnected) {

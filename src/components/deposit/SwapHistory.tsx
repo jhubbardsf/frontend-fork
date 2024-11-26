@@ -15,7 +15,7 @@ import { opaqueBackgroundColor } from '../../utils/constants';
 import { useContractData } from '../providers/ContractDataProvider';
 import SwapPreviewCard from './SwapPreviewCard';
 
-export const ManageSwaps = ({}) => {
+export const SwapHistory = ({}) => {
     const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
     const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
@@ -23,8 +23,8 @@ export const ManageSwaps = ({}) => {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const [hideCompletedVaults, setHideCompletedVaults] = useState(false);
     const allDepositVaults = useStore((state) => state.allDepositVaults);
-    const vaultsToDisplay = hideCompletedVaults ? userActiveDepositVaults : userActiveDepositVaults.concat(userCompletedDepositVaults);
-    // const vaultsToDisplay = allDepositVaults; // testing
+    // const vaultsToDisplay = hideCompletedVaults ? userActiveDepositVaults : userActiveDepositVaults.concat(userCompletedDepositVaults);
+    const vaultsToDisplay = allDepositVaults; // testing
     const { address, isConnected } = useAccount();
     const { refreshAllDepositData, loading } = useContractData();
     const allSwapReservations = useStore((state) => state.allSwapReservations);
@@ -230,41 +230,15 @@ export const ManageSwaps = ({}) => {
                                 ) : (
                                     <>
                                         {(() => {
-                                            // Combine reservations and vaults into a single array
-                                            const combinedReservationsAndVaults = [
-                                                ...userSwapReservations.map((reservation) => ({ type: 'reservation', data: reservation })),
-                                                ...vaultsToDisplay.map((vault) => ({ type: 'vault', data: vault })),
-                                            ];
-
-                                            // Sort the combined array by timestamp in descending order
-                                            combinedReservationsAndVaults.sort((a, b) => {
-                                                // Directly check properties to access the correct timestamp
-                                                const timestampA = 'reservationTimestamp' in a.data ? a.data.reservationTimestamp : a.data.depositTimestamp;
-                                                const timestampB = 'reservationTimestamp' in b.data ? b.data.reservationTimestamp : b.data.depositTimestamp;
-                                                return timestampB - timestampA;
+                                            // Sort vaults by timestamp in descending order
+                                            const sortedVaults = [...vaultsToDisplay].sort((a, b) => {
+                                                return b.depositTimestamp - a.depositTimestamp;
                                             });
 
-                                            // Map the sorted array back to the unified LightDepositVault component
-                                            return combinedReservationsAndVaults.map((item, index) => {
-                                                if (item.type === 'reservation') {
-                                                    const reservation = item.data as SwapReservation;
-                                                    const reservationUrl = createReservationUrl(reservation.nonce, reservation.indexInContract.toString());
-                                                    return (
-                                                        <SwapPreviewCard
-                                                            key={`reservation-${index}`}
-                                                            reservation={reservation}
-                                                            url={reservationUrl}
-                                                            onClick={() => handleNavigation(`/swap/${reservationUrl}`)}
-                                                            selectedInputAsset={selectedInputAsset}
-                                                        />
-                                                    );
-                                                } else {
-                                                    const vault = item.data as DepositVault;
-                                                    return (
-                                                        <SwapPreviewCard key={`vault-${index}`} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
-                                                    );
-                                                }
-                                            });
+                                            // Map the sorted vaults to SwapPreviewCard components
+                                            return sortedVaults.map((vault, index) => (
+                                                <SwapPreviewCard key={`vault-${index}`} vault={vault} onClick={() => setSelectedVaultToManage(vault)} selectedInputAsset={selectedInputAsset} />
+                                            ));
                                         })()}
                                     </>
                                 )}
