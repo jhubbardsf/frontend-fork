@@ -202,7 +202,7 @@ export const Navbar = ({}) => {
                 <Flex gap='12px'>
                     {navItem('Swap', '/')}
                     {/* {navItem('Lending', '/lending')} */}
-                    {/* {navItem('OTC', '/otc')} */}
+                    {navItem('OTC', '/otc')}
                     {navItem('Activity', '/activity')}
                     {navItem('About', '/about')}
                 </Flex>
