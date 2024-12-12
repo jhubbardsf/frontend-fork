@@ -191,7 +191,7 @@ export const ReserveLiquidity = ({}) => {
             console.log('Reservation result:', result);
 
             if (!result.status) {
-                console.error('Error reserving liquidity:', result);
+                console.error('Error reserving liquidity (FALSE):', result);
                 toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
                 setSwapFlowState('0-not-started');
                 setLoadingReservation(false);

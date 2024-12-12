@@ -566,7 +566,7 @@ export const DepositUI = () => {
                                             : colors.darkerGray
                                     }
                                     fontFamily='Nostromo'>
-                                    {areNewDepositsPaused ? 'NEW SWAPS DISABLED' : isConnected ? 'Create Sell Order' : 'Connect Wallet'}
+                                    {areNewDepositsPaused ? 'NEW DEPOSITS DISABLED' : isConnected ? 'Create Sell Order' : 'Connect Wallet'}
                                 </Text>
                             </Flex>
                         </>

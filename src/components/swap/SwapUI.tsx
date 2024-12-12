@@ -92,9 +92,14 @@ export const SwapUI = () => {
     const [isAboveMaxSwapLimitBtcInput, setIsAboveMaxSwapLimitBtcInput] = useState(false);
     const [isAboveMaxSwapLimitUsdtOutput, setIsAboveMaxSwapLimitUsdtOutput] = useState(false);
     const [fastestProxyWalletFeeInSats, setFastestProxyWalletFeeInSats] = useState(500);
-    const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
+    const areNewSwapsPaused = useStore((state) => state.areNewSwapsPaused);
     const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
     const [isLiquidityLoading, setIsLiquidityLoading] = useState(true);
+
+    // monitor bitcoin price changes
+    useEffect(() => {
+        console.log('tristanBitcoin price changed:', bitcoinPriceUSD);
+    }, [bitcoinPriceUSD]);
 
     // update token price and available liquidity
     useEffect(() => {
@@ -623,7 +628,7 @@ export const SwapUI = () => {
                                             ? `Exceeds maximum swap output - `
                                             : bitcoinPriceUSD
                                             ? btcInputSwapAmount
-                                                ? (bitcoinPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString('en-US', {
+                                                ? (Number(bitcoinPriceUSD) * parseFloat(btcInputSwapAmount)).toLocaleString('en-US', {
                                                       style: 'currency',
                                                       currency: 'USD',
                                                   })
@@ -970,7 +975,7 @@ export const SwapUI = () => {
                     transition={'0.2s'}
                     h='48px'
                     onClick={
-                        areNewDepositsPaused
+                        areNewSwapsPaused
                             ? () => toastInfo({ title: 'New swaps paused', description: 'in preparation for our upcoming Base launch!' })
                             : isMobile
                             ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
@@ -985,8 +990,8 @@ export const SwapUI = () => {
                     borderRadius={'10px'}
                     justify={'center'}
                     border={usdtOutputSwapAmount && btcInputSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                    <Text color={usdtOutputSwapAmount && btcInputSwapAmount && !areNewDepositsPaused ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
-                        {areNewDepositsPaused ? 'NEW SWAPS DISABLED' : 'Exchange'}
+                    <Text color={usdtOutputSwapAmount && btcInputSwapAmount && !areNewSwapsPaused ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                        {areNewSwapsPaused ? 'NEW SWAPS DISABLED' : 'Exchange'}
                     </Text>
                 </Flex>
             </Flex>

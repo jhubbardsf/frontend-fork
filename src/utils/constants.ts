@@ -4,16 +4,18 @@ import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 export const IS_MAINNET = true;
-export const IS_FRONTEND_PAUSED = true;
-export const MAX_SWAP_AMOUNT_USDT = 100; // USDT
-export const MIN_SWAP_AMOUNT_USDT = 1; // USDT
+// export const IS_FRONTEND_PAUSED = false;
+export const NEW_SWAPS_PAUSED = false;
+export const NEW_DEPOSISTS_PAUSED = true;
+export const MAX_SWAP_AMOUNT_USDT = 10; // USDT
+export const MIN_SWAP_AMOUNT_USDT = 5; // USDT
 export const MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT = 100_000; // 0.1 USDT
 
 // MAINNET ARBITRUM
 export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
 export const MAINNET_ARBITRUM_ETHERSCAN_URL = 'https://arbiscan.io/';
 export const MAINNET_ARBITRUM_PAYMASTER_URL = 'https://rift-paymaster-arbitrum.up.railway.app';
-export const MAINNET_ARBITRUM_RPC_URL = 'https://arbitrum.gateway.tenderly.co/4H6CSEj1eY5HDcfZbiUEP1';
+export const MAINNET_ARBITRUM_RPC_URL = 'https://arbitrum.gateway.tenderly.co/4j5xILEzXsxNvJkOdLOKHg';
 export const MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS = '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9';
 
 // TESTNET ARBITRUM

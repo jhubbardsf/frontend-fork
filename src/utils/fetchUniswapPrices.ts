@@ -96,7 +96,8 @@ export async function getPrices(): Promise<string[]> {
     let { contract, poolContract } = await getPricesDataProvider();
     try {
         const usdtPrice = await contract.latestAnswer();
-        const usdtPriceInUSD = parseFloat(ethers.utils.formatUnits(usdtPrice, 8)); // Assuming 8 decimals for USDT oracle
+        let usdtPriceInUSD = parseFloat(ethers.utils.formatUnits(usdtPrice, 8)); // Assuming 8 decimals for USDT oracle
+        usdtPriceInUSD = 1.0; // TODO: remove this hardcoded value
 
         const slot0 = await poolContract.slot0();
         const sqrtPriceX96 = slot0.sqrtPriceX96.toString();
@@ -108,7 +109,7 @@ export async function getPrices(): Promise<string[]> {
         const price = sqrtPrice * sqrtPrice * 10 ** 2;
 
         // If you need to adjust for USDT's price in USD:
-        const wbtcPriceInUSD = price * usdtPriceInUSD;
+        let wbtcPriceInUSD = price * usdtPriceInUSD;
 
         return [wbtcPriceInUSD.toFixed(18), usdtPrice.toString()];
     } catch (e) {

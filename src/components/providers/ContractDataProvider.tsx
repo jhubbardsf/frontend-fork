@@ -5,7 +5,7 @@ import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contractReadFunctions';
-import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
+import { ERC20ABI, NEW_DEPOSISTS_PAUSED, NEW_SWAPS_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { getPrices } from '../../utils/fetchUniswapPrices';
 
@@ -34,7 +34,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
-
+    const setAreNewSwapsPaused = useStore((state) => state.setAreNewSwapsPaused);
     // set ethers provider when selectedInputAsset changes
     useEffect(() => {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
@@ -65,15 +65,29 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const fetchPriceData = async () => {
             try {
-                const [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
-
-                const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
+                // let [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
+                let btcPriceUSD;
+                // const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
+                const usdtPriceUSD = '1.00000000'; // TODO: remove this hardcoded value
+                // Add CoinGecko price fetch
+                try {
+                    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=wrapped-bitcoin&vs_currencies=usd');
+                    const data = await response.json();
+                    if (data['wrapped-bitcoin']?.usd) {
+                        console.log('tristan wbtcPriceInUSD', data['wrapped-bitcoin'].usd);
+                        btcPriceUSD = data['wrapped-bitcoin'].usd;
+                    }
+                } catch (error) {
+                    console.error('tristan Failed to fetch CoinGecko price, using 100k as fallback');
+                    btcPriceUSD = '100000';
+                }
+                console.log('tristan btcPriceUSD', btcPriceUSD);
                 const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
 
                 setBitcoinPriceUSD(parseFloat(btcPriceUSD));
                 updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
             } catch (e) {
-                console.error(e);
+                console.error('tristan error', e);
                 return;
             }
         };
@@ -82,7 +96,8 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             if (!ethersRpcProvider || !selectedInputAsset) return;
 
             const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
-            setAreNewDepositsPaused(areNewDepositsPausedBool || IS_FRONTEND_PAUSED);
+            setAreNewDepositsPaused(areNewDepositsPausedBool || NEW_DEPOSISTS_PAUSED);
+            setAreNewSwapsPaused(NEW_SWAPS_PAUSED);
         };
 
         if (address) {

@@ -110,7 +110,8 @@ export function useDepositVaults(): UseDepositVaultsResult {
             }
         });
 
-        setCurrentlyExpiredReservationIndexes(expiredReservationIndexes);
+        // setCurrentlyExpiredReservationIndexes(expiredReservationIndexes);
+        setCurrentlyExpiredReservationIndexes([]); // TODO: is this the temp solution, if so add elsewhere.
         setTotalExpiredReservations(expiredReservationsCount);
         setTotalCompletedReservations(completedReservationsCount);
         setTotalUnlockedReservations(provedReservationsCount);

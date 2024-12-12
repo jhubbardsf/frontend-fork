@@ -269,8 +269,9 @@ export async function listenForLiquidityReservedEvent(
 ): Promise<LiquidityReservedEvent> {
     const contract = new ethers.Contract(contractAddress, abi, provider);
     const latestBlock = await provider.getBlockNumber();
-    const adjustedStartBlockHeight = Math.max(0, startBlockHeight - 5);
-    const adjustedLatestBlock = latestBlock + 50;
+    // Ensure we don't query beyond the latest block
+    const adjustedStartBlockHeight = Math.max(0, Math.min(startBlockHeight - 5, latestBlock));
+    const adjustedLatestBlock = Math.min(latestBlock, startBlockHeight + 50);
 
     console.log(`Setting up listener for LiquidityReserved events`);
     const eventPromise = new Promise<LiquidityReservedEvent>((resolve) => {
@@ -291,30 +292,39 @@ export async function listenForLiquidityReservedEvent(
         contract.on('LiquidityReserved', listener);
     });
 
-    console.log(`Starting search from block ${adjustedStartBlockHeight} to ${adjustedLatestBlock}`);
+    try {
+        console.log(`Starting search from block ${adjustedStartBlockHeight} to ${adjustedLatestBlock}`);
 
-    // Search historical blocks
-    for (let blockNumber = adjustedStartBlockHeight; blockNumber <= adjustedLatestBlock; blockNumber++) {
-        console.log(`Searching block ${blockNumber}`);
-        const events = await contract.queryFilter('LiquidityReserved', blockNumber, blockNumber);
-        console.log(`Found ${events.length} LiquidityReserved events in block ${blockNumber}`);
-        for (const event of events) {
-            const [reserver, swapReservationIndex, orderNonce] = event.args as [string, ethers.BigNumber, string];
-            console.log(`Event found: Reserver: ${reserver}, SwapReservationIndex: ${swapReservationIndex}, OrderNonce: ${orderNonce}`);
-            if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
-                console.log(`Match found for reserver ${reserverAddress} in block ${blockNumber}`);
-                contract.removeAllListeners('LiquidityReserved');
-                return {
-                    reserver,
-                    swapReservationIndex: swapReservationIndex.toString(),
-                    orderNonce,
-                    event,
-                };
+        // Search historical blocks
+        for (let blockNumber = adjustedStartBlockHeight; blockNumber <= adjustedLatestBlock; blockNumber++) {
+            try {
+                const events = await contract.queryFilter('LiquidityReserved', blockNumber, blockNumber);
+                console.log(`Found ${events.length} LiquidityReserved events in block ${blockNumber}`);
+                for (const event of events) {
+                    const [reserver, swapReservationIndex, orderNonce] = event.args as [string, ethers.BigNumber, string];
+                    console.log(`Event found: Reserver: ${reserver}, SwapReservationIndex: ${swapReservationIndex}, OrderNonce: ${orderNonce}`);
+                    if (reserver.toLowerCase() === reserverAddress.toLowerCase()) {
+                        console.log(`Match found for reserver ${reserverAddress} in block ${blockNumber}`);
+                        contract.removeAllListeners('LiquidityReserved');
+                        return {
+                            reserver,
+                            swapReservationIndex: swapReservationIndex.toString(),
+                            orderNonce,
+                            event,
+                        };
+                    }
+                }
+            } catch (error) {
+                console.warn(`Error querying block ${blockNumber}:`, error);
+                continue; // Skip problematic blocks
             }
         }
+
+        console.log(`No matching events found in historical blocks. Waiting for new events.`);
+        return eventPromise;
+    } catch (error) {
+        console.error('Error in listenForLiquidityReservedEvent:', error);
+        // If historical search fails, fall back to just listening for new events
+        return eventPromise;
     }
-
-    console.log(`No matching events found in historical blocks. Waiting for new events.`);
-
-    return eventPromise;
 }

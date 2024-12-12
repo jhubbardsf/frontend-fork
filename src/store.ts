@@ -103,6 +103,8 @@ type Store = {
     setSwapReservationData: (data: SwapReservation | null) => void;
     areNewDepositsPaused: boolean;
     setAreNewDepositsPaused: (paused: boolean) => void;
+    areNewSwapsPaused: boolean;
+    setAreNewSwapsPaused: (paused: boolean) => void;
     isGasFeeTooHigh: boolean;
     setIsGasFeeTooHigh: (isGasFeeTooHigh: boolean) => void;
     confirmationBlocksNeeded: number;
@@ -339,8 +341,10 @@ export const useStore = create<Store>((set) => {
         setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
         swapReservationData: null,
         setSwapReservationData: (swapReservationData) => set({ swapReservationData }),
-        areNewDepositsPaused: false,
+        areNewDepositsPaused: true,
         setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
+        areNewSwapsPaused: false,
+        setAreNewSwapsPaused: (areNewSwapsPaused) => set({ areNewSwapsPaused }),
         isGasFeeTooHigh: false,
         setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
         confirmationBlocksNeeded: REQUIRED_BLOCK_CONFIRMATIONS,
