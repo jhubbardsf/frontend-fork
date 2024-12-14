@@ -65,7 +65,7 @@ export function useDepositVaults(): UseDepositVaultsResult {
 
             // [2] track expired reservations that are not expired on chain
             if (isExpiredOffchain && !isExpiredOnChain) {
-                console.log('isExpiredOffchain && !isExpiredOnChain', reservationIndex);
+                // console.log('isExpiredOffchain && !isExpiredOnChain', reservationIndex);
                 expiredReservationIndexes.push(reservationIndex);
             }
 
@@ -124,35 +124,15 @@ export function useDepositVaults(): UseDepositVaultsResult {
             const completedAmount = completedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             const activelyReservedAmount = activelyReservedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             let additionalBalance = additionalBalances.get(vaultIndexKey) ? additionalBalances.get(vaultIndexKey).sub(vault.withdrawnAmount).sub(activelyReservedAmount) : BigNumber.from(0);
-            if (vaultIndex === 11) {
-                console.log('vaultIndex === 11', vaultIndex);
-                console.log('additionalBalance', additionalBalance.toString());
-            }
+
             // Ensure additional balance can never be more than vault.initialBalance - completedAmount
             let unreservedBalance = vault.unreservedBalanceFromContract ?? BigNumber.from(0);
             const provedAmount = provedAmountsPerVault.get(vaultIndexKey) || BigNumber.from(0);
             const maxAdditionalBalance = BigNumber.from(vault.initialBalance).sub(completedAmount).sub(unreservedBalance);
             additionalBalance = additionalBalance.gt(maxAdditionalBalance) ? maxAdditionalBalance : additionalBalance;
-            if (vaultIndex === 11) {
-                console.log('additionalBalance', additionalBalance.toString());
-                console.log('maxAdditionalBalance', maxAdditionalBalance.toString());
-                console.log('unreservedBalance', unreservedBalance.toString());
-            }
 
             if (BigNumber.from(unreservedBalance).gt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT))) {
                 totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
-            }
-
-            if (vaultIndex === 11) {
-                console.log(`Vault ${vaultIndex} data:`, {
-                    unreservedBalance: unreservedBalance.toString(),
-                    additionalBalance: additionalBalance.toString(),
-                    completedAmount: completedAmount.toString(),
-                    provedAmount: provedAmount.toString(),
-                    activelyReservedAmount: activelyReservedAmount.toString(),
-                    trueUnreservedBalance: BigNumber.from(unreservedBalance).add(BigNumber.from(additionalBalance)).toString(),
-                    withdrawnAmount: vault.withdrawnAmount.toString(),
-                });
             }
 
             if (vaultIndex === 23) {

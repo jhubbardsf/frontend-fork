@@ -186,7 +186,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                         </Flex>
 
                         <Spacer />
-                        <Button
+                        {/* <Button
                             color={colors.offWhite}
                             bg={colors.purpleButtonBG}
                             onClick={() => {
@@ -206,7 +206,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedVaultToManage, ha
                             h='114%'
                             w='305px'>
                             Update Exchange Rate
-                        </Button>
+                        </Button> */}
                     </Flex>
                 </Flex>
             </Flex>

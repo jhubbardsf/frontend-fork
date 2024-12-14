@@ -142,24 +142,6 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                         {isCompleted && (
                             <Flex direction='column' mt={'40px'} w='100%'>
                                 <Button
-                                    bg={colors.offBlackLighter}
-                                    borderWidth={'2px'}
-                                    borderColor={colors.borderGrayLight}
-                                    _hover={{ bg: colors.borderGray }}
-                                    borderRadius='md'
-                                    h='45px'
-                                    onClick={() => window.open(getEtherscanUrl(), '_blank')}
-                                    isDisabled={!txHash}>
-                                    <Flex mt='-4px ' mr='8px'>
-                                        <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
-                                    </Flex>
-                                    <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
-                                        View on Etherscan
-                                    </Text>
-                                </Button>
-
-                                <Button
-                                    mt={'10px'}
                                     bg={colors.purpleBackground}
                                     borderWidth={'2px'}
                                     h='45px'
@@ -182,9 +164,26 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                         <Spinner size='sm' color={colors.offWhite} />
                                     ) : (
                                         <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                                            Manage Deposit Vaults
+                                            View Order Status
                                         </Text>
                                     )}
+                                </Button>
+                                <Button
+                                    mt={'10px'}
+                                    bg={colors.offBlackLighter}
+                                    borderWidth={'2px'}
+                                    borderColor={colors.borderGrayLight}
+                                    _hover={{ bg: colors.borderGray }}
+                                    borderRadius='md'
+                                    h='45px'
+                                    onClick={() => window.open(getEtherscanUrl(), '_blank')}
+                                    isDisabled={!txHash}>
+                                    <Flex mt='-4px ' mr='8px'>
+                                        <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
+                                    </Flex>
+                                    <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
+                                        View on Etherscan
+                                    </Text>
                                 </Button>
                             </Flex>
                         )}

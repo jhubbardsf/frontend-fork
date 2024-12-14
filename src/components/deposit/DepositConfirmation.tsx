@@ -770,7 +770,7 @@ export const DepositConfirmation = ({}) => {
                             </ModalContent>
                         </Modal>
                         {/* ADVANCED SETTINGS  */}
-                        <Flex
+                        {/* <Flex
                             alignSelf={'center'}
                             bg='none'
                             w='150px'
@@ -789,7 +789,7 @@ export const DepositConfirmation = ({}) => {
                                 <SettingsIcon />
                             </Flex>{' '}
                             Advanced Settings
-                        </Flex>
+                        </Flex> */}
                         {/* Deposit Button */}
                         <Flex
                             alignSelf={'center'}

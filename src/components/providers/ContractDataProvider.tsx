@@ -66,28 +66,26 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         const fetchPriceData = async () => {
             try {
                 // let [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
-                let btcPriceUSD;
+                let btcPriceUSD = '101000';
                 // const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
                 const usdtPriceUSD = '1.00000000'; // TODO: remove this hardcoded value
                 // Add CoinGecko price fetch
-                try {
-                    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=wrapped-bitcoin&vs_currencies=usd');
-                    const data = await response.json();
-                    if (data['wrapped-bitcoin']?.usd) {
-                        console.log('tristan wbtcPriceInUSD', data['wrapped-bitcoin'].usd);
-                        btcPriceUSD = data['wrapped-bitcoin'].usd;
-                    }
-                } catch (error) {
-                    console.error('tristan Failed to fetch CoinGecko price, using 100k as fallback');
-                    btcPriceUSD = '100000';
-                }
-                console.log('tristan btcPriceUSD', btcPriceUSD);
+                // try {
+                //     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=wrapped-bitcoin&vs_currencies=usd');
+                //     const data = await response.json();
+                //     if (data['wrapped-bitcoin']?.usd) {
+                //         btcPriceUSD = data['wrapped-bitcoin'].usd;
+                //     }
+                // } catch (error) {
+                //     console.log('Failed to fetch CoinGecko price, using 100k as fallback');
+                // }
+                console.log('btcPriceUSD', btcPriceUSD);
                 const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
 
                 setBitcoinPriceUSD(parseFloat(btcPriceUSD));
                 updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
             } catch (e) {
-                console.error('tristan error', e);
+                console.error(' error', e);
                 return;
             }
         };
