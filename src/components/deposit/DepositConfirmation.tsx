@@ -441,7 +441,8 @@ export const DepositConfirmation = ({}) => {
                 tokenAddress: selectedInputAsset.tokenAddress,
                 tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
                 btcPayoutLockingScript: bitcoinPayoutLockingScript,
-                btcExchangeRate: clippedExchangeRate,
+                // btcExchangeRate: clippedExchangeRate,
+                btcExchangeRate: BigNumber.from(1000000000000000), // TODO: remove this hardcoded value - its for demo
             });
         }
     };

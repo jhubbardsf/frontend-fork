@@ -15,7 +15,7 @@ export const MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT = 100_000; // 0.1 USDT
 export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
 export const MAINNET_ARBITRUM_ETHERSCAN_URL = 'https://arbiscan.io/';
 export const MAINNET_ARBITRUM_PAYMASTER_URL = 'https://rift-paymaster-arbitrum.up.railway.app';
-export const MAINNET_ARBITRUM_RPC_URL = 'https://arbitrum.gateway.tenderly.co/4j5xILEzXsxNvJkOdLOKHg';
+export const MAINNET_ARBITRUM_RPC_URL = 'https://arbitrum.gateway.tenderly.co/2CozPE8XkkiFQIO8uj4Ug1';
 export const MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS = '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9';
 
 // TESTNET ARBITRUM

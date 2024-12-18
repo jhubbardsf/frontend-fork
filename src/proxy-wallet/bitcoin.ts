@@ -30,7 +30,6 @@ export type BitcoinWallet = {
     hdKey: HDKey;
 };
 
-
 function normalizeHexStr(hex: string): string {
     return hex.startsWith('0x') ? hex.slice(2) : hex;
 }
@@ -177,6 +176,7 @@ async function estimateRiftPaymentTransactionFees(liquidityProviderCount: number
     let virtualSize = txn.virtualSize();
 
     let feeRateQuote = await getBtcFeeRates(mempoolApiHostname);
+    console.log('alpine feeRateQuote', feeRateQuote);
 
     let amount = liquidityProviders.reduce((sum, lp) => sum + weiToSatoshi(lp.amount, lp.btcExchangeRate), 0);
 
@@ -225,7 +225,7 @@ async function executeRiftSwapOnAvailableUTXO(swapData: CreateRiftSwapArgs, rece
 async function buildSweepTransaction(
     utxos: { txid: string; vout: number; value: number; signer_wallet: BitcoinWallet }[],
     outputAddress: string,
-    satPerVbyte: number
+    satPerVbyte: number,
 ): Promise<{
     txSerializedNoSegwit: string;
     txid: string;

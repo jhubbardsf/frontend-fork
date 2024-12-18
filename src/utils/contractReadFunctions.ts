@@ -1,8 +1,9 @@
 import { ethers, BigNumberish, BigNumber } from 'ethers';
 import { JsonFragment } from '@ethersproject/abi';
-import { LiqudityProvider, LiquidityReservedEvent, ReservationByPaymasterRequest, ReservationState, SwapReservation } from '../types';
+import { LiqudityProvider, ReservationByPaymasterRequest, ReservationState, SwapReservation, LiquidityReservedEvent } from '../types';
 import { DepositVault, ValidAsset } from '../types';
 import { useStore } from '../store';
+import { LogDescription } from '@ethersproject/abi';
 
 // CONTRACT FUNCTIONS
 
@@ -323,4 +324,36 @@ export async function listenForLiquidityReservedEvent(
     console.log(`No matching events found in historical blocks. Waiting for new events.`);
 
     return eventPromise;
+}
+
+export function decodeLiquidityReservedEventFromReceipt(receipt: ethers.ContractReceipt, contract: ethers.Contract): LiquidityReservedEvent | null {
+    // Find the LiquidityReserved event in the logs
+    const liquidityReservedEvent = receipt.logs
+        .map((log) => {
+            try {
+                // Attempt to parse the log as a LiquidityReserved event
+                return contract.interface.parseLog(log);
+            } catch (e) {
+                // If parsing fails, this log is not the event we're looking for
+                return null;
+            }
+        })
+        .find((parsedLog) => parsedLog?.name === 'LiquidityReserved');
+
+    // If we didn't find the event, return null
+    if (!liquidityReservedEvent) {
+        console.log('No LiquidityReserved event found in receipt');
+        return null;
+    }
+
+    // Extract the event arguments
+    const [reserver, swapReservationIndex, orderNonce] = liquidityReservedEvent.args;
+
+    // Return the decoded event in the same format as the original function
+    return {
+        reserver,
+        swapReservationIndex: swapReservationIndex.toString(),
+        orderNonce,
+        event: liquidityReservedEvent,
+    };
 }

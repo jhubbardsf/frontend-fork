@@ -98,7 +98,7 @@ export const SwapUI = () => {
 
     // monitor bitcoin price changes
     useEffect(() => {
-        console.log('tristanBitcoin price changed:', bitcoinPriceUSD);
+        console.log('Bitcoin price changed:', bitcoinPriceUSD);
     }, [bitcoinPriceUSD]);
 
     // update token price and available liquidity
@@ -168,9 +168,11 @@ export const SwapUI = () => {
     );
 
     useEffect(() => {
+        setFastestProxyWalletFeeInSats(2000);
         const continuouslyCalculateProxyWalletFee = () => {
             getRiftSwapFees(lowestFeeReservationParams?.vaultIndexesToReserve.length ?? 1).then((fees) => {
-                setFastestProxyWalletFeeInSats(fees?.fastFeeAmount !== undefined ? fees.fastFeeAmount : 550);
+                console.log('alpine fees', fees);
+                setFastestProxyWalletFeeInSats(fees?.fastFeeAmount !== undefined ? fees.fastFeeAmount : 2000);
             });
         };
 
@@ -321,7 +323,8 @@ export const SwapUI = () => {
                 amountsInMicroUsdtToReserve: newIdealReservationDetails.amountsInMicroUsdtToReserve,
                 amountsInSatsToBePaid: newIdealReservationDetails.amountsInSatsToBePaid,
                 btcPayoutLockingScripts: newIdealReservationDetails.btcPayoutLockingScripts,
-                btcExchangeRates: newIdealReservationDetails.btcExchangeRates,
+                // btcExchangeRates: newIdealReservationDetails.btcExchangeRates,
+                btcExchangeRates: [1000000000000000], // TODO: remove this hardcoded value - its for demo
                 ethPayoutAddress: '', // this is set when user inputs their eth payout address
                 totalSatsInputInlcudingProxyFee: amountSatsSwapInput,
                 expiredSwapReservationIndexes: currentlyExpiredReservationIndexes,
@@ -393,7 +396,8 @@ export const SwapUI = () => {
                 amountsInMicroUsdtToReserve: idealReservationDetails.amountsInMicroUsdtToReserve,
                 amountsInSatsToBePaid: idealReservationDetails.amountsInSatsToBePaid,
                 btcPayoutLockingScripts: idealReservationDetails.btcPayoutLockingScripts,
-                btcExchangeRates: idealReservationDetails.btcExchangeRates,
+                // btcExchangeRates: idealReservationDetails.btcExchangeRates,
+                btcExchangeRates: [1000000000000000], // TODO: remove this hardcoded value - its for demo
                 ethPayoutAddress: '', // this is set when user inputs their eth payout address
                 totalSatsInputInlcudingProxyFee: newAmountSatsSwapInput,
                 expiredSwapReservationIndexes: currentlyExpiredReservationIndexes,

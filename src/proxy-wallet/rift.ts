@@ -102,7 +102,7 @@ export const RiftApi = {
         const utxos = [];
         for (const wallet of wallets) {
             // sleep for 250ms
-            await new Promise(resolve => setTimeout(resolve, 250));
+            await new Promise((resolve) => setTimeout(resolve, 250));
             const utxos = await fetchAddressUTXOs(wallet.address, MEMPOOL_HOST);
             utxos.push(...utxos);
         }

@@ -26,7 +26,7 @@ import { LockClosed } from 'react-ionicons';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
 import { toastError, toastInfo } from '../../hooks/toast';
-import { listenForLiquidityReservedEvent, validateReserveLiquidity } from '../../utils/contractReadFunctions';
+import { decodeLiquidityReservedEventFromReceipt, listenForLiquidityReservedEvent, validateReserveLiquidity } from '../../utils/contractReadFunctions';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
 import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
@@ -185,7 +185,7 @@ export const ReserveLiquidity = ({}) => {
             }
 
             // [0] start listening for the liquidity reserved event
-            let reservationsDetailPromise = listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);
+            // let reservationsDetailPromise = listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);
 
             const result = await reserveByPaymaster(reservationRequest);
             console.log('Reservation result:', result);
@@ -196,17 +196,30 @@ export const ReserveLiquidity = ({}) => {
                 setSwapFlowState('0-not-started');
                 setLoadingReservation(false);
                 return;
+            } else {
+                console.log('reservation result', result);
+
+                /// CHECK TXN RECIPT HERE TO FIND ON CHAIN INFO INSTEAD OF DOING THE BELOW AWAIT
+            }
+
+            let reservationReceipt = null;
+            while (!reservationReceipt) {
+                reservationReceipt = await ethersRpcProvider.getTransactionReceipt(result.tx_hash);
+                if (!reservationReceipt) {
+                    console.log('Waiting for reservation receipt...');
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
             }
 
             // [1] wait for the reservation to confirm
-            const reservationDetails = await reservationsDetailPromise;
-            console.log('are we getting past the listenForLiquidityReservedEvent call?');
+            console.log('reservationReceipt', reservationReceipt);
 
+            const reservationDetails = decodeLiquidityReservedEventFromReceipt(
+                reservationReceipt,
+                new ethers.Contract(selectedInputAsset.riftExchangeContractAddress, selectedInputAsset.riftExchangeAbi, ethersRpcProvider),
+            );
             console.log('Liquidity reserved successfully');
             console.log('reservationDetails', reservationDetails);
-
-            console.log('reservationDetails.orderNonce:', reservationDetails.orderNonce);
-            console.log('reservationDetails.swapReservationIndex:', reservationDetails.swapReservationIndex);
 
             const reservationUri = createReservationUrl(reservationDetails.orderNonce, reservationDetails.swapReservationIndex);
             console.log('reservationUri:', reservationUri);

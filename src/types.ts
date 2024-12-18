@@ -110,12 +110,12 @@ export type AssetType = 'BTC' | 'USDT' | 'ETH' | 'WETH' | 'WBTC';
 
 export type CurrencyModalTitle = 'send' | 'recieve' | 'deposit' | 'close';
 
-export type LiquidityReservedEvent = {
+export interface LiquidityReservedEvent {
     reserver: string;
     swapReservationIndex: string;
     orderNonce: string;
-    event: ethers.Event;
-};
+    event: ethers.Event | ethers.utils.LogDescription;
+}
 
 export type RouteButton = 'Swap' | 'Manage' | 'About';
 
