@@ -35,8 +35,15 @@ function normalizeHexStr(hex: string): string {
 }
 
 function weiToSatoshi(weiAmount: string, weiSatsExchangeRate: string): number {
+    console.log('alpine weiAmount', weiAmount);
+    console.log('alpine weiSatsExchangeRate', weiSatsExchangeRate);
     BigNumber.config({ ROUNDING_MODE: BigNumber.ROUND_DOWN });
     return new BigNumber(weiAmount).div(weiSatsExchangeRate).integerValue().toNumber();
+}
+
+if (typeof window !== 'undefined') {
+    // @ts-ignore
+    window.weiToSatoshi = weiToSatoshi;
 }
 
 function satsToWei(satsAmount: number, weiSatsExchangeRate: string): string {
@@ -193,6 +200,7 @@ async function estimateRiftPaymentTransactionFees(liquidityProviderCount: number
 async function executeRiftSwapOnAvailableUTXO(swapData: CreateRiftSwapArgs, receiverMnemonic: string, mempoolApiHostname: string, internalSwapId: string): Promise<void> {
     const wallet = buildWalletFromMnemonic(receiverMnemonic);
     const { orderNonceHex, liquidityProviders } = swapData;
+    console.log('alpine liquidityProviders', liquidityProviders);
     const swappedBtc = liquidityProviders.reduce((sum, lp) => sum + weiToSatoshi(lp.amount, lp.btcExchangeRate), 0);
     // Wait for the UTXO to be available, max wait is the reservation duration
     for (let i = 0; i < MAX_RESERVATION_DURATION / UTXO_POLLING_INTERVAL; i++) {
