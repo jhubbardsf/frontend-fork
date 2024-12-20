@@ -5,8 +5,8 @@ import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 export const IS_MAINNET = true;
 // export const IS_FRONTEND_PAUSED = false;
-export const NEW_SWAPS_PAUSED = false;
-export const NEW_DEPOSISTS_PAUSED = false;
+export const NEW_SWAPS_PAUSED = true;
+export const NEW_DEPOSISTS_PAUSED = true;
 export const MAX_SWAP_AMOUNT_USDT = 10; // USDT
 export const MIN_SWAP_AMOUNT_USDT = 2; // USDT
 export const MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT = 100_000; // 0.1 USDT

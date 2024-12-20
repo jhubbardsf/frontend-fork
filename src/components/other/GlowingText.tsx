@@ -37,7 +37,7 @@ const GlowingShimmerText = ({ text }) => <GlowingText>{text}</GlowingText>;
 
 // Default props in case no text is provided
 GlowingShimmerText.defaultProps = {
-    text: 'The Rift early alpha is awaiting audits - swaps are limited to 10 USDT - use at your own risk',
+    text: 'New Rift early alpha swaps are paused in preperation for our upcoming Base launch!',
 };
 
 export default GlowingShimmerText;
