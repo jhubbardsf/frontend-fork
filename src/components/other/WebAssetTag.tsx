@@ -45,7 +45,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 bg={borderColor}
                 w={w}
                 borderRadius='400px'
-                mr={`calc(${adjustedH} / 2 * -1)`}
+                mr={`calc(${adjustedH} / 1.6 * -1)`}
                 zIndex={1}
                 align='center'
                 justify='center'
@@ -67,7 +67,7 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 cursor={cursor}
                 onClick={onDropDown}>
                 {asset != 'BTC' && (
-                    <Flex ml='-4px' mr='-1px' mt='-1px'>
+                    <Flex ml='-1px' mr='-1px' mt='-1px'>
                         <BASE_LOGO width='24' height='24' />
                     </Flex>
                 )}

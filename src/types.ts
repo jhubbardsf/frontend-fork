@@ -72,7 +72,7 @@ export type ValidAsset = {
     riftExchangeContractAddress?: string;
     riftExchangeAbi?: any;
     contractChainID?: number;
-    chainDetails?: Chain;
+    chainDetails?: any;
     contractRpcURL?: string;
     etherScanBaseUrl?: string;
     paymasterUrl?: string;
@@ -139,3 +139,9 @@ export type ReservationByPaymasterResponse = {
     status: boolean;
     tx_hash: string | null;
 };
+
+export enum DeploymentType {
+    MAINNET = 'MAINNET',
+    TESTNET = 'TESTNET',
+    DEVNET = 'DEVNET',
+}

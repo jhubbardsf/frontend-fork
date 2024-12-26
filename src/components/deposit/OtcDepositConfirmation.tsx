@@ -75,25 +75,23 @@ export const OtcDepositConfirmation = ({}) => {
     const { data: walletClient } = useWalletClient();
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-
     const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
     const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
-
-    const [usdtDepositAmountUSD, setUsdtDepositAmountUSD] = useState('0.00');
-
+    const [coinbaseBtcDepositAmountUSD, setCoinbaseBtcDepositAmountUSD] = useState('0.00');
     const [profitPercentage, setProfitPercentage] = useState('');
     const [profitAmountUSD, setProfitAmountUSD] = useState('0.00');
-
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
+    const [otcRecipientUSDCAddress, setOtcRecipientUSDCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
-    const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
+    const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
+    const coinbasebtcPriceUSD = useStore.getState().validAssets['CoinbaseBTC'].priceUSD;
+    const validAssets = useStore((state) => state.validAssets);
     const [editExchangeRateMode, setEditExchangeRateMode] = useState(false);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const actualBorderColor = '#323232';
@@ -117,7 +115,7 @@ export const OtcDepositConfirmation = ({}) => {
 
     // calculate profit amount in USD
     useEffect(() => {
-        const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(profitPercentage)) / 100) * (usdtPriceUSD ?? 0)).toLocaleString('en-US', {
+        const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(profitPercentage)) / 100) * (coinbasebtcPriceUSD ?? 0)).toLocaleString('en-US', {
             style: 'currency',
             currency: 'USD',
         })}`;
@@ -127,22 +125,22 @@ export const OtcDepositConfirmation = ({}) => {
 
     // calculate deposit amount in USD
     useEffect(() => {
-        const usdtDepositAmountUSD =
-            usdtPriceUSD && usdtDepositAmount
-                ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+        const coinbaseBtcDepositAmountUSD =
+            coinbasebtcPriceUSD && usdtDepositAmount
+                ? (coinbasebtcPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
                 : '$0.00';
-        setUsdtDepositAmountUSD(usdtDepositAmountUSD);
+        setCoinbaseBtcDepositAmountUSD(coinbaseBtcDepositAmountUSD);
     }, [usdtDepositAmount]);
 
     // calculate Bitcoin output amount in USD
     useEffect(() => {
-        console.log('bitcoinPriceUSD:', bitcoinPriceUSD);
+        console.log('btcPriceUSD:', btcPriceUSD);
         const bitcoinOutputAmountUSD =
-            bitcoinPriceUSD && btcOutputAmount
-                ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
+            btcPriceUSD && btcOutputAmount
+                ? (btcPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
@@ -235,11 +233,11 @@ export const OtcDepositConfirmation = ({}) => {
     };
 
     const calculateBitcoinOutputAmount = (newEthDepositAmount: string | undefined, newProfitPercentage: string | undefined) => {
-        if (usdtPriceUSD && bitcoinPriceUSD) {
+        if (coinbasebtcPriceUSD && btcPriceUSD) {
             console.log('newProfitPercentage:', newProfitPercentage);
             const profitAmountInToken = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
-            const totalTokenUSD = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * usdtPriceUSD + profitAmountInToken * usdtPriceUSD;
-            const newBitcoinOutputAmount = totalTokenUSD / bitcoinPriceUSD > 0 ? totalTokenUSD / bitcoinPriceUSD : 0;
+            const totalTokenUSD = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * coinbasebtcPriceUSD + profitAmountInToken * coinbasebtcPriceUSD;
+            const newBitcoinOutputAmount = totalTokenUSD / btcPriceUSD > 0 ? totalTokenUSD / btcPriceUSD : 0;
             const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
 
             if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
@@ -247,7 +245,7 @@ export const OtcDepositConfirmation = ({}) => {
             }
             // calculate the profit amount in USD
 
-            const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
+            const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) * coinbasebtcPriceUSD).toLocaleString('en-US', {
                 style: 'currency',
                 currency: 'USD',
             })}`;
@@ -255,14 +253,14 @@ export const OtcDepositConfirmation = ({}) => {
 
             // calculate and update the deposit amount in USD
             console.log('tokenDepositAmount:', usdtDepositAmount);
-            const usdtDepositAmountUSD =
-                usdtPriceUSD && usdtDepositAmount
-                    ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+            const coinbaseBtcDepositAmountUSD =
+                coinbasebtcPriceUSD && usdtDepositAmount
+                    ? (coinbasebtcPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
                           style: 'currency',
                           currency: 'USD',
                       })
                     : '$0.00';
-            setUsdtDepositAmountUSD(usdtDepositAmountUSD);
+            setCoinbaseBtcDepositAmountUSD(coinbaseBtcDepositAmountUSD);
         }
     };
 
@@ -276,6 +274,11 @@ export const OtcDepositConfirmation = ({}) => {
     const handleBTCPayoutAddressChange = (e) => {
         const BTCPayoutAddress = e.target.value;
         setPayoutBTCAddress(BTCPayoutAddress);
+    };
+
+    const handleOtcRecipientUSDCAddressChange = (e) => {
+        const otcRecipientUSDCAddress = e.target.value;
+        setOtcRecipientUSDCAddress(otcRecipientUSDCAddress);
     };
 
     const validateBitcoinPayoutAddress = (address: string): boolean => {
@@ -499,7 +502,7 @@ export const OtcDepositConfirmation = ({}) => {
                                     letterSpacing={'-1px'}
                                     fontWeight={'normal'}
                                     fontFamily={'Aux'}>
-                                    {usdtDepositAmountUSD}
+                                    {coinbaseBtcDepositAmountUSD}
                                 </Text>
                             </Flex>
                             <Spacer />
@@ -507,11 +510,45 @@ export const OtcDepositConfirmation = ({}) => {
                                 <WebAssetTag asset='USDC' />
                             </Flex>
                         </Flex>
-                        {/* Profit Percentage Input */}
+                        {/* USDT Recipient Address */}
+                        <Text ml='8px' mt='24px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                            USDT Payout Address
+                        </Text>
+                        <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                            <Flex direction={'row'} py='6px' px='5px'>
+                                <Input
+                                    value={otcRecipientUSDCAddress}
+                                    onChange={handleOtcRecipientUSDCAddressChange}
+                                    fontFamily={'Aux'}
+                                    border='none'
+                                    mt='3.5px'
+                                    w='804px'
+                                    mr='65px'
+                                    ml='-4px'
+                                    p='0px'
+                                    letterSpacing={'-4px'}
+                                    color={colors.offWhite}
+                                    _active={{ border: 'none', boxShadow: 'none' }}
+                                    _focus={{ border: 'none', boxShadow: 'none' }}
+                                    _selected={{ border: 'none', boxShadow: 'none' }}
+                                    fontSize='28px'
+                                    placeholder='0xb0cb90a9a3dfd81...'
+                                    _placeholder={{ color: colors.darkerGray }}
+                                    spellCheck={false}
+                                />
+
+                                {otcRecipientUSDCAddress.length > 0 && (
+                                    <Flex ml='-5px' mt='0px'>
+                                        {/* <EthereumAddressValidation address={otcRecipientUSDCAddress} /> */}
+                                    </Flex>
+                                )}
+                            </Flex>
+                        </Flex>
+                        {/* Exchange Rate Slider Input */}
                         <Flex mt='10px' px='10px' bg='#161A33' w='100%' h='105px' border='2px solid #303F9F' borderRadius={'10px'}>
                             <Flex direction={'column'} py='10px' px='5px'>
                                 <Text color={!profitPercentage ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                    Your Profit %
+                                    Your Exchange Rate
                                 </Text>
                                 <Input
                                     value={profitPercentage}
@@ -558,7 +595,7 @@ export const OtcDepositConfirmation = ({}) => {
                                 <Text>
                                     1 BTC = {/* amount of deposit asset / amount of BTC out ) * deposit asset price in USD */}
                                     {usdtDepositAmount && btcOutputAmount
-                                        ? ((parseFloat(usdtDepositAmount) / parseFloat(btcOutputAmount)) * usdtPriceUSD).toLocaleString('en-US', {
+                                        ? ((parseFloat(usdtDepositAmount) / parseFloat(btcOutputAmount)) * coinbasebtcPriceUSD).toLocaleString('en-US', {
                                               style: 'currency',
                                               currency: 'USD',
                                           })
@@ -615,7 +652,7 @@ export const OtcDepositConfirmation = ({}) => {
                 <Flex direction='column' align='center' overflow={'visible'}>
                     <Flex w='100%' overflow={'visible'} direction={'column'}>
                         {/* BTC Payout Address */}
-                        {/* <Text ml='8px' mt='15px' w='100%' mb='10px' fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                        <Text ml='8px' mt='10px' w='100%' mb='10px' fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Bitcoin Payout Address
                         </Text>
                         <Flex mt='-2px' mb='10px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
@@ -647,7 +684,7 @@ export const OtcDepositConfirmation = ({}) => {
                                     </Flex>
                                 )}
                             </Flex>
-                        </Flex> */}
+                        </Flex>
 
                         {/* Fees and Swap Time Estimate */}
                         <Flex w='100%' justify={'center'} mb='7px'>

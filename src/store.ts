@@ -5,24 +5,32 @@ import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
 import {
     ERC20ABI,
-    IS_MAINNET,
-    MAINNET_ARBITRUM_CHAIN_ID,
-    MAINNET_ARBITRUM_ETHERSCAN_URL,
-    MAINNET_ARBITRUM_PAYMASTER_URL,
-    MAINNET_ARBITRUM_RPC_URL,
-    MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS,
+    DEPLOYMENT_TYPE,
+    MAINNET_BASE_CHAIN_ID,
+    MAINNET_BASE_ETHERSCAN_URL,
+    MAINNET_BASE_PAYMASTER_URL,
+    MAINNET_BASE_RPC_URL,
     REQUIRED_BLOCK_CONFIRMATIONS,
-    TESTNET_ARBITRUM_CHAIN_ID,
-    TESTNET_ARBITRUM_ETHERSCAN_URL,
-    TESTNET_ARBITRUM_PAYMASTER_URL,
-    TESTNET_ARBITRUM_RPC_URL,
-    TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
+    TESTNET_BASE_CHAIN_ID,
+    TESTNET_BASE_ETHERSCAN_URL,
+    TESTNET_BASE_PAYMASTER_URL,
+    TESTNET_BASE_RIFT_EXCHANGE_ADDRESS,
+    TESTNET_BASE_RPC_URL,
+    DEVNET_BASE_CHAIN_ID,
+    DEVNET_BASE_RPC_URL,
+    DEVNET_BASE_ETHERSCAN_URL,
+    DEVNET_BASE_PAYMASTER_URL,
+    DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
+    MAINNET_BASE_RIFT_EXCHANGE_ADDRESS,
+    MAINNET_BASE_CBBTC_TOKEN_ADDRESS,
+    DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
+    TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
 } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
-import arbitrumMainnetDeployment from '../protocol/contracts/broadcast/DeployRiftExchange.s.sol/42161/run-latest.json';
-import arbitrumSepoliaDeployment from '../protocol/contracts/broadcast/DeployRiftExchange.s.sol/421614/run-latest.json';
-import { arbitrumSepolia, arbitrum } from 'viem/chains';
+import { base, baseGoerli, baseSepolia } from 'viem/chains';
+import { DeploymentType } from './types';
+import { getDeploymentValue } from './utils/deploymentUtils';
 
 type Store = {
     // setup & asset data
@@ -30,13 +38,9 @@ type Store = {
     setUserEthAddress: (address: string) => void;
     ethersRpcProvider: ethers.providers.Provider | null;
     setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
-    bitcoinPriceUSD: number;
-    setBitcoinPriceUSD: (price: number) => void;
     validAssets: Record<string, ValidAsset>;
     setValidAssets: (assets: Record<string, ValidAsset>) => void;
     updateValidValidAsset: (assetKey: string, updates: Partial<ValidAsset>) => void;
-    updateExchangeRateInTokenPerBTC: (assetKey: string, newRate: number) => void;
-    updateExchangeRateInSmallestTokenUnitPerSat: (assetKey: string, newRate: BigNumber) => void;
     updatePriceUSD: (assetKey: string, newPrice: number) => void;
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
@@ -127,6 +131,31 @@ type Store = {
 
 export const useStore = create<Store>((set) => {
     const validAssets: Record<string, ValidAsset> = {
+        CoinbaseBTC: {
+            name: 'CoinbaseBTC',
+            display_name: 'CoinbaseBTC',
+            tokenAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CBBTC_TOKEN_ADDRESS, TESTNET_BASE_CBBTC_TOKEN_ADDRESS, DEVNET_BASE_CBBTC_TOKEN_ADDRESS),
+            decimals: 6,
+            riftExchangeContractAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RIFT_EXCHANGE_ADDRESS, TESTNET_BASE_RIFT_EXCHANGE_ADDRESS, DEVNET_BASE_RIFT_EXCHANGE_ADDRESS),
+            riftExchangeAbi: riftExchangeABI.abi,
+            contractChainID: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CHAIN_ID, TESTNET_BASE_CHAIN_ID, DEVNET_BASE_CHAIN_ID),
+            chainDetails: base, // ONLY USE FOR MAINNET SWITCHING NETWORKS WITH METAMASK
+            contractRpcURL: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RPC_URL, TESTNET_BASE_RPC_URL, DEVNET_BASE_RPC_URL),
+            etherScanBaseUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_ETHERSCAN_URL, TESTNET_BASE_ETHERSCAN_URL, DEVNET_BASE_ETHERSCAN_URL),
+            paymasterUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_PAYMASTER_URL, TESTNET_BASE_PAYMASTER_URL, DEVNET_BASE_PAYMASTER_URL),
+            proverFee: BigNumber.from(0),
+            releaserFee: BigNumber.from(0),
+            icon_svg: USDT_Icon,
+            bg_color: '#234C79',
+            border_color: '#2775CA',
+            border_color_light: '#2775CA',
+            dark_bg_color: '#0A1929',
+            light_text_color: '#255283',
+            priceUSD: null,
+            totalAvailableLiquidity: BigNumber.from(0),
+            connectedUserBalanceRaw: BigNumber.from(0),
+            connectedUserBalanceFormatted: '0',
+        },
         BTC: {
             name: 'BTC',
             decimals: 8,
@@ -138,72 +167,17 @@ export const useStore = create<Store>((set) => {
             light_text_color: '#7d572e',
             priceUSD: null,
         },
-        USDT: {
-            name: 'USDT',
-            tokenAddress: IS_MAINNET ? MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS : TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
-            decimals: 6,
-            riftExchangeContractAddress: (IS_MAINNET ? arbitrumMainnetDeployment : arbitrumSepoliaDeployment)?.transactions?.find((tx) => tx.contractName === 'ERC1967Proxy')?.contractAddress ?? '',
-            riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: IS_MAINNET ? MAINNET_ARBITRUM_CHAIN_ID : TESTNET_ARBITRUM_CHAIN_ID,
-            chainDetails: IS_MAINNET ? arbitrum : arbitrumSepolia,
-            contractRpcURL: IS_MAINNET ? MAINNET_ARBITRUM_RPC_URL : TESTNET_ARBITRUM_RPC_URL,
-            etherScanBaseUrl: IS_MAINNET ? MAINNET_ARBITRUM_ETHERSCAN_URL : TESTNET_ARBITRUM_ETHERSCAN_URL,
-            paymasterUrl: IS_MAINNET ? MAINNET_ARBITRUM_PAYMASTER_URL : TESTNET_ARBITRUM_PAYMASTER_URL,
-            proverFee: BigNumber.from(0),
-            releaserFee: BigNumber.from(0),
-            icon_svg: USDT_Icon,
-            bg_color: '#125641',
-            border_color: '#26A17B',
-            border_color_light: '#2DC495',
-            dark_bg_color: '#08221A',
-            light_text_color: '#327661',
-            exchangeRateInTokenPerBTC: null,
-            exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
-            priceUSD: 1,
-            totalAvailableLiquidity: BigNumber.from(0),
-            connectedUserBalanceRaw: BigNumber.from(0),
-            connectedUserBalanceFormatted: '0',
-        },
-        BASE_USDC: {
-            name: 'BASE_USDC',
-            display_name: 'USDC',
-            tokenAddress: IS_MAINNET ? MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS : TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS,
-            decimals: 6,
-            riftExchangeContractAddress: (IS_MAINNET ? arbitrumMainnetDeployment : arbitrumSepoliaDeployment)?.transactions?.find((tx) => tx.contractName === 'ERC1967Proxy')?.contractAddress ?? '',
-            riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: IS_MAINNET ? MAINNET_ARBITRUM_CHAIN_ID : TESTNET_ARBITRUM_CHAIN_ID,
-            chainDetails: IS_MAINNET ? arbitrum : arbitrumSepolia,
-            contractRpcURL: IS_MAINNET ? MAINNET_ARBITRUM_RPC_URL : TESTNET_ARBITRUM_RPC_URL,
-            etherScanBaseUrl: IS_MAINNET ? MAINNET_ARBITRUM_ETHERSCAN_URL : TESTNET_ARBITRUM_ETHERSCAN_URL,
-            paymasterUrl: IS_MAINNET ? MAINNET_ARBITRUM_PAYMASTER_URL : TESTNET_ARBITRUM_PAYMASTER_URL,
-            proverFee: BigNumber.from(0),
-            releaserFee: BigNumber.from(0),
-            icon_svg: USDT_Icon,
-            bg_color: '#234C79',
-            border_color: '#2775CA',
-            border_color_light: '#2775CA',
-            dark_bg_color: '#0A1929',
-            light_text_color: '#255283',
-            exchangeRateInTokenPerBTC: null,
-            exchangeRateInSmallestTokenUnitPerSat: null, // always 18 decimals
-            priceUSD: 1,
-            totalAvailableLiquidity: BigNumber.from(0),
-            connectedUserBalanceRaw: BigNumber.from(0),
-            connectedUserBalanceFormatted: '0',
-        },
     };
 
     return {
         // setup & asset data
-        selectedInputAsset: validAssets.BASE_USDC,
+        selectedInputAsset: validAssets.CoinbaseBTC,
         setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
         userEthAddress: '',
         setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
         //console log the new ethers provider
         ethersRpcProvider: null,
         setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
-        bitcoinPriceUSD: 0,
-        setBitcoinPriceUSD: (bitcoinPriceUSD) => set({ bitcoinPriceUSD }),
         validAssets,
         setValidAssets: (assets) => set({ validAssets: assets }),
         updateValidValidAsset: (assetKey, updates) =>
@@ -211,20 +185,6 @@ export const useStore = create<Store>((set) => {
                 validAssets: {
                     ...state.validAssets,
                     [assetKey]: { ...state.validAssets[assetKey], ...updates },
-                },
-            })),
-        updateExchangeRateInTokenPerBTC: (assetKey, newRate) =>
-            set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], exchangeRateInTokenPerBTC: newRate },
-                },
-            })),
-        updateExchangeRateInSmallestTokenUnitPerSat: (assetKey, newRate) =>
-            set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], exchangeRateInSmallestTokenUnitPerSat: newRate },
                 },
             })),
         updatePriceUSD: (assetKey, newPrice) =>

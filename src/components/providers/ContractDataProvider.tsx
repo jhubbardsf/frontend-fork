@@ -7,7 +7,7 @@ import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contractReadFunctions';
 import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
-import { getPrices } from '../../utils/fetchUniswapPrices';
+import { getUSDPrices } from '../../utils/fetchUniswapPrices';
 
 interface ContractDataContextType {
     allDepositVaults: any;
@@ -25,18 +25,18 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setEthersRpcProvider = useStore((state) => state.setEthersRpcProvider);
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const setBitcoinPriceUSD = useStore((state) => state.setBitcoinPriceUSD);
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
-    const updateExchangeRateInTokenPerBTC = useStore((state) => state.updateExchangeRateInTokenPerBTC);
+    const updatePriceUsd = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
+    const validAssets = useStore((state) => state.validAssets);
+
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // [0] set ethers provider when selectedInputAsset changes
     useEffect(() => {
         if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
-            const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.chainDetails.id, name: selectedInputAsset.chainDetails.name });
+            const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.contractChainID, name: selectedInputAsset.name });
             if (!provider) return;
             setEthersRpcProvider(provider);
         }
@@ -44,16 +44,19 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
     // [1] fetch selected asset user balance
     const fetchSelectedAssetUserBalance = async () => {
+        // [0] check if address, selectedInputAsset, and ethersRpcProvider are defined
         if (!address || !selectedInputAsset || !ethersRpcProvider) return;
 
+        // [1] fetch raw token balance
         const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
         updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
 
+        // [2] format token balance based on asset decimals
         const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
         updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
     };
 
-    // [2] refresh connected user balance
+    // [2] refresh connected user balance function
     const refreshConnectedUserBalance = async () => {
         await fetchSelectedAssetUserBalance();
     };
@@ -63,11 +66,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         // [0] fetch price data
         const fetchPriceData = async () => {
             try {
-                let [btcPriceUSD, usdtPriceUSDBufferedTo8Decimals] = await getPrices();
-                const usdtPriceUSD = formatUnits(usdtPriceUSDBufferedTo8Decimals, 8);
-                const btcToUsdtRate = parseFloat(btcPriceUSD) / parseFloat(usdtPriceUSD);
-                setBitcoinPriceUSD(parseFloat(btcPriceUSD));
-                updateExchangeRateInTokenPerBTC('USDT', parseFloat(btcToUsdtRate.toFixed(2)));
+                let [btcPriceUSD, cbbtcPriceUsd] = await getUSDPrices();
+                updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
+                updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUsd));
             } catch (e) {
                 console.error(e);
                 return;
@@ -108,8 +109,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         selectedInputAsset?.tokenAddress,
         address,
         isConnected,
-        setBitcoinPriceUSD,
-        updateExchangeRateInTokenPerBTC,
         setUserEthAddress,
         updateConnectedUserBalanceRaw,
         updateConnectedUserBalanceFormatted,
@@ -119,28 +118,28 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     ]);
 
     // [4] fetch deposit vaults
-    const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
+    // const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
     const isLoading = false; // todo make a new hook for the above to get deposit vaults with event logs with a new loading state
 
     // [5] continuously refresh deposit data every 10 seconds
-    useEffect(() => {
-        const continuouslyRefreshDepositData = async () => {
-            await refreshAllDepositData();
-            if (isConnected && address) {
-                await refreshConnectedUserBalance();
-            }
-        };
+    // useEffect(() => {
+    //     const continuouslyRefreshDepositData = async () => {
+    //         await refreshAllDepositData();
+    //         if (isConnected && address) {
+    //             await refreshConnectedUserBalance();
+    //         }
+    //     };
 
-        continuouslyRefreshDepositData();
-        const intervalId = setInterval(continuouslyRefreshDepositData, 10000); // 10 seconds
-        return () => clearInterval(intervalId);
-    }, [isConnected, address]);
+    //     continuouslyRefreshDepositData();
+    //     const intervalId = setInterval(continuouslyRefreshDepositData, 10000); // 10 seconds
+    //     return () => clearInterval(intervalId);
+    // }, [isConnected, address]);
 
     const value = {
         allDepositVaults: [],
         loading: isLoading,
-        error,
-        refreshAllDepositData,
+        error: null,
+        refreshAllDepositData: () => Promise.resolve(),
         refreshConnectedUserBalance,
     };
 

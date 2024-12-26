@@ -8,7 +8,7 @@ import { useStore } from '../../store';
 import { useSwapReservations } from './useSwapReservations';
 import { DepositVault, SwapReservation, ReservationState } from '../../types';
 import { calculateFillPercentage } from '../../utils/dappHelper';
-import { CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MIN_SWAP_AMOUNT_MICRO_USDT } from '../../utils/constants';
+import { CONTRACT_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS } from '../../utils/constants';
 
 type UseDepositVaultsResult = {
     allFetchedDepositVaults: DepositVault[];
@@ -138,9 +138,9 @@ export function useDepositVaults(): UseDepositVaultsResult {
                 console.log('unreservedBalance', unreservedBalance.toString());
             }
 
-            if (BigNumber.from(unreservedBalance).gt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT))) {
-                totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
-            }
+            // if (BigNumber.from(unreservedBalance).gt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDC))) {
+            //     totalAvailableLiquidity = totalAvailableLiquidity.add(unreservedBalance);
+            // }
 
             if (vaultIndex === 11) {
                 console.log(`Vault ${vaultIndex} data:`, {

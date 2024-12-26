@@ -1,33 +1,63 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { ValidAsset, DepositVault } from '../types';
+import { ValidAsset, DepositVault, DeploymentType } from '../types';
 import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
-export const IS_MAINNET = true;
+export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.DEVNET; // Local devnet
 export const IS_FRONTEND_PAUSED = false;
-export const MAX_SWAP_AMOUNT_USDT = 100_000_000; // USDT
-export const MIN_SWAP_AMOUNT_USDT = 1; // USDT
-export const MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT = 100_000; // 0.1 USDT
+export const MIN_SWAP_AMOUNT_SATS = 1_000; // 1000 sats = ~$0.96 currently
 
-// MAINNET ARBITRUM
-export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
-export const MAINNET_ARBITRUM_ETHERSCAN_URL = 'https://arbiscan.io/';
-export const MAINNET_ARBITRUM_PAYMASTER_URL = 'https://rift-paymaster-arbitrum.up.railway.app';
-export const MAINNET_ARBITRUM_RPC_URL = 'https://arbitrum.gateway.tenderly.co/4H6CSEj1eY5HDcfZbiUEP1';
-export const MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS = '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9';
+// BASE DEVNET
+export const DEVNET_BASE_CHAIN_ID = 1337;
+export const DEVNET_BASE_ETHERSCAN_URL = 'http://localhost:50123';
+export const DEVNET_BASE_PAYMASTER_URL = 'http://localhost:50123';
+export const DEVNET_BASE_RPC_URL = 'http://localhost:50123';
+export const DEVNET_BASE_WS_URL = 'ws://localhost:50123';
+export const DEVNET_BASE_CBBTC_TOKEN_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
 
-// TESTNET ARBITRUM
-export const TESTNET_ARBITRUM_CHAIN_ID = 421614;
-export const TESTNET_ARBITRUM_ETHERSCAN_URL = 'https://sepolia.arbiscan.io/';
-export const TESTNET_ARBITRUM_PAYMASTER_URL = 'https://rift-paymaster-arbitrum-sepolia.up.railway.app';
-export const TESTNET_ARBITRUM_RPC_URL = 'https://arbitrum-sepolia.gateway.tenderly.co/r5qQTaEWNQHaU4iClbRdt';
-export const TESTNET_ARBITRUM_USDT_TOKEN_ADDRESS = '0xC4af7CFe412805C4A751321B7b0799ca9b8dbE56';
+// BASE TESTNET
+export const TESTNET_BASE_CHAIN_ID = 84532;
+export const TESTNET_BASE_ETHERSCAN_URL = 'https://base-sepolia.g.alchemy.com/v2/demo';
+export const TESTNET_BASE_PAYMASTER_URL = 'https://rift-paymaster-base-sepolia.up.railway.app';
+export const TESTNET_BASE_RPC_URL = 'https://base-sepolia.g.alchemy.com/v2/demo';
+export const TESTNET_BASE_CBBTC_TOKEN_ADDRESS = '0x83358384d0c3874356f590d220e1064212525379';
+export const TESTNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // TODO: REPLACE
+
+// BASE MAINNET
+export const MAINNET_BASE_CHAIN_ID = 8453;
+export const MAINNET_BASE_ETHERSCAN_URL = 'https://basescan.org/';
+export const MAINNET_BASE_PAYMASTER_URL = 'https://rift-paymaster-base.up.railway.app';
+export const MAINNET_BASE_RPC_URL = 'https://base.gateway.tenderly.co/2CozPE8XkkiFQIO8uj4Ug1';
+export const MAINNET_BASE_CBBTC_TOKEN_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+export const MAINNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // TODO: REPLACE
+
+// // MAINNET ARBITRUM
+// export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
+// export const MAINNET_ARBITRUM_ETHERSCAN_URL = 'https://arbiscan.io/';
+// export const MAINNET_ARBITRUM_PAYMASTER_URL = 'https://rift-paymaster-arbitrum.up.railway.app';
+// export const MAINNET_ARBITRUM_RPC_URL = 'https://arbitrum.gateway.tenderly.co/4H6CSEj1eY5HDcfZbiUEP1';
+// export const MAINNET_ARBITRUM_USDT_TOKEN_ADDRESS = '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9';
 
 // ----------------------------------------------------------------//
 export const MEMPOOL_HOST = 'https://mempool.space';
-export const MAINNET_ETH_RPC_URL = 'https://archive-node.tail0a0b83.ts.net/ethereum/?key=7a29b610f3c03ebe55c4dcc5138884bea1976a7b9804fefc796da213610e0bf5';
-export const MAX_SWAP_AMOUNT_MICRO_USDT = MAX_SWAP_AMOUNT_USDT * 10 ** 6;
-export const MIN_SWAP_AMOUNT_MICRO_USDT = MIN_SWAP_AMOUNT_USDT * 10 ** 6;
+export const MAINNET_ETH_RPC_URL = [
+    'https://eth.llamarpc.com',
+    'https://rpc.ankr.com/eth',
+    'https://mainnet.gateway.tenderly.co',
+    'https://ethereum-rpc.publicnode.com',
+    'https://api.securerpc.com/v1',
+    'https://eth.rpc.blxrbdn.com',
+    'https://eth-mainnet.g.alchemy.com/v2/demo',
+    'https://eth-mainnet.public.blastapi.io',
+    'https://singapore.rpc.blxrbdn.com',
+    'https://eth-mainnet.nodereal.io/v1/1659dfb40aa24bbb8153a677b98064d7',
+    'https://virginia.rpc.blxrbdn.com',
+    'https://uk.rpc.blxrbdn.com',
+    'https://gateway.tenderly.co/public/mainnet',
+    'https://ethereum.blockpi.network/v1/rpc/public',
+];
+
 export const MAX_SWAP_LP_OUTPUTS = 175;
 export const REQUIRED_BLOCK_CONFIRMATIONS = 2;
 export const PROTOCOL_FEE = BigNumber.from(1); // 0.1%

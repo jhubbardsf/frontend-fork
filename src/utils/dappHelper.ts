@@ -8,8 +8,8 @@ import {
     BITCOIN_DECIMALS,
     FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS,
     MAX_SWAP_LP_OUTPUTS,
-    MIN_SWAP_AMOUNT_MICRO_USDT,
-    MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT,
+    MIN_SWAP_AMOUNT_MICRO_USDC,
+    MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC,
     PROTOCOL_FEE,
     PROTOCOL_FEE_DENOMINATOR,
     SATS_PER_BTC,
@@ -223,7 +223,7 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
     // [2.5] Filter out vaults with insufficient balance
     sortedVaults = sortedVaults.filter((vault) => {
         const microUsdtAvailable = BigNumber.from(vault.trueUnreservedBalance);
-        return microUsdtAvailable.gte(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT));
+        return microUsdtAvailable.gte(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDC));
     });
 
     // If all vaults were filtered out, return null
@@ -249,7 +249,7 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
         if (totalLpOutputsUsed >= maxLpOutputs || satsToSpend.lte(0)) break;
 
         // skip vaults with insufficient balance
-        if (BigNumber.from(sortedVaults[i].trueUnreservedBalance).lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
+        if (BigNumber.from(sortedVaults[i].trueUnreservedBalance).lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC)) {
             console.log(`Skipping vault ${sortedVaults[i].index} due to insufficient balance`);
             continue;
         }
@@ -324,8 +324,8 @@ export function calculateBestVaultsForBitcoinInput(depositVaults, satsToSpend, m
 export function calculateProtocolFeeInMicroUsdt(microUsdtOutputAmount: BigNumber) {
     let protocolFeeInMicroUsdt = microUsdtOutputAmount.mul(PROTOCOL_FEE).div(PROTOCOL_FEE_DENOMINATOR);
     protocolFeeInMicroUsdt = protocolFeeInMicroUsdt;
-    if (protocolFeeInMicroUsdt.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
-        protocolFeeInMicroUsdt = BigNumber.from(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT);
+    if (protocolFeeInMicroUsdt.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC)) {
+        protocolFeeInMicroUsdt = BigNumber.from(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC);
     }
     return protocolFeeInMicroUsdt;
 }
@@ -338,8 +338,8 @@ export function calculateOriginalAmountBeforeFee(totalAmountWithFee: BigNumber):
         .integerValue(BigNumberJs.ROUND_UP);
 
     const diff = BigNumberJs(totalAmountWithFee.toString()).minus(roundedOutputAmount);
-    if (diff.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT)) {
-        roundedOutputAmount = BigNumberJs(totalAmountWithFee.toString()).minus(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDT);
+    if (diff.lt(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC)) {
+        roundedOutputAmount = BigNumberJs(totalAmountWithFee.toString()).minus(MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC);
     }
     return BigNumber.from(roundedOutputAmount.toString());
 }
@@ -381,8 +381,8 @@ export function calculateBestVaultsForUsdtOutput(depositVaults, microUsdtOutputA
         const vault = sortedVaults[i];
         const microUsdtAvailable = BigNumber.from(vault.trueUnreservedBalance);
 
-        // Skip vaults with less than MIN_SWAP_AMOUNT_MICRO_USDT
-        if (microUsdtAvailable.lt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDT))) {
+        // Skip vaults with less than MIN_SWAP_AMOUNT_MICRO_USDC
+        if (microUsdtAvailable.lt(BigNumber.from(MIN_SWAP_AMOUNT_MICRO_USDC))) {
             continue;
         }
 
