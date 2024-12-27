@@ -85,8 +85,8 @@ type Store = {
     setBtcInputSwapAmount: (amount: string) => void;
     usdtOutputSwapAmount: string;
     setUsdtOutputSwapAmount: (amount: string) => void;
-    usdtDepositAmount: string;
-    setUsdtDepositAmount: (amount: string) => void;
+    coinbaseBtcDepositAmount: string;
+    setCoinbaseBtcDepositAmount: (amount: string) => void;
     btcOutputAmount: string;
     setBtcOutputAmount: (amount: string) => void;
     lowestFeeReservationParams: ReserveLiquidityParams | null;
@@ -253,8 +253,8 @@ export const useStore = create<Store>((set) => {
         setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
         usdtOutputSwapAmount: '',
         setUsdtOutputSwapAmount: (usdtOutputSwapAmount) => set({ usdtOutputSwapAmount }),
-        usdtDepositAmount: '',
-        setUsdtDepositAmount: (usdtDepositAmount) => set({ usdtDepositAmount }),
+        coinbaseBtcDepositAmount: '',
+        setCoinbaseBtcDepositAmount: (coinbaseBtcDepositAmount) => set({ coinbaseBtcDepositAmount }),
         btcOutputAmount: '',
         setBtcOutputAmount: (btcOutputAmount) => set({ btcOutputAmount }),
         lowestFeeReservationParams: null,

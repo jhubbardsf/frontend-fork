@@ -31,8 +31,7 @@ const Home = () => {
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
-    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
@@ -41,7 +40,7 @@ const Home = () => {
     useEffect(() => {
         setSwapFlowState('0-not-started');
         setDepositFlowState('1-confirm-deposit');
-        setUsdtDepositAmount('');
+        setCoinbaseBtcDepositAmount('');
         setBtcInputSwapAmount('');
         setUsdtOutputSwapAmount('');
         setBtcOutputAmount('');

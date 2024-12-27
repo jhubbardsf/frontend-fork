@@ -68,7 +68,7 @@ import WebAssetTag from '../other/WebAssetTag';
 
 type ActiveTab = 'swap' | 'liquidity';
 
-const DynamicExchangeRateInput = ({ value, onChange }) => {
+const ExchangeRateInput = ({ value, onChange }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -81,16 +81,16 @@ const DynamicExchangeRateInput = ({ value, onChange }) => {
     }, [value]);
 
     return (
-        <Flex position='relative' display='inline-flex' alignItems='center'>
+        <Flex position='relative' display='inline-flex' alignItems='center' zIndex={37}>
             <Box as='span' ref={spanRef} position='absolute' visibility='hidden' whiteSpace='pre' fontFamily='Aux' fontSize='20px' letterSpacing='-3px' />
             <Input
                 ref={inputRef}
-                bg='#296746'
+                bg={value > 1 ? '#296746' : '#584539'}
                 value={value}
                 onChange={onChange}
                 cursor={'text'}
                 fontFamily='Aux'
-                border='2px solid #548148'
+                border={value > 1 ? '2px solid #548148' : '2px solid #C86B6B'}
                 borderRadius='10px'
                 mt='2px'
                 textAlign='right'
@@ -114,28 +114,9 @@ const DynamicExchangeRateInput = ({ value, onChange }) => {
     );
 };
 
-const A = 56.56854249; // approx.
-
-// Forward mapping: t in [0..1] → real percent in [-10..+10].
-function valueFromSlider(t) {
-    const distFromMiddle = t - 0.5; // can be negative or positive
-    const sign = distFromMiddle < 0 ? -1 : 1;
-    const magnitude = Math.abs(distFromMiddle);
-    return A * sign * magnitude ** 2.5; // (|dist|^2.5), reapply sign
-}
-
-// Inverse mapping: real percent → t in [0..1].
-function sliderFromValue(v) {
-    const sign = v < 0 ? -1 : 1;
-    const magnitude = Math.abs(v) / A;
-    return 0.5 + sign * magnitude ** (1 / 2.5);
-}
-
 export const OtcDeposit = ({}) => {
     const { isMobile } = useWindowSize();
     const router = useRouter();
-    const fontSize = isMobile ? '20px' : '20px';
-
     const { openConnectModal } = useConnectModal();
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
@@ -144,13 +125,12 @@ export const OtcDeposit = ({}) => {
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
-    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
+    const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const [coinbaseBtcDepositAmountUSD, setCoinbaseBtcDepositAmountUSD] = useState('0.00');
     const [coinbaseBtcPerBtcExchangeRate, setCoinbaseBtcPerBtcExchangeRate] = useState('1');
-    const [profitAmountUSD, setProfitAmountUSD] = useState('0.00');
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [otcRecipientUSDCAddress, setOtcRecipientUSDCAddress] = useState('');
@@ -160,21 +140,17 @@ export const OtcDeposit = ({}) => {
     const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
     const coinbasebtcPriceUSD = useStore.getState().validAssets['CoinbaseBTC'].priceUSD;
     const validAssets = useStore((state) => state.validAssets);
-    const [editExchangeRateMode, setEditExchangeRateMode] = useState(false);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
-    const actualBorderColor = '#323232';
-    const borderColor = `2px solid ${actualBorderColor}`;
-    const { isOpen, onOpen, onClose } = useDisclosure();
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const [sliderT, setSliderT] = useState(0.5); // start at middle
-    // This is the real mapped percentage
-    const realPercent = valueFromSlider(sliderT);
+    const tickPercents = [-10, -6, -3, -1, 0, 1, 3, 6, 10];
+    const A = 56.56854249; // approx.
+    const realSliderPercent = valueFromSlider(sliderT);
 
-    // For ticks, define the real percents you want labeled
-    const tickPercents = [-10, -5, -3, -1, 0, 1, 3, 5, 10];
-
+    // ---------- USE EFFECTS ---------- //
+    // [0] watch for wallet connection and proceed with deposit
     useEffect(() => {
         if (isWaitingForConnection && isConnected) {
             setIsWaitingForConnection(false);
@@ -187,31 +163,20 @@ export const OtcDeposit = ({}) => {
         }
     }, [isConnected, isWaitingForConnection, chainId, isWaitingForCorrectNetwork]);
 
-    // calculate profit amount in USD
-    useEffect(() => {
-        const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(coinbaseBtcPerBtcExchangeRate)) / 100) * (coinbasebtcPriceUSD ?? 0)).toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        })}`;
-
-        setProfitAmountUSD(!coinbaseBtcPerBtcExchangeRate || !usdtDepositAmount || coinbaseBtcPerBtcExchangeRate == '-' ? '$0.00' : profitAmountUSD);
-    }, [usdtDepositAmount, coinbaseBtcPerBtcExchangeRate]);
-
-    // calculate deposit amount in USD
+    // [1] calculate coinbase btc deposit amount in USD
     useEffect(() => {
         const coinbaseBtcDepositAmountUSD =
-            coinbasebtcPriceUSD && usdtDepositAmount
-                ? (coinbasebtcPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+            coinbasebtcPriceUSD && coinbaseBtcDepositAmount
+                ? (coinbasebtcPriceUSD * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
                 : '$0.00';
         setCoinbaseBtcDepositAmountUSD(coinbaseBtcDepositAmountUSD);
-    }, [usdtDepositAmount]);
+    }, [coinbaseBtcDepositAmount]);
 
-    // calculate Bitcoin output amount in USD
+    // [2] calculate Bitcoin output amount in USD
     useEffect(() => {
-        console.log('btcPriceUSD:', btcPriceUSD);
         const bitcoinOutputAmountUSD =
             btcPriceUSD && btcOutputAmount
                 ? (btcPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
@@ -222,107 +187,91 @@ export const OtcDeposit = ({}) => {
         setBitcoinOutputAmountUSD(bitcoinOutputAmountUSD);
     }, [btcOutputAmount]);
 
-    // ---------- DEPOSIT TOKEN AMOUNT ---------- //
-    const handleTokenDepositChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-        const tokenValue = e.target.value;
+    // [3] update the exchange rate based on the real percent from the slider
+    useEffect(() => {
+        const baseExchangeRate = 1;
+        const adjustedExchangeRate = baseExchangeRate * (1 + realSliderPercent / 100);
+        setCoinbaseBtcPerBtcExchangeRate(adjustedExchangeRate.toFixed(8));
+    }, [realSliderPercent]);
 
-        const validateTokenDepositChange = (value: string) => {
-            if (value === '') return true;
-            const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
-            return regex.test(value);
+    // [4] calculate bitcoin output amount upon exchange rate change
+    useEffect(() => {
+        const calculateBitcoinOutputAmount = () => {
+            if (coinbasebtcPriceUSD && btcPriceUSD && coinbaseBtcDepositAmount && coinbaseBtcPerBtcExchangeRate) {
+                const newBitcoinOutputAmount = parseFloat(coinbaseBtcDepositAmount) * parseFloat(coinbaseBtcPerBtcExchangeRate);
+                const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(BITCOIN_DECIMALS);
+
+                if (validateBitcoinAmount(formattedBitcoinOutputAmount)) {
+                    setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
+                }
+            }
         };
 
-        if (validateTokenDepositChange(tokenValue)) {
-            setUsdtDepositAmount(tokenValue);
-            calculateBitcoinOutputAmount(tokenValue, undefined);
+        calculateBitcoinOutputAmount();
+    }, [coinbaseBtcPerBtcExchangeRate, coinbaseBtcDepositAmount]);
+
+    // [5] calculate exchange rate upon btc output amount change
+    useEffect(() => {
+        if (btcOutputAmount && coinbaseBtcDepositAmount) {
+            const newExchangeRate = parseFloat(btcOutputAmount) / parseFloat(coinbaseBtcDepositAmount);
+            setCoinbaseBtcPerBtcExchangeRate(newExchangeRate.toFixed(8));
+
+            // Update the slider position based on the new exchange rate
+            const percentChange = (newExchangeRate - 1) * 100;
+            setSliderT(sliderFromValue(percentChange));
+        }
+    }, [btcOutputAmount, coinbaseBtcDepositAmount]);
+
+    // ---------- cbBTC DEPOSIT AMOUNT ---------- //
+    const handleCoinbaseBtcDepositChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const tokenValue = e.target.value;
+
+        // [0] if valid, set coinbase btc deposit amount and calculate the bitcoin output amount
+        if (validateBitcoinAmount(tokenValue)) {
+            setCoinbaseBtcDepositAmount(tokenValue);
         }
     };
 
-    // ---------- PROFIT PERCENTAGE ---------- //
+    // ---------- EXCHANGE RATE SLIDER ---------- //
+    // [0] forward mapping: t in [0..1] → real percent in [-10..+10].
+    function valueFromSlider(t) {
+        const distFromMiddle = t - 0.5;
+        const sign = distFromMiddle < 0 ? -1 : 1;
+        const magnitude = Math.abs(distFromMiddle);
+        return A * sign * magnitude ** 2.5; // (|dist|^2.5), reapply sign
+    }
+
+    // [1] inverse mapping: real percent → t in [0..1].
+    function sliderFromValue(v) {
+        const sign = v < 0 ? -1 : 1;
+        const magnitude = Math.abs(v) / A;
+        return 0.5 + sign * magnitude ** (1 / 2.5);
+    }
+
+    // [2] handle exchange rate change
     const handleCoinbaseBtcPerBtcExchangeRateChange = (e: ChangeEvent<HTMLInputElement>) => {
         const coinbaseBtcPerBtcExchangeRateValue = e.target.value;
 
-        if (validateCoinbaseBtcPerBtcExchangeRate(coinbaseBtcPerBtcExchangeRateValue)) {
+        // [0] validate bitcoin amount
+        if (validateBitcoinAmount(coinbaseBtcPerBtcExchangeRateValue)) {
+            // [0] if valid, set exchange rate & calculate bitcoin output amount
             setCoinbaseBtcPerBtcExchangeRate(coinbaseBtcPerBtcExchangeRateValue);
-            calculateBitcoinOutputAmount(undefined, coinbaseBtcPerBtcExchangeRateValue);
-        } else {
-            console.log('Invalid profit percentage');
+
+            // [1] update slider location
+            const exchangeRate = parseFloat(coinbaseBtcPerBtcExchangeRateValue) || 1;
+            const percentChange = (exchangeRate - 1) * 100;
+            setSliderT(sliderFromValue(percentChange));
         }
-    };
-
-    const calculateProfitPercent = (bitcoinAmount: string) => {
-        const startValue = parseFloat(usdtDepositAmount);
-        const endValue = parseFloat(bitcoinAmount) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC;
-
-        const newCoinbaseBtcPerBtcExchangeRate = (((endValue - startValue) / startValue) * 100).toFixed(2);
-        if (validateCoinbaseBtcPerBtcExchangeRate(newCoinbaseBtcPerBtcExchangeRate)) {
-            let formattedCoinbaseBtcPerBtcExchangeRate = newCoinbaseBtcPerBtcExchangeRate;
-            if (!formattedCoinbaseBtcPerBtcExchangeRate.startsWith('-') && /^[0-9]/.test(formattedCoinbaseBtcPerBtcExchangeRate)) {
-                // check if it's numeric and not negative
-                formattedCoinbaseBtcPerBtcExchangeRate = '+' + formattedCoinbaseBtcPerBtcExchangeRate;
-            }
-            formattedCoinbaseBtcPerBtcExchangeRate += '%';
-            setCoinbaseBtcPerBtcExchangeRate(formattedCoinbaseBtcPerBtcExchangeRate);
-        }
-    };
-
-    const validateCoinbaseBtcPerBtcExchangeRate = (value) => {
-        // max 8 decimal places, no minus sign
-        if (value === '') return true;
-        const regex = /^\d*(\.\d{0,8})?$/;
-        return regex.test(value);
     };
 
     // ---------- BITCOIN OUTPUT AMOUNT ---------- //
     const handleBitcoinOutputAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
         const bitcoinOutputAmountValue = e.target.value;
 
-        if (validateBitcoinOutputAmount(bitcoinOutputAmountValue)) {
+        // [0] if valid, set bitcoin output amount
+        if (validateBitcoinAmount(bitcoinOutputAmountValue)) {
             setBtcOutputAmount(bitcoinOutputAmountValue === '0.0' ? '' : bitcoinOutputAmountValue);
-            calculateProfitPercent(bitcoinOutputAmountValue);
         }
-    };
-
-    const calculateBitcoinOutputAmount = (newEthDepositAmount: string | undefined, newCoinbaseBtcPerBtcExchangeRate: string | undefined) => {
-        if (coinbasebtcPriceUSD && btcPriceUSD) {
-            console.log('newCoinbaseBtcPerBtcExchangeRate:', newCoinbaseBtcPerBtcExchangeRate);
-            const profitAmountInToken = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * (parseFloat(newCoinbaseBtcPerBtcExchangeRate ?? coinbaseBtcPerBtcExchangeRate) / 100);
-            const totalTokenUSD = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * coinbasebtcPriceUSD + profitAmountInToken * coinbasebtcPriceUSD;
-            const newBitcoinOutputAmount = totalTokenUSD / btcPriceUSD > 0 ? totalTokenUSD / btcPriceUSD : 0;
-            const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
-
-            if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
-                setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
-            }
-            // calculate the profit amount in USD
-
-            const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(newCoinbaseBtcPerBtcExchangeRate ?? coinbaseBtcPerBtcExchangeRate)) / 100) * coinbasebtcPriceUSD).toLocaleString(
-                'en-US',
-                {
-                    style: 'currency',
-                    currency: 'USD',
-                },
-            )}`;
-            setProfitAmountUSD(profitAmountUSD);
-
-            // calculate and update the deposit amount in USD
-            console.log('tokenDepositAmount:', usdtDepositAmount);
-            const coinbaseBtcDepositAmountUSD =
-                coinbasebtcPriceUSD && usdtDepositAmount
-                    ? (coinbasebtcPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
-                          style: 'currency',
-                          currency: 'USD',
-                      })
-                    : '$0.00';
-            setCoinbaseBtcDepositAmountUSD(coinbaseBtcDepositAmountUSD);
-        }
-    };
-
-    const validateBitcoinOutputAmount = (value: string) => {
-        if (value === '') return true;
-        const regex = /^\d*\.?\d*$/;
-        return regex.test(value);
     };
 
     // ---------- BTC PAYOUT ADDRESS ---------- //
@@ -331,7 +280,7 @@ export const OtcDeposit = ({}) => {
         setPayoutBTCAddress(BTCPayoutAddress);
     };
 
-    const handleOtcRecipientUSDCAddressChange = (e) => {
+    const handleOtcRecipientBaseAddressChange = (e) => {
         const otcRecipientUSDCAddress = e.target.value;
         setOtcRecipientUSDCAddress(otcRecipientUSDCAddress);
     };
@@ -366,7 +315,7 @@ export const OtcDeposit = ({}) => {
     const handleModalClose = () => {
         setIsModalOpen(false);
         if (depositLiquidityStatus === DepositStatus.Confirmed) {
-            setUsdtDepositAmount('');
+            setCoinbaseBtcDepositAmount('');
             setBtcInputSwapAmount('');
             setUsdtOutputSwapAmount('');
             setBtcOutputAmount('');
@@ -404,8 +353,8 @@ export const OtcDeposit = ({}) => {
             </Flex>
         );
     };
-    // ---------- DEPOSIT ---------- //
 
+    // ---------- INITIATE DEPOSIT LOGIC ---------- //
     const initiateDeposit = async () => {
         if (!isConnected) {
             setIsWaitingForConnection(true);
@@ -477,7 +426,7 @@ export const OtcDeposit = ({}) => {
             const vaultIndexToOverwrite = findVaultIndexToOverwrite();
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
             const tokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-            const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtDepositAmount, tokenDecmials);
+            const tokenDepositAmountInSmallestTokenUnits = parseUnits(coinbaseBtcDepositAmount, tokenDecmials);
             const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(tokenDepositAmountInSmallestTokenUnits, tokenDecmials);
             const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, BITCOIN_DECIMALS);
             console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
@@ -505,29 +454,12 @@ export const OtcDeposit = ({}) => {
         }
     };
 
-    // Update the exchange rate based on the real percent
-    useEffect(() => {
-        const baseExchangeRate = 1; // Assuming 1 is the base exchange rate
-        const adjustedExchangeRate = baseExchangeRate * (1 + realPercent / 100);
-        setCoinbaseBtcPerBtcExchangeRate(adjustedExchangeRate.toFixed(8)); // Adjust to 8 decimal places
-    }, [realPercent]);
-
-    useEffect(() => {
-        const calculateBitcoinOutputAmount = () => {
-            if (coinbasebtcPriceUSD && btcPriceUSD) {
-                const profitAmountInToken = parseFloat(usdtDepositAmount) * (parseFloat(coinbaseBtcPerBtcExchangeRate) / 100);
-                const totalTokenUSD = parseFloat(usdtDepositAmount) * coinbasebtcPriceUSD + profitAmountInToken * coinbasebtcPriceUSD;
-                const newBitcoinOutputAmount = totalTokenUSD / btcPriceUSD > 0 ? totalTokenUSD / btcPriceUSD : 0;
-                const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
-
-                if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
-                    setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
-                }
-            }
-        };
-
-        calculateBitcoinOutputAmount();
-    }, [coinbaseBtcPerBtcExchangeRate, usdtDepositAmount]);
+    // ---------- HELPER FUNCTIONS ---------- //
+    const validateBitcoinAmount = (value: string) => {
+        if (value === '') return true;
+        const regex = new RegExp(`^\\d*\\.?\\d{0,${BITCOIN_DECIMALS}}$`);
+        return regex.test(value);
+    };
 
     return (
         <Flex w='100%' h='100%' flexDir={'column'} userSelect={'none'} fontSize={'12px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={'#c3c3c3'} fontWeight={'normal'} overflow={'visible'} gap={'0px'}>
@@ -548,13 +480,13 @@ export const OtcDeposit = ({}) => {
                         {/* Deposit Input */}
                         <Flex mt='0px' px='10px' bg={selectedInputAsset.dark_bg_color} w='100%' h='105px' border='2px solid' borderColor={selectedInputAsset.bg_color} borderRadius={'10px'}>
                             <Flex direction={'column'} py='10px' px='5px'>
-                                <Text color={!usdtDepositAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                <Text color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                     You Deposit
                                 </Text>
                                 <Input
-                                    value={usdtDepositAmount}
+                                    value={coinbaseBtcDepositAmount}
                                     onChange={(e) => {
-                                        handleTokenDepositChange(e);
+                                        handleCoinbaseBtcDepositChange(e);
                                     }}
                                     fontFamily={'Aux'}
                                     border='none'
@@ -574,7 +506,7 @@ export const OtcDeposit = ({}) => {
                                     }}
                                 />
                                 <Text
-                                    color={!usdtDepositAmount ? colors.offWhite : colors.textGray}
+                                    color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray}
                                     fontSize={'13px'}
                                     mt='2px'
                                     ml='1px'
@@ -629,62 +561,26 @@ export const OtcDeposit = ({}) => {
                                 <Text color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                     Your Exchange Rate
                                 </Text>
-                                <Flex mt='-px' w='100%' justify='center'>
-                                    <DynamicExchangeRateInput
+                                <Flex mt='0px' w='100%' justify='center'>
+                                    <ExchangeRateInput
                                         value={coinbaseBtcPerBtcExchangeRate}
                                         onChange={(e) => {
                                             handleCoinbaseBtcPerBtcExchangeRateChange(e);
                                         }}
                                     />
                                 </Flex>
-                                <Flex direction='column' w='100%' mt='-50px' zIndex={3}>
-                                    {/* Example “Market Exchange Rate” box */}
-                                    {/* <Flex
-                                        alignSelf='flex-end'
-                                        mr='6px'
-                                        w='160px'
-                                        h='45px'
-                                        bg='#605636'
-                                        fontSize='10px'
-                                        align='center'
-                                        letterSpacing='-1px'
-                                        justify='center'
-                                        border='2px solid #B8AF73'
-                                        borderRadius='10px'
-                                        textAlign='center'
-                                        direction='column'>
-                                        <Text color='#ECEBE0'>Market Exchange Rate</Text>
-                                        <Text>1 BTC = 1 cbBTC</Text>
-                                    </Flex> */}
-
+                                <Flex direction='column' w='100%' mt='-48px' zIndex={3}>
                                     <Box mt='55px' px='10px' w='95%' alignSelf='center'>
-                                        <Slider
-                                            // Slider is purely 0→1, step is up to you
-                                            min={0}
-                                            max={1}
-                                            step={0.001}
-                                            value={sliderT}
-                                            onChange={(val) => setSliderT(val)}
-                                            aria-label='exchange-rate-slider'>
+                                        <Slider min={0} max={1} step={0.001} value={sliderT} onChange={(val) => setSliderT(val)} aria-label='exchange-rate-slider'>
                                             {tickPercents.map((p) => {
                                                 const markPosition = sliderFromValue(p);
                                                 return (
-                                                    <SliderMark
-                                                        key={p}
-                                                        value={markPosition}
-                                                        fontSize='sm'
-                                                        textAlign='center'
-                                                        mt='2'
-                                                        // shift label so it lines up nicely
-                                                        ml='-15px'>
+                                                    <SliderMark key={p} value={markPosition} fontSize='sm' textAlign='center' mt='2' ml='-15px'>
                                                         {p < 0 ? `${p}%` : `+${p}%`}
                                                     </SliderMark>
                                                 );
                                             })}
-
-                                            {/* "Split" track: red on left half, green on right half */}
                                             <SliderTrack h='14px' borderRadius='20px' bg='transparent' position='relative'>
-                                                {/* Just color behind the track from 0→0.5 = red, 0.5→1 = green */}
                                                 <Box
                                                     position='absolute'
                                                     left='0'
@@ -708,17 +604,17 @@ export const OtcDeposit = ({}) => {
                                             </SliderTrack>
                                             <SliderFilledTrack bg='transparent' />
 
-                                            <SliderThumb boxSize={6} bg='#EAC344' border='2px solid #B8AF73' _focus={{ boxShadow: '0 0 0 3px rgba(234,195,68, 0.6)' }} />
+                                            <SliderThumb boxSize={3} height={7} bg='#EAC344' border='2px solid #B8AF73' borderRadius='10px' _focus={{ boxShadow: '0 0 0 2px rgba(234,195,68, 0.6)' }} />
                                         </Slider>
 
                                         {/* Show the real mapped percentage */}
                                         <Box mt='12px' textAlign='center'>
-                                            <Text as='span' ml='4px' fontWeight='bold' color={realPercent >= 0 ? 'green.300' : 'red.300'}>
-                                                {realPercent.toFixed(2)}%
+                                            <Text as='span' ml='4px' fontWeight='bold' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
+                                                {realSliderPercent.toFixed(2)}%
                                             </Text>
-                                            {realPercent !== 0 && (
-                                                <Text as='span' ml='6px' color={realPercent >= 0 ? 'green.300' : 'red.300'}>
-                                                    {realPercent >= 0 ? 'above market rate' : 'below market rate'}
+                                            {realSliderPercent !== 0 && (
+                                                <Text as='span' ml='6px' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
+                                                    {realSliderPercent >= 0 ? 'above market rate' : 'below market rate'}
                                                 </Text>
                                             )}
                                         </Box>
@@ -811,17 +707,17 @@ export const OtcDeposit = ({}) => {
                         {/* Deposit Button */}
                         <Flex
                             alignSelf={'center'}
-                            bg={isConnected ? (usdtDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
+                            bg={isConnected ? (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
                             _hover={{ bg: colors.purpleHover }}
                             w='300px'
                             mt='12px'
                             transition={'0.2s'}
                             h='45px'
                             onClick={async () => {
-                                console.log('usdtDepositAmount:', usdtDepositAmount);
+                                console.log('coinbaseBtcDepositAmount:', coinbaseBtcDepositAmount);
                                 console.log('btcOutputAmount:', btcOutputAmount);
                                 console.log('payoutBTCAddress:', payoutBTCAddress);
-                                if (usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
+                                if (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
                                     initiateDeposit();
                                 } else toastError('', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
                             }}
@@ -831,9 +727,9 @@ export const OtcDeposit = ({}) => {
                             cursor={'pointer'}
                             borderRadius={'10px'}
                             justify={'center'}
-                            border={usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                            border={coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? '3px solid #445BCB' : '3px solid #3242a8'}>
                             <Text
-                                color={usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? colors.offWhite : colors.darkerGray}
+                                color={coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? colors.offWhite : colors.darkerGray}
                                 fontFamily='Nostromo'>
                                 {isConnected ? 'Continue' : 'Connect Wallet'}
                             </Text>
