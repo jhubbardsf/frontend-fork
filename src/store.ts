@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { useEffect } from 'react';
 import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
 import { BigNumber, ethers } from 'ethers';
-import { USDT_Icon, ETH_Icon, ETH_Logo } from './components/other/SVGs';
+import { USDT_Icon, ETH_Icon, ETH_Logo, Coinbase_BTC_Icon } from './components/other/SVGs';
 import {
     ERC20ABI,
     DEPLOYMENT_TYPE,
@@ -133,7 +133,7 @@ export const useStore = create<Store>((set) => {
     const validAssets: Record<string, ValidAsset> = {
         CoinbaseBTC: {
             name: 'CoinbaseBTC',
-            display_name: 'CoinbaseBTC',
+            display_name: 'cbBTC',
             tokenAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CBBTC_TOKEN_ADDRESS, TESTNET_BASE_CBBTC_TOKEN_ADDRESS, DEVNET_BASE_CBBTC_TOKEN_ADDRESS),
             decimals: 6,
             riftExchangeContractAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RIFT_EXCHANGE_ADDRESS, TESTNET_BASE_RIFT_EXCHANGE_ADDRESS, DEVNET_BASE_RIFT_EXCHANGE_ADDRESS),
@@ -145,11 +145,11 @@ export const useStore = create<Store>((set) => {
             paymasterUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_PAYMASTER_URL, TESTNET_BASE_PAYMASTER_URL, DEVNET_BASE_PAYMASTER_URL),
             proverFee: BigNumber.from(0),
             releaserFee: BigNumber.from(0),
-            icon_svg: USDT_Icon,
-            bg_color: '#234C79',
-            border_color: '#2775CA',
-            border_color_light: '#2775CA',
-            dark_bg_color: '#0A1929',
+            icon_svg: Coinbase_BTC_Icon,
+            bg_color: '#3B70E8',
+            border_color: '#0D56FC',
+            border_color_light: '#3B70E8',
+            dark_bg_color: '#0B1A3D',
             light_text_color: '#255283',
             priceUSD: null,
             totalAvailableLiquidity: BigNumber.from(0),

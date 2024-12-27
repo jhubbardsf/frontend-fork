@@ -15,7 +15,7 @@ import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
 import OfflinePage from '../components/background/OfflinePage';
-import { OtcDepositConfirmation } from '../components/deposit/OtcDepositConfirmation';
+import { OtcDeposit } from '../components/deposit/OtcDeposit';
 import { opaqueBackgroundColor } from '../utils/constants';
 
 const Home = () => {
@@ -79,7 +79,7 @@ const Home = () => {
                         borderTop='2px solid #323232'
                         borderRight='2px solid #323232'>
                         <Flex w='90%' direction={'column'}>
-                            <OtcDepositConfirmation />
+                            <OtcDeposit />
                         </Flex>
                     </Flex>
                 </Flex>

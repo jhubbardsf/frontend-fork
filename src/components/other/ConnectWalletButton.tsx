@@ -1,7 +1,7 @@
 import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
 import { useStore } from '../../store';
 import useWindowSize from '../../hooks/useWindowSize';
-import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon, ARBITRUM_LOGO, USDC_Icon, BASE_LOGO } from './SVGs'; // Assuming you also have a BTC logo
+import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon, ARBITRUM_LOGO, USDC_Icon, BASE_LOGO, Coinbase_BTC_Icon } from './SVGs'; // Assuming you also have a BTC logo
 import { ConnectButton, AvatarComponent } from '@rainbow-me/rainbowkit';
 import { colors } from '../../utils/colors';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,7 @@ import { useAccount } from 'wagmi';
 import { BigNumber, ethers } from 'ethers';
 import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import { FONT_FAMILIES } from '../../utils/font';
+import { BITCOIN_DECIMALS } from '../../utils/constants';
 
 export const ConnectWalletButton = ({}) => {
     const [usdtBalance, setUsdtBalance] = useState('0');
@@ -94,7 +95,7 @@ export const ConnectWalletButton = ({}) => {
                                         <>
                                             <Flex mt='-2px' mr='-10px' pl='15px' paddingY={'2px'}>
                                                 {(() => {
-                                                    switch (selectedInputAsset.name) {
+                                                    switch (selectedInputAsset.display_name) {
                                                         case 'WETH':
                                                             return <ETH_Icon width={'12'} height={'17'} viewBox='0 0 23 36' />;
                                                         case 'USDT':
@@ -106,12 +107,13 @@ export const ConnectWalletButton = ({}) => {
                                                                     </Flex>
                                                                 </Flex>
                                                             );
-                                                        case 'BASE_USDC':
+                                                        case 'cbBTC':
                                                             return (
                                                                 <Flex mt='-1px' ml='-5px' mr='0px'>
-                                                                    <USDC_Icon width='26' height='26' />
+                                                                    <Coinbase_BTC_Icon width='26' height='26' />
+                                                                    {/* <cbBTC_Icon width='26' height='26' /> */}
                                                                     <Flex ml='8px' mr='-1px' mt='1px'>
-                                                                        <BASE_LOGO width='24' height='24' />
+                                                                        <BASE_LOGO width='23' height='24' />
                                                                     </Flex>
                                                                 </Flex>
                                                             );
@@ -121,7 +123,10 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex mt='-2px' mr='-2px' fontSize='17px' paddingX='22px' fontFamily={'aux'}>
-                                                {parseFloat(localBalance).toFixed(2).toString()}
+                                                {parseFloat(localBalance)
+                                                    .toFixed(BITCOIN_DECIMALS)
+                                                    .replace(/\.?0+$/, '')
+                                                    .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                                 <Text color={colors.offWhite} ml='8px'>
                                                     {selectedInputAsset.display_name}
                                                 </Text>

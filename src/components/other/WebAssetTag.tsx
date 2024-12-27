@@ -67,13 +67,19 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 cursor={cursor}
                 onClick={onDropDown}>
                 {asset != 'BTC' && (
-                    <Flex ml='-1px' mr='-1px' mt='-1px'>
-                        <BASE_LOGO width='24' height='24' />
+                    <Flex ml='0px' mr='-1px' mt='-1px'>
+                        <BASE_LOGO width='22' height='22' />
                     </Flex>
                 )}
-                <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
-                    {asset}
-                </Text>
+                {asset.toLowerCase() === 'coinbasebtc' ? (
+                    <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
+                        <span style={{ fontSize: '12px', marginRight: '1px' }}>cb</span>BTC
+                    </Text>
+                ) : (
+                    <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
+                        {asset}
+                    </Text>
+                )}
                 {onDropDown && <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />}
             </Flex>
         </Flex>

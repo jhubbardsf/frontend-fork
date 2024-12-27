@@ -4,16 +4,7 @@ import { DepositVault, ReservationState, SwapReservation } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import {
-    BITCOIN_DECIMALS,
-    FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS,
-    MAX_SWAP_LP_OUTPUTS,
-    MIN_SWAP_AMOUNT_MICRO_USDC,
-    MINIMUM_PROTOCOL_FEE_IN_MICRO_USDC,
-    PROTOCOL_FEE,
-    PROTOCOL_FEE_DENOMINATOR,
-    SATS_PER_BTC,
-} from './constants';
+import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';

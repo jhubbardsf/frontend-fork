@@ -107,7 +107,7 @@ export interface ProxyWalletSwapArgs {
     liquidityProviders: Array<ProxyWalletLiquidityProvider>;
 }
 
-export type AssetType = 'BTC' | 'USDT' | 'USDC' | 'ETH' | 'WETH' | 'WBTC';
+export type AssetType = 'BTC' | 'USDT' | 'USDC' | 'ETH' | 'WETH' | 'WBTC' | 'CoinbaseBTC';
 
 export type CurrencyModalTitle = 'send' | 'recieve' | 'deposit' | 'close';
 
