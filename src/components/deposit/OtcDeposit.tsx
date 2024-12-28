@@ -133,6 +133,7 @@ export const OtcDeposit = ({}) => {
     const [coinbaseBtcPerBtcExchangeRate, setCoinbaseBtcPerBtcExchangeRate] = useState('1');
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
+    const [showConfirmationScreen, setShowConfirmationScreen] = useState(false);
     const [otcRecipientUSDCAddress, setOtcRecipientUSDCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
@@ -463,69 +464,81 @@ export const OtcDeposit = ({}) => {
 
     return (
         <Flex w='100%' h='100%' flexDir={'column'} userSelect={'none'} fontSize={'12px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={'#c3c3c3'} fontWeight={'normal'} overflow={'visible'} gap={'0px'}>
-            <Text align='center' w='100%' mb='20px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+            {showConfirmationScreen && (
+                <Flex w='100%' mt='-5px' mb='-35px' ml='0px'>
+                    <Button bg='none' w='12px' _hover={{ bg: colors.borderGray }} onClick={() => setShowConfirmationScreen(false)}>
+                        <ChevronLeftIcon width={'40px'} height={'40px'} bg='none' color={colors.offWhite} />
+                    </Button>
+                </Flex>
+            )}
+            <Text align='center' w='100%' mb='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                 INITIATE DIRECT SWAP
             </Text>
 
             {/* INSTRUCTIONAL TEXT  */}
-            <Text mb='10px' justifyContent='center' w='100%' fontSize={'14px'} letterSpacing={'-1px'} textAlign={'center'}>
-                Create a direct OTC swap if you know your counterparty. Set your exchange rate and recipiant's Base payout address. Your deposit will be locked for 8 hours or until your counterparty
-                pays you the agreed upon amount of <OrangeText> Bitcoin.</OrangeText>
-            </Text>
+            {!showConfirmationScreen && (
+                <Text mb='8px' justifyContent='center' w='100%' fontSize={'14px'} letterSpacing={'-1px'} textAlign={'center'}>
+                    Create a direct OTC swap if you know your counterparty. Set your exchange rate and recipiant's Base payout address. Your deposit will be locked for 8 hours or until your
+                    counterparty pays you the agreed upon amount of <OrangeText> Bitcoin.</OrangeText>
+                </Text>
+            )}
 
             <Flex mt='25px' direction={'column'} overflow={'visible'}>
                 {/* Content */}
-                <Flex direction='column' align='center' overflow={'visible'}>
-                    <Flex w='100%' overflow={'visible'} direction={'column'}>
-                        {/* Deposit Input */}
-                        <Flex mt='0px' px='10px' bg={selectedInputAsset.dark_bg_color} w='100%' h='105px' border='2px solid' borderColor={selectedInputAsset.bg_color} borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                    You Deposit
-                                </Text>
-                                <Input
-                                    value={coinbaseBtcDepositAmount}
-                                    onChange={(e) => {
-                                        handleCoinbaseBtcDepositChange(e);
-                                    }}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-100px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{
-                                        color: selectedInputAsset.light_text_color,
-                                    }}
-                                />
-                                <Text
-                                    color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    {coinbaseBtcDepositAmountUSD}
-                                </Text>
+                {showConfirmationScreen ? (
+                    <Flex direction='column' align='center' overflow={'visible'}></Flex>
+                ) : (
+                    <Flex direction='column' align='center' overflow={'visible'}>
+                        <Flex w='100%' overflow={'visible'} direction={'column'}>
+                            {/* Deposit Input */}
+                            <Flex mt='0px' px='10px' bg={selectedInputAsset.dark_bg_color} w='100%' h='105px' border='2px solid' borderColor={selectedInputAsset.bg_color} borderRadius={'10px'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
+                                    <Text color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        You Deposit
+                                    </Text>
+                                    <Input
+                                        value={coinbaseBtcDepositAmount}
+                                        onChange={(e) => {
+                                            handleCoinbaseBtcDepositChange(e);
+                                        }}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='2px'
+                                        mr='-100px'
+                                        ml='-5px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='40px'
+                                        placeholder='0.0'
+                                        _placeholder={{
+                                            color: selectedInputAsset.light_text_color,
+                                        }}
+                                    />
+                                    <Text
+                                        color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        letterSpacing={'-1px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        {coinbaseBtcDepositAmountUSD}
+                                    </Text>
+                                </Flex>
+                                <Spacer />
+                                <Flex mr='6px'>
+                                    <WebAssetTag asset='CoinbaseBTC' />
+                                </Flex>
                             </Flex>
-                            <Spacer />
-                            <Flex mr='6px'>
-                                <WebAssetTag asset='CoinbaseBTC' />
-                            </Flex>
-                        </Flex>
-                        {/* USDT Recipient Address */}
-                        {/* <Text ml='8px' mt='24px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                            {/* USDT Recipient Address */}
+                            {/* <Text ml='8px' mt='24px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             USDT Payout Address
                         </Text> */}
-                        {/* <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                            {/* <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
                             <Flex direction={'row'} py='6px' px='5px'>
                                 <Input
                                     value={otcRecipientUSDCAddress}
@@ -555,115 +568,122 @@ export const OtcDeposit = ({}) => {
                                 )}
                             </Flex>
                         </Flex> */}
-                        {/* Exchange Rate Slider Input */}
-                        <Flex mt='10px' px='10px' bg='#193626' w='100%' h='155px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
-                            <Flex direction={'column'} py='10px' px='5px' w='100%'>
-                                <Text color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                    Your Exchange Rate
-                                </Text>
-                                <Flex mt='0px' w='100%' justify='center'>
-                                    <ExchangeRateInput
-                                        value={coinbaseBtcPerBtcExchangeRate}
-                                        onChange={(e) => {
-                                            handleCoinbaseBtcPerBtcExchangeRateChange(e);
-                                        }}
-                                    />
-                                </Flex>
-                                <Flex direction='column' w='100%' mt='-48px' zIndex={3}>
-                                    <Box mt='55px' px='10px' w='95%' alignSelf='center'>
-                                        <Slider min={0} max={1} step={0.001} value={sliderT} onChange={(val) => setSliderT(val)} aria-label='exchange-rate-slider'>
-                                            {tickPercents.map((p) => {
-                                                const markPosition = sliderFromValue(p);
-                                                return (
-                                                    <SliderMark key={p} value={markPosition} fontSize='sm' textAlign='center' mt='2' ml='-15px'>
-                                                        {p < 0 ? `${p}%` : `+${p}%`}
-                                                    </SliderMark>
-                                                );
-                                            })}
-                                            <SliderTrack h='14px' borderRadius='20px' bg='transparent' position='relative'>
-                                                <Box
-                                                    position='absolute'
-                                                    left='0'
-                                                    w='50%'
-                                                    h='100%'
-                                                    bg='#584539'
-                                                    borderLeft='2px solid #C86B6B'
-                                                    borderTop='2px solid #C86B6B'
-                                                    borderBottom='2px solid #C86B6B'
-                                                />
-                                                <Box
-                                                    position='absolute'
-                                                    left='50%'
-                                                    w='50%'
-                                                    h='100%'
-                                                    bg='#3C6850'
-                                                    borderRight='2px solid #78C86B'
-                                                    borderTop='2px solid #78C86B'
-                                                    borderBottom='2px solid #78C86B'
-                                                />
-                                            </SliderTrack>
-                                            <SliderFilledTrack bg='transparent' />
-
-                                            <SliderThumb boxSize={3} height={7} bg='#EAC344' border='2px solid #B8AF73' borderRadius='10px' _focus={{ boxShadow: '0 0 0 2px rgba(234,195,68, 0.6)' }} />
-                                        </Slider>
-
-                                        {/* Show the real mapped percentage */}
-                                        <Box mt='12px' textAlign='center'>
-                                            <Text as='span' ml='4px' fontWeight='bold' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
-                                                {realSliderPercent.toFixed(2)}%
-                                            </Text>
-                                            {realSliderPercent !== 0 && (
-                                                <Text as='span' ml='6px' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
-                                                    {realSliderPercent >= 0 ? 'above market rate' : 'below market rate'}
-                                                </Text>
-                                            )}
-                                        </Box>
+                            {/* Exchange Rate Slider Input */}
+                            <Flex mt='10px' px='10px' bg='#193626' w='100%' h='155px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
+                                <Flex direction={'column'} py='10px' px='5px' w='100%'>
+                                    <Text color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        Your Exchange Rate
+                                    </Text>
+                                    {/* slider percentage */}
+                                    <Box mt='-3px' textAlign='center'>
+                                        <Text as='span' ml='4px' fontWeight='bold' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
+                                            {realSliderPercent !== 0 && `${realSliderPercent.toFixed(2)}%`}
+                                        </Text>
+                                        <Text as='span' ml='6px' color={realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'green.300' : 'red.300') : colors.offWhite}>
+                                            {realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'above market rate' : 'below market rate') : 'Current Market Rate'}
+                                        </Text>
                                     </Box>
+                                    {/* exchange rate input */}
+                                    <Flex mt='4px' w='100%' justify='center'>
+                                        <ExchangeRateInput
+                                            value={coinbaseBtcPerBtcExchangeRate}
+                                            onChange={(e) => {
+                                                handleCoinbaseBtcPerBtcExchangeRateChange(e);
+                                            }}
+                                        />
+                                    </Flex>
+                                    {/* exchange rate slider */}
+                                    <Flex direction='column' w='100%' mt='-48px' zIndex={3}>
+                                        <Box mt='55px' px='10px' w='95%' alignSelf='center'>
+                                            <Slider min={0} max={1} step={0.001} value={sliderT} onChange={(val) => setSliderT(val)} aria-label='exchange-rate-slider'>
+                                                {tickPercents.map((p) => {
+                                                    const markPosition = sliderFromValue(p);
+                                                    return (
+                                                        <SliderMark key={p} value={markPosition} fontSize='sm' textAlign='center' mt='12px' ml='-15px'>
+                                                            {p < 0 ? `${p}%` : `+${p}%`}
+                                                        </SliderMark>
+                                                    );
+                                                })}
+                                                <SliderTrack h='14px' borderRadius='20px' bg='transparent' position='relative'>
+                                                    <Box
+                                                        position='absolute'
+                                                        left='0'
+                                                        w='50%'
+                                                        h='100%'
+                                                        bg='#584539'
+                                                        borderLeft='2px solid #C86B6B'
+                                                        borderTop='2px solid #C86B6B'
+                                                        borderBottom='2px solid #C86B6B'
+                                                    />
+                                                    <Box
+                                                        position='absolute'
+                                                        left='50%'
+                                                        w='50%'
+                                                        h='100%'
+                                                        bg='#3C6850'
+                                                        borderRight='2px solid #78C86B'
+                                                        borderTop='2px solid #78C86B'
+                                                        borderBottom='2px solid #78C86B'
+                                                    />
+                                                </SliderTrack>
+                                                <SliderFilledTrack bg='transparent' />
+
+                                                <SliderThumb
+                                                    boxSize={3}
+                                                    height={7}
+                                                    bg='#EAC344'
+                                                    border='2px solid #B8AF73'
+                                                    borderRadius='10px'
+                                                    _focus={{ boxShadow: '0 0 0 2px rgba(234,195,68, 0.6)' }}
+                                                />
+                                            </Slider>
+                                        </Box>
+                                    </Flex>
                                 </Flex>
                             </Flex>
-                        </Flex>
-                        {/* Bitcoin Amount Out */}
-                        <Flex mt='10px' px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
-                            <Flex direction={'column'} py='10px' px='5px'>
-                                <Text color={!btcOutputAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                    You Recieve
-                                </Text>
-                                <Input
-                                    value={btcOutputAmount}
-                                    onChange={handleBitcoinOutputAmountChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='2px'
-                                    mr='-5px'
-                                    ml='-5px'
-                                    p='0px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='40px'
-                                    placeholder='0.0'
-                                    _placeholder={{ color: '#805530' }}
-                                />
-                                <Text
-                                    color={!btcOutputAmount ? colors.offWhite : colors.textGray}
-                                    fontSize={'13px'}
-                                    mt='2px'
-                                    ml='1px'
-                                    letterSpacing={'-1.5px'}
-                                    fontWeight={'normal'}
-                                    fontFamily={'Aux'}>
-                                    ≈ {bitcoinOutputAmountUSD}
-                                </Text>
-                            </Flex>
-                            <Spacer />
-                            <Flex mt='8px' mr='6px'>
-                                <AssetTag assetName='BTC' />
+                            {/* Bitcoin Amount Out */}
+                            <Flex mt='10px' px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
+                                <Flex direction={'column'} py='10px' px='5px'>
+                                    <Text color={!btcOutputAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        You Recieve
+                                    </Text>
+                                    <Input
+                                        value={btcOutputAmount}
+                                        onChange={handleBitcoinOutputAmountChange}
+                                        fontFamily={'Aux'}
+                                        border='none'
+                                        mt='2px'
+                                        mr='-5px'
+                                        ml='-5px'
+                                        p='0px'
+                                        letterSpacing={'-6px'}
+                                        color={colors.offWhite}
+                                        _active={{ border: 'none', boxShadow: 'none' }}
+                                        _focus={{ border: 'none', boxShadow: 'none' }}
+                                        _selected={{ border: 'none', boxShadow: 'none' }}
+                                        fontSize='40px'
+                                        placeholder='0.0'
+                                        _placeholder={{ color: '#805530' }}
+                                    />
+                                    <Text
+                                        color={!btcOutputAmount ? colors.offWhite : colors.textGray}
+                                        fontSize={'13px'}
+                                        mt='2px'
+                                        ml='1px'
+                                        letterSpacing={'-1.5px'}
+                                        fontWeight={'normal'}
+                                        fontFamily={'Aux'}>
+                                        ≈ {bitcoinOutputAmountUSD}
+                                    </Text>
+                                </Flex>
+                                <Spacer />
+                                <Flex mt='8px' mr='6px'>
+                                    <AssetTag assetName='BTC' />
+                                </Flex>
                             </Flex>
                         </Flex>
                     </Flex>
-                </Flex>
+                )}
             </Flex>
 
             <Flex mt='10px' direction={'column'} overflow={'visible'}>
@@ -714,12 +734,13 @@ export const OtcDeposit = ({}) => {
                             transition={'0.2s'}
                             h='45px'
                             onClick={async () => {
-                                console.log('coinbaseBtcDepositAmount:', coinbaseBtcDepositAmount);
-                                console.log('btcOutputAmount:', btcOutputAmount);
-                                console.log('payoutBTCAddress:', payoutBTCAddress);
-                                if (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
-                                    initiateDeposit();
-                                } else toastError('', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
+                                if (showConfirmationScreen) {
+                                    if (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
+                                        initiateDeposit();
+                                    } else toastError('', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
+                                } else if (coinbaseBtcDepositAmount && btcOutputAmount) {
+                                    setShowConfirmationScreen(true);
+                                }
                             }}
                             fontSize={'15px'}
                             align={'center'}
@@ -727,9 +748,25 @@ export const OtcDeposit = ({}) => {
                             cursor={'pointer'}
                             borderRadius={'10px'}
                             justify={'center'}
-                            border={coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                            border={
+                                showConfirmationScreen
+                                    ? coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)
+                                        ? '3px solid #445BCB'
+                                        : '3px solid #3242a8'
+                                    : coinbaseBtcDepositAmount && btcOutputAmount
+                                    ? '3px solid #445BCB'
+                                    : '3px solid #3242a8'
+                            }>
                             <Text
-                                color={coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? colors.offWhite : colors.darkerGray}
+                                color={
+                                    showConfirmationScreen
+                                        ? coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)
+                                            ? colors.offWhite
+                                            : colors.darkerGray
+                                        : coinbaseBtcDepositAmount && btcOutputAmount
+                                        ? colors.offWhite
+                                        : colors.darkerGray
+                                }
                                 fontFamily='Nostromo'>
                                 {isConnected ? 'Continue' : 'Connect Wallet'}
                             </Text>

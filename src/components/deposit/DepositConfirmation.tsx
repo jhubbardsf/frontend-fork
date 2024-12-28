@@ -54,7 +54,7 @@ import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { AssetTag } from '../other/AssetTag';
-import { FaClock, FaRegArrowAltCircleRight, FaLock } from 'react-icons/fa';
+import { FaClock, FaLock } from 'react-icons/fa';
 import * as bitcoin from 'bitcoinjs-lib';
 import { addChain } from 'viem/actions';
 import { createWalletClient, custom } from 'viem';

@@ -9,7 +9,7 @@ import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther } from 'ethers/lib/utils';
 import { btcToSats, ethToWei, formatAmountToString, weiToEth } from '../../utils/dappHelper';
-import { BITCOIN_DECIMALS, MAX_SWAP_LP_OUTPUTS, MIN_SWAP_AMOUNT_USDC, opaqueBackgroundColor } from '../../utils/constants';
+import { BITCOIN_DECIMALS, MAX_SWAP_LP_OUTPUTS, opaqueBackgroundColor } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
@@ -18,7 +18,6 @@ import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
 import { DepositAmounts } from './DepositAmounts';
-import { MAX_SWAP_AMOUNT_MICRO_USDC, MAX_SWAP_AMOUNT_USDC } from '../../utils/constants';
 import { findOptimalSwapsUsdcInput, btcLimitOrders, usdcLimitOrders, OptimalSwapsResult } from '../../utils/LimitOrderPriceFunctions';
 
 export const DepositUI = () => {
