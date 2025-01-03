@@ -32,8 +32,6 @@ const Home = () => {
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
-    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
-    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const depositMode = useStore((state) => state.depositMode);
 
@@ -42,7 +40,6 @@ const Home = () => {
         setDepositFlowState('1-confirm-deposit');
         setCoinbaseBtcDepositAmount('');
         setBtcInputSwapAmount('');
-        setUsdtOutputSwapAmount('');
         setBtcOutputAmount('');
     }, []);
 
@@ -70,7 +67,7 @@ const Home = () => {
                         direction='column'
                         align='center'
                         py={isMobile ? '20px' : '27px'}
-                        w={isMobile ? '100%' : depositFlowState === '1-confirm-deposit' ? '850px' : '630px'}
+                        w={isMobile ? '100%' : '850px'}
                         borderRadius='20px'
                         {...opaqueBackgroundColor}
                         borderBottom='2px solid #323232'

@@ -44,7 +44,6 @@ export function useDepositLiquidity() {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const userEthAddress = useStore((state) => state.userEthAddress);
     const { refreshAllDepositData } = useContractData();
-    const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const validAssets = useStore((state) => state.validAssets);
 
     const resetDepositState = useCallback(() => {

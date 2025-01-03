@@ -84,8 +84,6 @@ type Store = {
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
-    usdtOutputSwapAmount: string;
-    setUsdtOutputSwapAmount: (amount: string) => void;
     coinbaseBtcDepositAmount: string;
     setCoinbaseBtcDepositAmount: (amount: string) => void;
     btcOutputAmount: string;
@@ -252,8 +250,6 @@ export const useStore = create<Store>((set) => {
         setDepositFlowState: (depositFlowState) => set({ depositFlowState }),
         btcInputSwapAmount: '',
         setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
-        usdtOutputSwapAmount: '',
-        setUsdtOutputSwapAmount: (usdtOutputSwapAmount) => set({ usdtOutputSwapAmount }),
         coinbaseBtcDepositAmount: '',
         setCoinbaseBtcDepositAmount: (coinbaseBtcDepositAmount) => set({ coinbaseBtcDepositAmount }),
         btcOutputAmount: '',

@@ -137,8 +137,6 @@ export const OtcDeposit = ({}) => {
     const validAssets = useStore((state) => state.validAssets);
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
-    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const [sliderT, setSliderT] = useState(0.5); // start at middle
     const [blockConfirmationsSliderValue, setBlockConfirmationsSlider] = useState(2); // 2 block confs default
@@ -310,11 +308,12 @@ export const OtcDeposit = ({}) => {
         setIsModalOpen(false);
         if (depositLiquidityStatus === DepositStatus.Confirmed) {
             setCoinbaseBtcDepositAmount('');
-            setBtcInputSwapAmount('');
-            setUsdtOutputSwapAmount('');
+            setCoinbaseBtcDepositAmountUSD('');
+            setOtcRecipientUSDCAddress('');
+            setBlockConfirmationsSlider(2);
             setBtcOutputAmount('');
-
-            setDepositFlowState('0-not-started');
+            setBitcoinOutputAmountUSD('');
+            setShowConfirmationScreen(false);
         }
     };
 
@@ -429,7 +428,12 @@ export const OtcDeposit = ({}) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const randomBytes = new Uint8Array(32);
-            const generatedDepositSalt = window.crypto.getRandomValues(randomBytes).toString();
+            const generatedDepositSalt =
+                '0x' +
+                Array.from(window.crypto.getRandomValues(randomBytes))
+                    .map((byte) => byte.toString(16).padStart(2, '0'))
+                    .join('');
+            console.log('generatedDepositSalt', generatedDepositSalt);
 
             console.log('[IN] depositAmountInSmallestTokenUnit:', depositAmountInSmallestTokenUnit.toString());
             console.log('[OUT] bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
@@ -446,7 +450,7 @@ export const OtcDeposit = ({}) => {
                 expectedSats: bitcoinOutputAmountInSats,
                 btcPayoutScriptPubKey: btcPayoutScriptPubKey,
                 depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
-                confirmationBlocks: 2, // TODO - make this an advanced settings slider (between 2-6?)
+                confirmationBlocks: blockConfirmationsSliderValue, // TODO - make this an advanced settings slider (between 2-6?)
             });
         }
     };
