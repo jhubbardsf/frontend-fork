@@ -21,9 +21,13 @@ interface DepositLiquidityParams {
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContractAddress: string;
     tokenAddress: string;
-    tokenDepositAmountInSmallestTokenUnits: BigNumber;
-    btcPayoutLockingScript: string;
-    btcExchangeRate: BigNumber;
+    // ---- depositLiquidity() contract params -----
+    specifiedPayoutAddress: string;
+    depositAmountInSmallestTokenUnit: BigNumber;
+    expectedSats: BigNumber;
+    btcPayoutScriptPubKey: string;
+    depositSalt: string;
+    confirmationBlocks: number;
 }
 
 function useIsClient() {
@@ -61,37 +65,47 @@ export function useDepositLiquidity() {
 
             try {
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
+                console.log('tokenContractAddress', params.tokenAddress);
+                console.log('riftExchangeContractAddress', params.riftExchangeContractAddress);
                 const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContractAddress, params.riftExchangeAbi, params.signer);
 
+                // [0] TODO: Replace with n allowance system from alpine ------------------------
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
-
                 console.log('allowance:', allowance.toString());
-                console.log('tokenDepositAmountInSmallestTokenUnits:', params.tokenDepositAmountInSmallestTokenUnits.toString());
-                if (BigNumber.from(allowance).lt(BigNumber.from(params.tokenDepositAmountInSmallestTokenUnits))) {
+                console.log('tokenDepositAmountInSmallestTokenUnits:', params.depositAmountInSmallestTokenUnit.toString());
+                if (BigNumber.from(allowance).lt(BigNumber.from(params.depositAmountInSmallestTokenUnit))) {
                     setStatus(DepositStatus.WaitingForDepositTokenApproval);
                     const approveTx = await tokenContract.approve(params.riftExchangeContractAddress, validAssets[selectedInputAsset.name].connectedUserBalanceRaw);
 
                     setStatus(DepositStatus.ApprovalPending);
                     await approveTx.wait();
                 }
+                // --------------------------------
 
                 setStatus(DepositStatus.WaitingForWalletConfirmation);
 
-                // estimate gas
+                // [1] set gas limit as 2x estimated gas
                 const estimatedGas = await riftExchangeContractInstance.estimateGas.depositLiquidity(
-                    params.tokenDepositAmountInSmallestTokenUnits,
-                    params.btcExchangeRate,
-                    params.btcPayoutLockingScript
+                    params.specifiedPayoutAddress,
+                    params.depositAmountInSmallestTokenUnit,
+                    params.expectedSats,
+                    params.btcPayoutScriptPubKey,
+                    params.depositSalt,
+                    params.confirmationBlocks,
                 );
-
-                // double the estimated gas
                 const doubledGasLimit = estimatedGas.mul(2);
 
+                // [2] deposit liquidity
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
-                    params.tokenDepositAmountInSmallestTokenUnits,
-                    params.btcExchangeRate,
-                    params.btcPayoutLockingScript,
-                    { gasLimit: doubledGasLimit } 
+                    params.specifiedPayoutAddress,
+                    params.depositAmountInSmallestTokenUnit,
+                    params.expectedSats,
+                    params.btcPayoutScriptPubKey,
+                    params.depositSalt,
+                    params.confirmationBlocks,
+                    {
+                        gasLimit: doubledGasLimit,
+                    },
                 );
                 setStatus(DepositStatus.DepositPending);
 

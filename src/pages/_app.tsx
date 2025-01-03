@@ -20,10 +20,31 @@ import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
 
+// Define the custom Anvil chain
+const anvilChain = {
+    id: 1337,
+    name: 'Anvil Testnet',
+    network: 'anvil',
+    nativeCurrency: {
+        name: 'Anvil Ether',
+        symbol: 'aETH',
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: {
+            http: ['http://localhost:50123'], // Replace with your Anvil testnet RPC URL
+        },
+    },
+    blockExplorers: {
+        default: { name: 'Anvil Explorer', url: 'http://localhost:50123' }, // Replace with your block explorer URL if available
+    },
+    testnet: true,
+};
+
 const config = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
-    chains: [arbitrum, arbitrumSepolia],
+    chains: [arbitrum, arbitrumSepolia, anvilChain],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
@@ -179,7 +200,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                                                     <Flex
                                                         fontFamily={'Aux'}
                                                         h='100%'
-                                                    // pt='5px'
+                                                        // pt='5px'
                                                     >
                                                         {icon}
                                                     </Flex>

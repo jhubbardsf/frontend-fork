@@ -94,8 +94,8 @@ export const colors = {
             border: '#646C8C',
         },
         coinbasebtc: {
-            background: '#061E55',
-            border: '#0D56FC',
+            background: '#092461',
+            border: '#1C61FD',
         },
     },
     gradient: {

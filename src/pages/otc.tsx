@@ -70,7 +70,7 @@ const Home = () => {
                         direction='column'
                         align='center'
                         py={isMobile ? '20px' : '27px'}
-                        w={isMobile ? '100%' : depositFlowState === '1-confirm-deposit' ? '800px' : '630px'}
+                        w={isMobile ? '100%' : depositFlowState === '1-confirm-deposit' ? '850px' : '630px'}
                         borderRadius='20px'
                         {...opaqueBackgroundColor}
                         borderBottom='2px solid #323232'

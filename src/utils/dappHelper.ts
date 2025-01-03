@@ -71,20 +71,6 @@ export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo1
     return exchangeRateInStandardUnitsPerBtc;
 }
 
-export function findVaultIndexToOverwrite(): number {
-    // TODO - implement this
-    // const vaultIndexToOverwrite = allDepositVaults.findIndex((vault) => BigNumber.from(vault.unreservedBalance).eq(0));
-    // return vaultIndexToOverwrite;
-    return -1;
-}
-
-export function findVaultIndexWithSameExchangeRate(): number {
-    // TODO - implement this
-    // const vaultIndexWithSameExchangeRate = allDepositVaults.findIndex((vault) => BigNumber.from(vault.btcExchangeRate).eq(allDepositVaults[0].btcExchangeRate));
-    // return vaultIndexWithSameExchangeRate;
-    return -1;
-}
-
 export function convertLockingScriptToBitcoinAddress(lockingScript: string): string {
     // Remove '0x' prefix if present
     const script = lockingScript.startsWith('0x') ? lockingScript.slice(2) : lockingScript;

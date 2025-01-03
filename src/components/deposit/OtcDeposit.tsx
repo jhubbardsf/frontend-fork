@@ -33,17 +33,7 @@ import { colors } from '../../utils/colors';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
-import {
-    ethToWei,
-    weiToEth,
-    btcToSats,
-    findVaultIndexToOverwrite,
-    findVaultIndexWithSameExchangeRate,
-    satsToBtc,
-    bufferTo18Decimals,
-    convertToBitcoinLockingScript,
-    addNetwork,
-} from '../../utils/dappHelper';
+import { ethToWei, weiToEth, btcToSats, satsToBtc, bufferTo18Decimals, convertToBitcoinLockingScript, addNetwork } from '../../utils/dappHelper';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
@@ -53,7 +43,7 @@ import DepositStatusModal from './DepositStatusModal';
 import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { BITCOIN_DECIMALS } from '../../utils/constants';
+import { BITCOIN_DECIMALS, opaqueBackgroundColor } from '../../utils/constants';
 import { CheckCircleIcon, CheckIcon, ChevronLeftIcon, SettingsIcon } from '@chakra-ui/icons';
 import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
@@ -65,6 +55,8 @@ import { addChain } from 'viem/actions';
 import { createWalletClient, custom } from 'viem';
 import { toastError } from '../../hooks/toast';
 import WebAssetTag from '../other/WebAssetTag';
+import { DepositAmounts } from './DepositAmounts';
+import { MdArrowRight } from 'react-icons/md';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -81,6 +73,7 @@ const ExchangeRateInput = ({ value, onChange }) => {
     }, [value]);
 
     return (
+        // exchange rate manual input
         <Flex position='relative' display='inline-flex' alignItems='center' zIndex={37}>
             <Box as='span' ref={spanRef} position='absolute' visibility='hidden' whiteSpace='pre' fontFamily='Aux' fontSize='20px' letterSpacing='-3px' />
             <Input
@@ -91,23 +84,24 @@ const ExchangeRateInput = ({ value, onChange }) => {
                 cursor={'text'}
                 fontFamily='Aux'
                 border={value > 1 ? '2px solid #548148' : '2px solid #C86B6B'}
-                borderRadius='10px'
+                borderRadius='8px'
                 mt='2px'
                 textAlign='right'
-                h='31px'
+                h='34px'
                 minWidth='20px'
                 letterSpacing='-3px'
-                pr='19px'
+                pr='20px'
+                pt='2px'
                 pl='0px'
                 color={colors.offWhite}
                 _active={{ border: 'none', boxShadow: 'none' }}
-                _focus={{ border: 'none', boxShadow: 'none' }}
+                _focus={{ border: 'none', boxShadow: 'none', paddingRight: '22px', backgroundColor: '#685549' }}
                 _selected={{ border: 'none', boxShadow: 'none' }}
                 fontSize='20px'
                 placeholder='1.0'
                 _placeholder={{ color: '#888' }}
             />
-            <Text color={colors.offWhite} ml='5px' mt='1px' letterSpacing='-1px' fontSize={'16px'}>
+            <Text color={colors.offWhite} ml='6px' mt='1px' letterSpacing='-1px' fontSize={'16px'}>
                 BTC <span style={{ color: colors.textGray }}>≈</span> 1 cbBTC
             </Text>
         </Flex>
@@ -134,7 +128,7 @@ export const OtcDeposit = ({}) => {
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('0.00');
     const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
     const [showConfirmationScreen, setShowConfirmationScreen] = useState(false);
-    const [otcRecipientUSDCAddress, setOtcRecipientUSDCAddress] = useState('');
+    const [otcRecipientBaseAddress, setOtcRecipientUSDCAddress] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
@@ -145,8 +139,11 @@ export const OtcDeposit = ({}) => {
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
+    const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const [sliderT, setSliderT] = useState(0.5); // start at middle
+    const [blockConfirmationsSlider, setBlockConfirmationsSlider] = useState(2); // 2 block confs default
     const tickPercents = [-10, -6, -3, -1, 0, 1, 3, 6, 10];
+    const blockConfirmationOptions = [2, 3, 4, 5, 6];
     const A = 56.56854249; // approx.
     const realSliderPercent = valueFromSlider(sliderT);
 
@@ -212,6 +209,7 @@ export const OtcDeposit = ({}) => {
     }, [coinbaseBtcPerBtcExchangeRate, coinbaseBtcDepositAmount]);
 
     // [5] calculate exchange rate upon btc output amount change
+    // TODO - fix this useeffect causing the unfocusing of the exchange rate and output amount input fields
     useEffect(() => {
         if (btcOutputAmount && coinbaseBtcDepositAmount) {
             const newExchangeRate = parseFloat(btcOutputAmount) / parseFloat(coinbaseBtcDepositAmount);
@@ -257,11 +255,6 @@ export const OtcDeposit = ({}) => {
         if (validateBitcoinAmount(coinbaseBtcPerBtcExchangeRateValue)) {
             // [0] if valid, set exchange rate & calculate bitcoin output amount
             setCoinbaseBtcPerBtcExchangeRate(coinbaseBtcPerBtcExchangeRateValue);
-
-            // [1] update slider location
-            const exchangeRate = parseFloat(coinbaseBtcPerBtcExchangeRateValue) || 1;
-            const percentChange = (exchangeRate - 1) * 100;
-            setSliderT(sliderFromValue(percentChange));
         }
     };
 
@@ -282,8 +275,8 @@ export const OtcDeposit = ({}) => {
     };
 
     const handleOtcRecipientBaseAddressChange = (e) => {
-        const otcRecipientUSDCAddress = e.target.value;
-        setOtcRecipientUSDCAddress(otcRecipientUSDCAddress);
+        const otcRecipientBaseAddress = e.target.value;
+        setOtcRecipientUSDCAddress(otcRecipientBaseAddress);
     };
 
     const validateBitcoinPayoutAddress = (address: string): boolean => {
@@ -333,20 +326,20 @@ export const OtcDeposit = ({}) => {
         }
 
         return (
-            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='50px' ml='-10px' mr='0px' h='100%' justify='center' direction='column'>
+            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='140px' ml='-0px' mr='0px' h='100%' justify='center' direction='column'>
                 {isValid ? (
-                    <Flex direction={'column'} align={'center'} justify={'center'} mr='-4px'>
-                        <IoMdCheckmarkCircle color={colors.greenOutline} size={'26px'} />
+                    <Flex direction={'column'} align={'center'} justify={'center'} mr='18px'>
+                        <IoMdCheckmarkCircle color={colors.greenOutline} size={'25px'} />
                         <Text color={colors.greenOutline} fontSize={'10px'} mt='3px'>
                             Valid
                         </Text>
                     </Flex>
                 ) : (
-                    <Flex w='160px' ml='7px' align='cetner'>
-                        <Flex mt='2px'>
-                            <HiXCircle color='red' size={'40px'} />
+                    <Flex w='160px' ml='7px' mt='-2px' align='cetner'>
+                        <Flex mt='4px'>
+                            <HiXCircle color='red' size={'35px'} />
                         </Flex>
-                        <Text fontSize={'9px'} w='70px' mt='3px' ml='6px' color='red'>
+                        <Text fontSize={'8px'} w='70px' mt='3px' ml='5px' color='red'>
                             Invalid Segwit Address
                         </Text>
                     </Flex>
@@ -357,6 +350,7 @@ export const OtcDeposit = ({}) => {
 
     // ---------- INITIATE DEPOSIT LOGIC ---------- //
     const initiateDeposit = async () => {
+        // this function ensures user is connected, and switched to the correct chain before proceeding with the deposit attempt
         if (!isConnected) {
             setIsWaitingForConnection(true);
             openConnectModal();
@@ -386,6 +380,7 @@ export const OtcDeposit = ({}) => {
                 console.log('Switched to the existing network successfully');
             } catch (error) {
                 // error code 4902 indicates the chain is not available
+                console.error('error', error);
                 if (error.code === 4902) {
                     console.log('Network not available in MetaMask. Attempting to add network.');
 
@@ -420,37 +415,38 @@ export const OtcDeposit = ({}) => {
 
     const proceedWithDeposit = async () => {
         if (window.ethereum) {
-            // reset the deposit state before starting a new deposit
+            // [0] reset the deposit state before starting a new deposit
             resetDepositState();
             setIsModalOpen(true);
 
-            const vaultIndexToOverwrite = findVaultIndexToOverwrite();
-            const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
-            const tokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-            const tokenDepositAmountInSmallestTokenUnits = parseUnits(coinbaseBtcDepositAmount, tokenDecmials);
-            const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(tokenDepositAmountInSmallestTokenUnits, tokenDecmials);
+            // [1] convert deposit amount to smallest token unit (sats), prepare deposit params
+            console.log('SELECTED ASSET', useStore.getState().validAssets[selectedInputAsset.name]);
+            const depositTokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
+            console.log('depositTokenDecmials', depositTokenDecmials);
+            const depositAmountInSmallestTokenUnit = parseUnits(coinbaseBtcDepositAmount, depositTokenDecmials);
             const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, BITCOIN_DECIMALS);
-            console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
-            const exchangeRate = tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(bitcoinOutputAmountInSats);
-
-            const clipToDecimals = BITCOIN_DECIMALS; // Calculate how many decimals to clip to
-            const precisionBN = BigNumber.from(10).pow(clipToDecimals); // Calculate precision
-
-            const clippedExchangeRate = exchangeRate.div(precisionBN).mul(precisionBN);
-
-            const bitcoinPayoutLockingScript = convertToBitcoinLockingScript(payoutBTCAddress);
-
+            const btcPayoutScriptPubKey = convertToBitcoinLockingScript(payoutBTCAddress);
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
+            const randomBytes = new Uint8Array(32);
+            const generatedDepositSalt = window.crypto.getRandomValues(randomBytes).toString();
 
+            console.log('[IN] depositAmountInSmallestTokenUnit:', depositAmountInSmallestTokenUnit.toString());
+            console.log('[OUT] bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
+
+            // [2] deposit liquidity
             await depositLiquidity({
                 signer: signer,
                 riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
                 riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
                 tokenAddress: selectedInputAsset.tokenAddress,
-                tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
-                btcPayoutLockingScript: bitcoinPayoutLockingScript,
-                btcExchangeRate: clippedExchangeRate,
+                // ---- depositLiquidity() contract params -----
+                specifiedPayoutAddress: otcRecipientBaseAddress,
+                depositAmountInSmallestTokenUnit: depositAmountInSmallestTokenUnit,
+                expectedSats: bitcoinOutputAmountInSats,
+                btcPayoutScriptPubKey: btcPayoutScriptPubKey,
+                depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
+                confirmationBlocks: 2, // TODO - make this an advanced settings slider (between 2-6?)
             });
         }
     };
@@ -460,6 +456,40 @@ export const OtcDeposit = ({}) => {
         if (value === '') return true;
         const regex = new RegExp(`^\\d*\\.?\\d{0,${BITCOIN_DECIMALS}}$`);
         return regex.test(value);
+    };
+
+    const validateEthereumPayoutAddress = (address: string): boolean => {
+        const ethereumRegex = /^0x[a-fA-F0-9]{40}$/;
+        return ethereumRegex.test(address);
+    };
+
+    const EthereumAddressValidation: React.FC<{ address: string }> = ({ address }) => {
+        const isValid = validateEthereumPayoutAddress(address);
+        setIsEthereumPayoutAddressValid(isValid);
+
+        if (address.length === 0) {
+            return <Text>...</Text>;
+        }
+
+        return (
+            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} ml='-170px' mr='0px' h='100%' justify='center' direction='column'>
+                {isValid ? (
+                    <Flex mr='-46px' direction={'column'} align={'center'}>
+                        <IoMdCheckmarkCircle color={colors.greenOutline} size={'25px'} />
+                        <Text fontSize={'10px'} mt='3px' color={colors.greenOutline}>
+                            Valid
+                        </Text>
+                    </Flex>
+                ) : (
+                    <>
+                        <HiXCircle color='red' size={'24px'} />
+                        <Text fontSize={'10px'} mt='3px' color='red'>
+                            Invalid
+                        </Text>
+                    </>
+                )}
+            </Flex>
+        );
     };
 
     return (
@@ -472,7 +502,7 @@ export const OtcDeposit = ({}) => {
                 </Flex>
             )}
             <Text align='center' w='100%' mb='12px' fontSize='25px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                INITIATE DIRECT SWAP
+                DIRECT OTC SWAP
             </Text>
 
             {/* INSTRUCTIONAL TEXT  */}
@@ -486,7 +516,175 @@ export const OtcDeposit = ({}) => {
             <Flex mt='25px' direction={'column'} overflow={'visible'}>
                 {/* Content */}
                 {showConfirmationScreen ? (
-                    <Flex direction='column' align='center' overflow={'visible'}></Flex>
+                    <Flex direction='column' align='center' overflow={'visible'}>
+                        {/* Deposit Amounts Info */}
+                        <Flex mt='-16px' mb='30px'>
+                            <Flex
+                                borderRadius='full'
+                                h='88px'
+                                {...opaqueBackgroundColor}
+                                borderWidth={3}
+                                borderColor={colors.borderGray}
+                                px='40px'
+                                fontFamily={FONT_FAMILIES.AUX_MONO}
+                                fontWeight='normal'
+                                boxShadow='0px 0px 20px 5px rgba(0, 0, 0, 0.3)'
+                                py='3px'>
+                                <>
+                                    <Flex direction='column'>
+                                        <Flex>
+                                            <Text mr='15px' fontSize='36px' letterSpacing='-5px' color={colors.offWhite}>
+                                                {coinbaseBtcDepositAmount}
+                                            </Text>
+                                            <Flex mt='-14px' mb='-9px'>
+                                                <WebAssetTag asset='CoinbaseBTC' />
+                                            </Flex>
+                                        </Flex>
+                                        <Text color={colors.textGray} fontSize='13px' mt='-12px' ml='6px' letterSpacing='-2px' fontWeight='normal' fontFamily='Aux'>
+                                            ≈ {coinbaseBtcDepositAmountUSD}
+                                        </Text>
+                                    </Flex>
+
+                                    <Spacer />
+                                    <Flex align='center' ml='-4px' mr='-5px' mt='-2px' justify='center'>
+                                        <MdArrowRight size='50px' color={colors.darkerGray} />
+                                    </Flex>
+                                    <Spacer />
+
+                                    <Flex direction='column'>
+                                        <Flex>
+                                            <Text mr='15px' fontSize='36px' letterSpacing='-5px' color={colors.offWhite}>
+                                                {btcOutputAmount}
+                                            </Text>
+                                            <Flex mt='-14px' mb='-9px'>
+                                                <AssetTag assetName='BTC' width='79px' />
+                                            </Flex>
+                                        </Flex>
+                                        <Text color={colors.textGray} fontSize='13px' mt='-10.5px' ml='6px' letterSpacing='-2px' fontWeight='normal' fontFamily='Aux'>
+                                            ≈ {bitcoinOutputAmountUSD}
+                                        </Text>
+                                    </Flex>
+                                </>
+                            </Flex>
+                        </Flex>
+                        {/* Recipient Base Address */}
+                        <Text ml='8px' mt='0px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                            Recipient Base Address
+                        </Text>
+                        <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                            <Flex direction={'row'} py='6px' px='5px'>
+                                <Input
+                                    value={otcRecipientBaseAddress}
+                                    onChange={handleOtcRecipientBaseAddressChange}
+                                    fontFamily={'Aux'}
+                                    border='none'
+                                    mt='3.5px'
+                                    w='804px'
+                                    mr='65px'
+                                    ml='-4px'
+                                    p='0px'
+                                    letterSpacing={'-4px'}
+                                    color={colors.offWhite}
+                                    _active={{ border: 'none', boxShadow: 'none' }}
+                                    _focus={{ border: 'none', boxShadow: 'none' }}
+                                    _selected={{ border: 'none', boxShadow: 'none' }}
+                                    fontSize='28px'
+                                    placeholder='0xb0cb90a9a3dfd81...'
+                                    _placeholder={{ color: colors.darkerGray }}
+                                    spellCheck={false}
+                                />
+
+                                {otcRecipientBaseAddress.length > 0 && (
+                                    <Flex ml='-5px' mt='0px'>
+                                        <EthereumAddressValidation address={otcRecipientBaseAddress} />
+                                    </Flex>
+                                )}
+                            </Flex>
+                        </Flex>
+
+
+                         {/* Block Confirmation Slider */}
+                        <Text ml='8px' mt='18px' w='100%' mb='0px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                            Required Block Confirmations
+                        </Text>
+                        <Flex mt='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='110px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
+                            <Flex direction={'column'} py='10px' px='5px' w='100%'>
+                                <Flex>
+                                    <Text textAlign={'left'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        Fastest <br />≈ 20 minutes
+                                    </Text>
+                                    <Spacer />
+                                    <Text textAlign={'right'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        Most Secure <br />≈ 60 minutes
+                                    </Text>
+                                </Flex>
+                                {/* block confirmations slider */}
+                                <Flex direction='column' w='100%' mt='-50px' zIndex={3}>
+                                    <Box mt='55px' w='100%' alignSelf='center'>
+                                        <Slider min={0} max={1} step={0.001} value={blockConfirmationsSlider} onChange={(val) => setBlockConfirmationsSlider(val)} aria-label='exchange-rate-slider'>
+                                            {blockConfirmationOptions.map((p) => {
+                                                const markPosition = sliderFromValue(p);
+                                                return (
+                                                    <SliderMark
+                                                        key={p}
+                                                        value={markPosition}
+                                                        fontSize='sm'
+                                                        letterSpacing={'-1px'}
+                                                        textAlign='center'
+                                                        mt='15px'
+                                                        ml={p == -10 ? '0px' : p == 10 ? '-38px' : '-14px'}>
+                                                        {p}
+                                                    </SliderMark>
+                                                );
+                                            })}
+                                            <SliderTrack h='14px' borderRadius='20px' bg='transparent' position='relative'>
+                                                <Box position='absolute' w='100%' h='100%' bg='#3C6850' borderRadius={'10px'} border='2px solid #78C86B' />
+                                            </SliderTrack>
+                                            <SliderFilledTrack bg='transparent' />
+
+                                            <SliderThumb boxSize={3} height={7} bg='#EAC344' border='2px solid #B8AF73' borderRadius='10px' _focus={{ boxShadow: '0 0 0 2px rgba(234,195,68, 0.6)' }} />
+                                        </Slider>
+                                    </Box>
+                                </Flex>
+                            </Flex>
+                        </Flex>
+                        {/* BTC Payout Address */}
+                        <Text ml='8px' mt='8px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                            Bitcoin Payout Address
+                        </Text>
+                        <Flex mt='-2px' mb='10px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                            <Flex direction={'row'} py='6px' px='5px'>
+                                <Input
+                                    value={payoutBTCAddress}
+                                    onChange={handleBTCPayoutAddressChange}
+                                    fontFamily={'Aux'}
+                                    border='none'
+                                    mt='3.5px'
+                                    mr='75px'
+                                    ml='-4px'
+                                    p='0px'
+                                    w='585px'
+                                    letterSpacing={'-6px'}
+                                    color={colors.offWhite}
+                                    _active={{ border: 'none', boxShadow: 'none' }}
+                                    _focus={{ border: 'none', boxShadow: 'none' }}
+                                    _selected={{ border: 'none', boxShadow: 'none' }}
+                                    fontSize='28px'
+                                    placeholder='bc1q5d7rjq7g6rd2d94ca69...'
+                                    _placeholder={{ color: colors.darkerGray }}
+                                    spellCheck={false}
+                                />
+
+                                {payoutBTCAddress.length > 0 && (
+                                    <Flex ml='-5px'>
+                                        <BitcoinAddressValidation address={payoutBTCAddress} />
+                                    </Flex>
+                                )}
+                            </Flex>
+                        </Flex>
+
+                       
+                    </Flex>
                 ) : (
                     <Flex direction='column' align='center' overflow={'visible'}>
                         <Flex w='100%' overflow={'visible'} direction={'column'}>
@@ -534,57 +732,15 @@ export const OtcDeposit = ({}) => {
                                     <WebAssetTag asset='CoinbaseBTC' />
                                 </Flex>
                             </Flex>
-                            {/* USDT Recipient Address */}
-                            {/* <Text ml='8px' mt='24px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                            USDT Payout Address
-                        </Text> */}
-                            {/* <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
-                            <Flex direction={'row'} py='6px' px='5px'>
-                                <Input
-                                    value={otcRecipientUSDCAddress}
-                                    onChange={handleOtcRecipientUSDCAddressChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='3.5px'
-                                    w='804px'
-                                    mr='65px'
-                                    ml='-4px'
-                                    p='0px'
-                                    letterSpacing={'-4px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='28px'
-                                    placeholder='0xb0cb90a9a3dfd81...'
-                                    _placeholder={{ color: colors.darkerGray }}
-                                    spellCheck={false}
-                                />
 
-                                {otcRecipientUSDCAddress.length > 0 && (
-                                    <Flex ml='-5px' mt='0px'>
-                                        <EthereumAddressValidation address={otcRecipientUSDCAddress} />
-                                    </Flex>
-                                )}
-                            </Flex>
-                        </Flex> */}
                             {/* Exchange Rate Slider Input */}
-                            <Flex mt='10px' px='10px' bg='#193626' w='100%' h='155px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
+                            <Flex mt='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='168px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
                                 <Flex direction={'column'} py='10px' px='5px' w='100%'>
                                     <Text color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                         Your Exchange Rate
                                     </Text>
-                                    {/* slider percentage */}
-                                    <Box mt='-3px' textAlign='center'>
-                                        <Text as='span' ml='4px' fontWeight='bold' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
-                                            {realSliderPercent !== 0 && `${realSliderPercent.toFixed(2)}%`}
-                                        </Text>
-                                        <Text as='span' ml='6px' color={realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'green.300' : 'red.300') : colors.offWhite}>
-                                            {realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'above market rate' : 'below market rate') : 'Current Market Rate'}
-                                        </Text>
-                                    </Box>
                                     {/* exchange rate input */}
-                                    <Flex mt='4px' w='100%' justify='center'>
+                                    <Flex mt='6px' mb='5px' w='100%' justify='flex-start'>
                                         <ExchangeRateInput
                                             value={coinbaseBtcPerBtcExchangeRate}
                                             onChange={(e) => {
@@ -592,14 +748,22 @@ export const OtcDeposit = ({}) => {
                                             }}
                                         />
                                     </Flex>
+
                                     {/* exchange rate slider */}
-                                    <Flex direction='column' w='100%' mt='-48px' zIndex={3}>
-                                        <Box mt='55px' px='10px' w='95%' alignSelf='center'>
+                                    <Flex direction='column' w='100%' mt='-50px' zIndex={3}>
+                                        <Box mt='55px' w='100%' alignSelf='center'>
                                             <Slider min={0} max={1} step={0.001} value={sliderT} onChange={(val) => setSliderT(val)} aria-label='exchange-rate-slider'>
                                                 {tickPercents.map((p) => {
                                                     const markPosition = sliderFromValue(p);
                                                     return (
-                                                        <SliderMark key={p} value={markPosition} fontSize='sm' textAlign='center' mt='12px' ml='-15px'>
+                                                        <SliderMark
+                                                            key={p}
+                                                            value={markPosition}
+                                                            fontSize='sm'
+                                                            letterSpacing={'-1px'}
+                                                            textAlign='center'
+                                                            mt='15px'
+                                                            ml={p == -10 ? '0px' : p == 10 ? '-38px' : '-14px'}>
                                                             {p < 0 ? `${p}%` : `+${p}%`}
                                                         </SliderMark>
                                                     );
@@ -611,6 +775,7 @@ export const OtcDeposit = ({}) => {
                                                         w='50%'
                                                         h='100%'
                                                         bg='#584539'
+                                                        borderRadius={'10px 0px 0px 10px'}
                                                         borderLeft='2px solid #C86B6B'
                                                         borderTop='2px solid #C86B6B'
                                                         borderBottom='2px solid #C86B6B'
@@ -621,6 +786,7 @@ export const OtcDeposit = ({}) => {
                                                         w='50%'
                                                         h='100%'
                                                         bg='#3C6850'
+                                                        borderRadius={'0px 10px 10px 0px'}
                                                         borderRight='2px solid #78C86B'
                                                         borderTop='2px solid #78C86B'
                                                         borderBottom='2px solid #78C86B'
@@ -639,10 +805,19 @@ export const OtcDeposit = ({}) => {
                                             </Slider>
                                         </Box>
                                     </Flex>
+                                    {/* market rate percentage */}
+                                    <Box fontSize='11px' mt='20px' textAlign='center'>
+                                        <Text as='span' ml='4px' fontWeight='bold' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
+                                            {realSliderPercent !== 0 && `${realSliderPercent.toFixed(2)}%`}
+                                        </Text>
+                                        <Text as='span' ml='6px' color={realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'green.300' : 'red.300') : '#B8AF73'}>
+                                            {realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'above market rate' : 'below market rate') : 'Current Market Rate'}
+                                        </Text>
+                                    </Box>
                                 </Flex>
                             </Flex>
                             {/* Bitcoin Amount Out */}
-                            <Flex mt='10px' px='10px' bg='#2E1C0C' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
+                            <Flex mt='10px' px='10px' bg='rgba(46, 29, 14, 0.45)' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
                                 <Flex direction={'column'} py='10px' px='5px'>
                                     <Text color={!btcOutputAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                         You Recieve
@@ -689,48 +864,14 @@ export const OtcDeposit = ({}) => {
             <Flex mt='10px' direction={'column'} overflow={'visible'}>
                 <Flex direction='column' align='center' overflow={'visible'}>
                     <Flex w='100%' overflow={'visible'} direction={'column'}>
-                        {/* BTC Payout Address */}
-                        {/* <Text ml='8px' mt='10px' w='100%' mb='10px' fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                            Bitcoin Payout Address
-                        </Text>
-                        <Flex mt='-2px' mb='10px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
-                            <Flex direction={'row'} py='6px' px='5px'>
-                                <Input
-                                    value={payoutBTCAddress}
-                                    onChange={handleBTCPayoutAddressChange}
-                                    fontFamily={'Aux'}
-                                    border='none'
-                                    mt='3.5px'
-                                    mr='75px'
-                                    ml='-4px'
-                                    p='0px'
-                                    w='585px'
-                                    letterSpacing={'-6px'}
-                                    color={colors.offWhite}
-                                    _active={{ border: 'none', boxShadow: 'none' }}
-                                    _focus={{ border: 'none', boxShadow: 'none' }}
-                                    _selected={{ border: 'none', boxShadow: 'none' }}
-                                    fontSize='28px'
-                                    placeholder='bc1q5d7rjq7g6rd2d94ca69...'
-                                    _placeholder={{ color: colors.darkerGray }}
-                                    spellCheck={false}
-                                />
-
-                                {payoutBTCAddress.length > 0 && (
-                                    <Flex ml='-5px'>
-                                        <BitcoinAddressValidation address={payoutBTCAddress} />
-                                    </Flex>
-                                )}
-                            </Flex>
-                        </Flex> */}
-
                         {/* Deposit Button */}
                         <Flex
                             alignSelf={'center'}
                             bg={isConnected ? (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
                             _hover={{ bg: colors.purpleHover }}
                             w='300px'
-                            mt='12px'
+                            mt={showConfirmationScreen ? '15px' : '18px'}
+                            mb='5px'
                             transition={'0.2s'}
                             h='45px'
                             onClick={async () => {
@@ -768,7 +909,7 @@ export const OtcDeposit = ({}) => {
                                         : colors.darkerGray
                                 }
                                 fontFamily='Nostromo'>
-                                {isConnected ? 'Continue' : 'Connect Wallet'}
+                                {!showConfirmationScreen ? 'Continue' : isConnected ? 'Initiate Deposit' : 'Connect Wallet'}
                             </Text>
                         </Flex>
                     </Flex>

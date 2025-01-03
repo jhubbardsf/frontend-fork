@@ -25,6 +25,7 @@ import {
     MAINNET_BASE_CBBTC_TOKEN_ADDRESS,
     DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
     TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
+    BITCOIN_DECIMALS,
 } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
@@ -135,7 +136,7 @@ export const useStore = create<Store>((set) => {
             name: 'CoinbaseBTC',
             display_name: 'cbBTC',
             tokenAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CBBTC_TOKEN_ADDRESS, TESTNET_BASE_CBBTC_TOKEN_ADDRESS, DEVNET_BASE_CBBTC_TOKEN_ADDRESS),
-            decimals: 6,
+            decimals: BITCOIN_DECIMALS,
             riftExchangeContractAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RIFT_EXCHANGE_ADDRESS, TESTNET_BASE_RIFT_EXCHANGE_ADDRESS, DEVNET_BASE_RIFT_EXCHANGE_ADDRESS),
             riftExchangeAbi: riftExchangeABI.abi,
             contractChainID: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CHAIN_ID, TESTNET_BASE_CHAIN_ID, DEVNET_BASE_CHAIN_ID),
@@ -146,11 +147,11 @@ export const useStore = create<Store>((set) => {
             proverFee: BigNumber.from(0),
             releaserFee: BigNumber.from(0),
             icon_svg: Coinbase_BTC_Icon,
-            bg_color: '#3B70E8',
-            border_color: '#0D56FC',
+            bg_color: '#2E59BB',
+            border_color: '#1C61FD',
             border_color_light: '#3B70E8',
-            dark_bg_color: '#0B1A3D',
-            light_text_color: '#255283',
+            dark_bg_color: 'rgba(9, 36, 97, 0.35)',
+            light_text_color: '#2B4E90',
             priceUSD: null,
             totalAvailableLiquidity: BigNumber.from(0),
             connectedUserBalanceRaw: BigNumber.from(0),
