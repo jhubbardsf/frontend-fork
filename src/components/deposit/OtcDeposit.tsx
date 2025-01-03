@@ -30,7 +30,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, ChangeEvent, use } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
-import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
+import { BTCSVG, Coinbase_BTC_Card, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
 import { ethToWei, weiToEth, btcToSats, satsToBtc, bufferTo18Decimals, convertToBitcoinLockingScript, addNetwork } from '../../utils/dappHelper';
@@ -44,12 +44,12 @@ import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { BITCOIN_DECIMALS, opaqueBackgroundColor } from '../../utils/constants';
-import { CheckCircleIcon, CheckIcon, ChevronLeftIcon, SettingsIcon } from '@chakra-ui/icons';
+import { ArrowRightIcon, CheckCircleIcon, CheckIcon, ChevronLeftIcon, SettingsIcon } from '@chakra-ui/icons';
 import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { AssetTag } from '../other/AssetTag';
-import { FaClock, FaRegArrowAltCircleRight, FaLock } from 'react-icons/fa';
+import { FaClock, FaRegArrowAltCircleRight, FaLock, FaArrowRight } from 'react-icons/fa';
 import * as bitcoin from 'bitcoinjs-lib';
 import { addChain } from 'viem/actions';
 import { createWalletClient, custom } from 'viem';
@@ -326,20 +326,20 @@ export const OtcDeposit = ({}) => {
         }
 
         return (
-            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='140px' ml='-0px' mr='0px' h='100%' justify='center' direction='column'>
+            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='140px' ml='-30px' mr='0px' h='100%' justify='center' direction='column'>
                 {isValid ? (
-                    <Flex direction={'column'} align={'center'} justify={'center'} mr='18px'>
+                    <Flex direction={'column'} align={'center'} justify={'center'} mr='22px'>
                         <IoMdCheckmarkCircle color={colors.greenOutline} size={'25px'} />
                         <Text color={colors.greenOutline} fontSize={'10px'} mt='3px'>
                             Valid
                         </Text>
                     </Flex>
                 ) : (
-                    <Flex w='160px' ml='7px' mt='-2px' align='cetner'>
-                        <Flex mt='4px'>
+                    <Flex w='160px' ml='-8px' mt='-2px' align='cetner'>
+                        <Flex mt='5px'>
                             <HiXCircle color='red' size={'35px'} />
                         </Flex>
-                        <Text fontSize={'8px'} w='70px' mt='3px' ml='5px' color='red'>
+                        <Text fontSize={'9px'} w='70px' mt='3px' ml='5px' color='red'>
                             Invalid Segwit Address
                         </Text>
                     </Flex>
@@ -472,21 +472,23 @@ export const OtcDeposit = ({}) => {
         }
 
         return (
-            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} ml='-170px' mr='0px' h='100%' justify='center' direction='column'>
+            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} ml='-45px' mr='0px' h='100%' justify='center' direction='column'>
                 {isValid ? (
-                    <Flex mr='-46px' direction={'column'} align={'center'}>
+                    <Flex mr='-148px' direction={'column'} align={'center'}>
                         <IoMdCheckmarkCircle color={colors.greenOutline} size={'25px'} />
                         <Text fontSize={'10px'} mt='3px' color={colors.greenOutline}>
                             Valid
                         </Text>
                     </Flex>
                 ) : (
-                    <>
-                        <HiXCircle color='red' size={'24px'} />
-                        <Text fontSize={'10px'} mt='3px' color='red'>
-                            Invalid
+                    <Flex w='160px' ml='0px' mt='-3px' align='cetner'>
+                        <Flex mt='5px'>
+                            <HiXCircle color='red' size={'35px'} />
+                        </Flex>
+                        <Text fontSize={'9px'} w='70px' mt='3px' ml='5px' color='red'>
+                            Invalid <br /> Base Address
                         </Text>
-                    </>
+                    </Flex>
                 )}
             </Flex>
         );
@@ -524,39 +526,40 @@ export const OtcDeposit = ({}) => {
                                 h='88px'
                                 {...opaqueBackgroundColor}
                                 borderWidth={3}
-                                borderColor={colors.borderGray}
+                                borderColor={'rgba(255, 142, 40, 0.55)'}
+                                boxShadow='0px 0px 16px 4px rgba(255, 142, 40, 0.38)'
                                 px='40px'
                                 fontFamily={FONT_FAMILIES.AUX_MONO}
                                 fontWeight='normal'
-                                boxShadow='0px 0px 20px 5px rgba(0, 0, 0, 0.3)'
                                 py='3px'>
                                 <>
-                                    <Flex direction='column'>
+                                    <Flex ml='-3px' direction='column'>
                                         <Flex>
-                                            <Text mr='15px' fontSize='36px' letterSpacing='-5px' color={colors.offWhite}>
+                                            <Text mr='15px' fontSize='36px' letterSpacing='-6px' color={colors.offWhite}>
                                                 {coinbaseBtcDepositAmount}
                                             </Text>
-                                            <Flex mt='-14px' mb='-9px'>
-                                                <WebAssetTag asset='CoinbaseBTC' />
+                                            <Flex mt='-16px' mb='-5px' ml='-4px'>
+                                                {/* <WebAssetTag asset='CoinbaseBTC' /> */}
+                                                <Coinbase_BTC_Card width='114px' />
                                             </Flex>
                                         </Flex>
                                         <Text color={colors.textGray} fontSize='13px' mt='-12px' ml='6px' letterSpacing='-2px' fontWeight='normal' fontFamily='Aux'>
-                                            ≈ {coinbaseBtcDepositAmountUSD}
+                                            {coinbaseBtcDepositAmountUSD}
                                         </Text>
                                     </Flex>
 
                                     <Spacer />
-                                    <Flex align='center' ml='-4px' mr='-5px' mt='-2px' justify='center'>
-                                        <MdArrowRight size='50px' color={colors.darkerGray} />
+                                    <Flex align='center' ml='-4px' mr='-5px' px='20px' mt='-28px' justify='center'>
+                                        <ArrowRightIcon w={'16px'} h='16px' color={'#888'} />
                                     </Flex>
                                     <Spacer />
 
                                     <Flex direction='column'>
                                         <Flex>
-                                            <Text mr='15px' fontSize='36px' letterSpacing='-5px' color={colors.offWhite}>
+                                            <Text mr='15px' fontSize='36px' letterSpacing='-6px' color={colors.offWhite}>
                                                 {btcOutputAmount}
                                             </Text>
-                                            <Flex mt='-14px' mb='-9px'>
+                                            <Flex mt='-15px' mb='-8px'>
                                                 <AssetTag assetName='BTC' width='79px' />
                                             </Flex>
                                         </Flex>
@@ -571,7 +574,7 @@ export const OtcDeposit = ({}) => {
                         <Text ml='8px' mt='0px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Recipient Base Address
                         </Text>
-                        <Flex mt='-2px' mb='22px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                        <Flex mt='-2px' mb='22px' px='10px' bg={selectedInputAsset.dark_bg_color} border='2px solid' borderColor={selectedInputAsset.bg_color} w='100%' h='60px' borderRadius={'10px'}>
                             <Flex direction={'row'} py='6px' px='5px'>
                                 <Input
                                     value={otcRecipientBaseAddress}
@@ -579,18 +582,18 @@ export const OtcDeposit = ({}) => {
                                     fontFamily={'Aux'}
                                     border='none'
                                     mt='3.5px'
-                                    w='804px'
-                                    mr='65px'
+                                    w='620px'
+                                    mr='75px'
                                     ml='-4px'
                                     p='0px'
-                                    letterSpacing={'-4px'}
+                                    letterSpacing={'-5px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='28px'
                                     placeholder='0xb0cb90a9a3dfd81...'
-                                    _placeholder={{ color: colors.darkerGray }}
+                                    _placeholder={{ color: '#5F7192' }}
                                     spellCheck={false}
                                 />
 
@@ -603,10 +606,10 @@ export const OtcDeposit = ({}) => {
                         </Flex>
 
                         {/* BTC Payout Address */}
-                        <Text ml='8px' mt='8px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                        <Text ml='8px' mt='0px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Bitcoin Payout Address
                         </Text>
-                        <Flex mt='-2px' mb='10px' px='10px' bg='#111' border='2px solid #565656' w='100%' h='60px' borderRadius={'10px'}>
+                        <Flex mt='-2px' mb='10px' px='10px' bg='rgba(46, 29, 14, 0.45)' border='2px solid #78491F' w='100%' h='60px' borderRadius={'10px'}>
                             <Flex direction={'row'} py='6px' px='5px'>
                                 <Input
                                     value={payoutBTCAddress}
@@ -617,15 +620,15 @@ export const OtcDeposit = ({}) => {
                                     mr='75px'
                                     ml='-4px'
                                     p='0px'
-                                    w='585px'
-                                    letterSpacing={'-6px'}
+                                    w='620px'
+                                    letterSpacing={'-5px'}
                                     color={colors.offWhite}
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
                                     fontSize='28px'
-                                    placeholder='bc1q5d7rjq7g6rd2d94ca69...'
-                                    _placeholder={{ color: colors.darkerGray }}
+                                    placeholder='bc1q5d7rjq7g6rd2d...'
+                                    _placeholder={{ color: '#856549' }}
                                     spellCheck={false}
                                 />
 
@@ -638,7 +641,7 @@ export const OtcDeposit = ({}) => {
                         </Flex>
 
                         {/* Block Confirmation Slider */}
-                        <Text ml='8px' mt='18px' w='100%' mb='0px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                        <Text ml='8px' mt='15px' w='100%' mb='0px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Block Confirmations
                         </Text>
                         <Flex mt='10px' mb='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='90px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
@@ -664,7 +667,7 @@ export const OtcDeposit = ({}) => {
                                             onChange={(val) => setBlockConfirmationsSlider(val)}
                                             aria-label='block-confirmations-slider'>
                                             {blockConfirmationOptions.map((p) => (
-                                                <SliderMark key={p} value={p} fontSize='sm' letterSpacing={'-1px'} textAlign='center' mt='15px' ml={p === 2 ? '0px' : p === 6 ? '-20px' : '-10px'}>
+                                                <SliderMark key={p} value={p} fontSize='sm' fontWeight={'bold'} letterSpacing={'-1px'} textAlign='center' mt='15px' ml={'-5px'}>
                                                     {p}
                                                 </SliderMark>
                                             ))}
@@ -811,7 +814,7 @@ export const OtcDeposit = ({}) => {
                                 </Flex>
                             </Flex>
                             {/* Bitcoin Amount Out */}
-                            <Flex mt='10px' px='10px' bg='rgba(46, 29, 14, 0.45)' w='100%' h='105px' border='2px solid #78491F' borderRadius={'10px'}>
+                            <Flex mt='10px' px='10px' bg='rgba(46, 29, 14, 0.45)' border='2px solid #78491F' w='100%' h='105px' borderRadius={'10px'}>
                                 <Flex direction={'column'} py='10px' px='5px'>
                                     <Text color={!btcOutputAmount ? colors.offWhite : colors.textGray} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
                                         You Recieve
