@@ -150,7 +150,7 @@ export const useStore = create<Store>((set) => {
             bg_color: '#2E59BB',
             border_color: '#1C61FD',
             border_color_light: '#3B70E8',
-            dark_bg_color: 'rgba(9, 36, 97, 0.35)',
+            dark_bg_color: 'rgba(9, 36, 97, 0.4)',
             light_text_color: '#2B4E90',
             priceUSD: null,
             totalAvailableLiquidity: BigNumber.from(0),
