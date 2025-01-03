@@ -602,52 +602,6 @@ export const OtcDeposit = ({}) => {
                             </Flex>
                         </Flex>
 
-
-                         {/* Block Confirmation Slider */}
-                        <Text ml='8px' mt='18px' w='100%' mb='0px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                            Required Block Confirmations
-                        </Text>
-                        <Flex mt='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='110px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
-                            <Flex direction={'column'} py='10px' px='5px' w='100%'>
-                                <Flex>
-                                    <Text textAlign={'left'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                        Fastest <br />≈ 20 minutes
-                                    </Text>
-                                    <Spacer />
-                                    <Text textAlign={'right'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                        Most Secure <br />≈ 60 minutes
-                                    </Text>
-                                </Flex>
-                                {/* block confirmations slider */}
-                                <Flex direction='column' w='100%' mt='-50px' zIndex={3}>
-                                    <Box mt='55px' w='100%' alignSelf='center'>
-                                        <Slider min={0} max={1} step={0.001} value={blockConfirmationsSlider} onChange={(val) => setBlockConfirmationsSlider(val)} aria-label='exchange-rate-slider'>
-                                            {blockConfirmationOptions.map((p) => {
-                                                const markPosition = sliderFromValue(p);
-                                                return (
-                                                    <SliderMark
-                                                        key={p}
-                                                        value={markPosition}
-                                                        fontSize='sm'
-                                                        letterSpacing={'-1px'}
-                                                        textAlign='center'
-                                                        mt='15px'
-                                                        ml={p == -10 ? '0px' : p == 10 ? '-38px' : '-14px'}>
-                                                        {p}
-                                                    </SliderMark>
-                                                );
-                                            })}
-                                            <SliderTrack h='14px' borderRadius='20px' bg='transparent' position='relative'>
-                                                <Box position='absolute' w='100%' h='100%' bg='#3C6850' borderRadius={'10px'} border='2px solid #78C86B' />
-                                            </SliderTrack>
-                                            <SliderFilledTrack bg='transparent' />
-
-                                            <SliderThumb boxSize={3} height={7} bg='#EAC344' border='2px solid #B8AF73' borderRadius='10px' _focus={{ boxShadow: '0 0 0 2px rgba(234,195,68, 0.6)' }} />
-                                        </Slider>
-                                    </Box>
-                                </Flex>
-                            </Flex>
-                        </Flex>
                         {/* BTC Payout Address */}
                         <Text ml='8px' mt='8px' w='100%' mb='10px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Bitcoin Payout Address
@@ -683,7 +637,43 @@ export const OtcDeposit = ({}) => {
                             </Flex>
                         </Flex>
 
-                       
+                        {/* Block Confirmation Slider */}
+                        <Text ml='8px' mt='18px' w='100%' mb='0px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                            Block Confirmations
+                        </Text>
+                        <Flex mt='10px' mb='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='110px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
+                            <Flex direction={'column'} py='10px' px='5px' w='100%'>
+                                <Flex>
+                                    <Text textAlign={'left'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        Fastest Settlement
+                                        <br />
+                                        <span style={{ color: colors.textGray }}>≈ 20 minutes</span>
+                                    </Text>
+                                    <Spacer />
+                                    <Text textAlign={'right'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                        Most Secure <br />
+                                        <span style={{ color: colors.textGray }}>≈ 60 minutes</span>
+                                    </Text>
+                                </Flex>
+                                {/* block confirmations slider */}
+                                <Flex direction='column' w='100%' mt='-50px' zIndex={3}>
+                                    <Box mt='55px' w='100%' alignSelf='center'>
+                                        <Slider min={2} max={6} step={1} value={blockConfirmationsSlider} onChange={(val) => setBlockConfirmationsSlider(val)} aria-label='block-confirmations-slider'>
+                                            {blockConfirmationOptions.map((p) => (
+                                                <SliderMark key={p} value={p} fontSize='sm' letterSpacing={'-1px'} textAlign='center' mt='15px' ml={p === 2 ? '0px' : p === 6 ? '-20px' : '-10px'}>
+                                                    {p}
+                                                </SliderMark>
+                                            ))}
+                                            <SliderTrack h='14px' borderRadius='20px' bg='transparent' position='relative'>
+                                                <Box position='absolute' w='100%' h='100%' bg='#3C6850' borderRadius={'10px'} border='2px solid #78C86B' />
+                                            </SliderTrack>
+                                            <SliderFilledTrack bg='transparent' />
+                                            <SliderThumb boxSize={3} height={7} bg='#EAC344' border='2px solid #B8AF73' borderRadius='10px' _focus={{ boxShadow: '0 0 0 2px rgba(234,195,68, 0.6)' }} />
+                                        </Slider>
+                                    </Box>
+                                </Flex>
+                            </Flex>
+                        </Flex>
                     </Flex>
                 ) : (
                     <Flex direction='column' align='center' overflow={'visible'}>
