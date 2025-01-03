@@ -141,7 +141,7 @@ export const OtcDeposit = ({}) => {
     const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const [sliderT, setSliderT] = useState(0.5); // start at middle
-    const [blockConfirmationsSlider, setBlockConfirmationsSlider] = useState(2); // 2 block confs default
+    const [blockConfirmationsSliderValue, setBlockConfirmationsSlider] = useState(2); // 2 block confs default
     const tickPercents = [-10, -6, -3, -1, 0, 1, 3, 6, 10];
     const blockConfirmationOptions = [2, 3, 4, 5, 6];
     const A = 56.56854249; // approx.
@@ -641,24 +641,28 @@ export const OtcDeposit = ({}) => {
                         <Text ml='8px' mt='18px' w='100%' mb='0px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                             Block Confirmations
                         </Text>
-                        <Flex mt='10px' mb='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='110px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
+                        <Flex mt='10px' mb='10px' px='10px' bg='rgba(25, 54, 38, 0.5)' w='100%' h='90px' border='2px solid #548148' borderRadius={'10px'} justify='center'>
                             <Flex direction={'column'} py='10px' px='5px' w='100%'>
                                 <Flex>
-                                    <Text textAlign={'left'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                        Fastest Settlement
-                                        <br />
-                                        <span style={{ color: colors.textGray }}>≈ 20 minutes</span>
+                                    <Text mt='-2px' mb='-4px' textAlign={'left'} color={'#78C86B'} fontSize={'48px'} letterSpacing={'-1px'} fontWeight={'normal'} p='0px' fontFamily={'Aux'}>
+                                        {blockConfirmationsSliderValue}
                                     </Text>
-                                    <Spacer />
-                                    <Text textAlign={'right'} color={colors.offWhite} fontSize={'13px'} letterSpacing={'-1px'} fontWeight={'normal'} fontFamily={'Aux'}>
-                                        Most Secure <br />
-                                        <span style={{ color: colors.textGray }}>≈ 60 minutes</span>
+                                    <Text textAlign={'left'} color={colors.offWhite} fontSize={'13px'} ml='17px' letterSpacing={'-1px'} fontWeight={'normal'} mt='13px' fontFamily={'Aux'}>
+                                        Estimated Time <br />
+                                        <span style={{ color: colors.textGray }}>≈ {blockConfirmationsSliderValue}0 minutes</span>
                                     </Text>
                                 </Flex>
+
                                 {/* block confirmations slider */}
-                                <Flex direction='column' w='100%' mt='-50px' zIndex={3}>
+                                <Flex w='70%' ml='200px' mt='-112px' zIndex={3}>
                                     <Box mt='55px' w='100%' alignSelf='center'>
-                                        <Slider min={2} max={6} step={1} value={blockConfirmationsSlider} onChange={(val) => setBlockConfirmationsSlider(val)} aria-label='block-confirmations-slider'>
+                                        <Slider
+                                            min={2}
+                                            max={6}
+                                            step={1}
+                                            value={blockConfirmationsSliderValue}
+                                            onChange={(val) => setBlockConfirmationsSlider(val)}
+                                            aria-label='block-confirmations-slider'>
                                             {blockConfirmationOptions.map((p) => (
                                                 <SliderMark key={p} value={p} fontSize='sm' letterSpacing={'-1px'} textAlign='center' mt='15px' ml={p === 2 ? '0px' : p === 6 ? '-20px' : '-10px'}>
                                                     {p}
