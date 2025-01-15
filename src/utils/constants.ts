@@ -6,6 +6,7 @@ import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.DEVNET; // Local devnet
 export const IS_FRONTEND_PAUSED = false;
 export const MIN_SWAP_AMOUNT_SATS = 1_000; // 1000 sats = ~$0.96 currently
+export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
 
 // BASE DEVNET
 export const DEVNET_BASE_CHAIN_ID = 1337;

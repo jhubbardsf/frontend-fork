@@ -88,6 +88,8 @@ type Store = {
     setCoinbaseBtcDepositAmount: (amount: string) => void;
     btcOutputAmount: string;
     setBtcOutputAmount: (amount: string) => void;
+    coinbaseBtcOutputAmount: string;
+    setCoinbaseBtcOutputAmount: (amount: string) => void;
     lowestFeeReservationParams: ReserveLiquidityParams | null;
     setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
     showManageReservationScreen: boolean;
@@ -254,11 +256,13 @@ export const useStore = create<Store>((set) => {
         setCoinbaseBtcDepositAmount: (coinbaseBtcDepositAmount) => set({ coinbaseBtcDepositAmount }),
         btcOutputAmount: '',
         setBtcOutputAmount: (btcOutputAmount) => set({ btcOutputAmount }),
+        coinbaseBtcOutputAmount: '',
+        setCoinbaseBtcOutputAmount: (coinbaseBtcOutputAmount) => set({ coinbaseBtcOutputAmount }),
         lowestFeeReservationParams: null,
         setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
         showManageReservationScreen: false,
         setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
-        depositMode: false,
+        depositMode: true,
         setDepositMode: (depositMode) => set({ depositMode }),
         withdrawAmount: '',
         setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),

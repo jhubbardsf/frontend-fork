@@ -74,15 +74,15 @@ export const DepositConfirmation = ({}) => {
     const { data: walletClient } = useWalletClient();
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
 
-    const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
-    const setUsdtDepositAmount = useStore((state) => state.setUsdtDepositAmount);
+    const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
+    const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
 
-    const [usdtDepositAmountUSD, setUsdtDepositAmountUSD] = useState('0.00');
+    const [coinbaseBtcDepositAmountUSD, setUsdtDepositAmountUSD] = useState('0.00');
 
     const [profitPercentage, setProfitPercentage] = useState('');
     const [profitAmountUSD, setProfitAmountUSD] = useState('0.00');
@@ -99,8 +99,6 @@ export const DepositConfirmation = ({}) => {
     const borderColor = `2px solid ${actualBorderColor}`;
     const { isOpen, onOpen, onClose } = useDisclosure();
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
-    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
 
     useEffect(() => {
         if (isWaitingForConnection && isConnected) {
@@ -116,32 +114,32 @@ export const DepositConfirmation = ({}) => {
 
     // calculate profit amount in USD
     useEffect(() => {
-        const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(profitPercentage)) / 100) * (usdtPriceUSD ?? 0)).toLocaleString('en-US', {
+        const profitAmountUSD = `${(((parseFloat(coinbaseBtcDepositAmount) * parseFloat(profitPercentage)) / 100) * (usdtPriceUSD ?? 0)).toLocaleString('en-US', {
             style: 'currency',
             currency: 'USD',
         })}`;
 
-        setProfitAmountUSD(!profitPercentage || !usdtDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD);
-    }, [usdtDepositAmount, profitPercentage]);
+        setProfitAmountUSD(!profitPercentage || !coinbaseBtcDepositAmount || profitPercentage == '-' ? '$0.00' : profitAmountUSD);
+    }, [coinbaseBtcDepositAmount, profitPercentage]);
 
     // calculate deposit amount in USD
     useEffect(() => {
-        const usdtDepositAmountUSD =
-            usdtPriceUSD && usdtDepositAmount
-                ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+        const coinbaseBtcDepositAmountUSD =
+            usdtPriceUSD && coinbaseBtcDepositAmount
+                ? (usdtPriceUSD * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
                 : '$0.00';
-        setUsdtDepositAmountUSD(usdtDepositAmountUSD);
-    }, [usdtDepositAmount]);
+        setUsdtDepositAmountUSD(coinbaseBtcDepositAmountUSD);
+    }, [coinbaseBtcDepositAmount]);
 
     // calculate Bitcoin output amount in USD
     useEffect(() => {
-        console.log('bitcoinPriceUSD:', bitcoinPriceUSD);
+        console.log('btcPriceUSD:', btcPriceUSD);
         const bitcoinOutputAmountUSD =
-            bitcoinPriceUSD && btcOutputAmount
-                ? (bitcoinPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
+            btcPriceUSD && btcOutputAmount
+                ? (btcPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
                       style: 'currency',
                       currency: 'USD',
                   })
@@ -161,7 +159,7 @@ export const DepositConfirmation = ({}) => {
         };
 
         if (validateTokenDepositChange(tokenValue)) {
-            setUsdtDepositAmount(tokenValue);
+            setCoinbaseBtcDepositAmount(tokenValue);
             calculateBitcoinOutputAmount(tokenValue, undefined);
         }
     };
@@ -201,7 +199,7 @@ export const DepositConfirmation = ({}) => {
     };
 
     const calculateProfitPercent = (bitcoinAmount: string) => {
-        const startValue = parseFloat(usdtDepositAmount);
+        const startValue = parseFloat(coinbaseBtcDepositAmount);
         const endValue = parseFloat(bitcoinAmount) * useStore.getState().validAssets[selectedInputAsset.name].exchangeRateInTokenPerBTC;
 
         const newProfitPercentage = (((endValue - startValue) / startValue) * 100).toFixed(2);
@@ -234,11 +232,11 @@ export const DepositConfirmation = ({}) => {
     };
 
     const calculateBitcoinOutputAmount = (newEthDepositAmount: string | undefined, newProfitPercentage: string | undefined) => {
-        if (usdtPriceUSD && bitcoinPriceUSD) {
+        if (usdtPriceUSD && btcPriceUSD) {
             console.log('newProfitPercentage:', newProfitPercentage);
-            const profitAmountInToken = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
-            const totalTokenUSD = parseFloat(newEthDepositAmount ?? usdtDepositAmount) * usdtPriceUSD + profitAmountInToken * usdtPriceUSD;
-            const newBitcoinOutputAmount = totalTokenUSD / bitcoinPriceUSD > 0 ? totalTokenUSD / bitcoinPriceUSD : 0;
+            const profitAmountInToken = parseFloat(newEthDepositAmount ?? coinbaseBtcDepositAmount) * (parseFloat(newProfitPercentage ?? profitPercentage) / 100);
+            const totalTokenUSD = parseFloat(newEthDepositAmount ?? coinbaseBtcDepositAmount) * usdtPriceUSD + profitAmountInToken * usdtPriceUSD;
+            const newBitcoinOutputAmount = totalTokenUSD / btcPriceUSD > 0 ? totalTokenUSD / btcPriceUSD : 0;
             const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(7);
 
             if (validateBitcoinOutputAmount(formattedBitcoinOutputAmount)) {
@@ -246,22 +244,22 @@ export const DepositConfirmation = ({}) => {
             }
             // calculate the profit amount in USD
 
-            const profitAmountUSD = `${(((parseFloat(usdtDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
+            const profitAmountUSD = `${(((parseFloat(coinbaseBtcDepositAmount) * parseFloat(newProfitPercentage ?? profitPercentage)) / 100) * usdtPriceUSD).toLocaleString('en-US', {
                 style: 'currency',
                 currency: 'USD',
             })}`;
             setProfitAmountUSD(profitAmountUSD);
 
             // calculate and update the deposit amount in USD
-            console.log('tokenDepositAmount:', usdtDepositAmount);
-            const usdtDepositAmountUSD =
-                usdtPriceUSD && usdtDepositAmount
-                    ? (usdtPriceUSD * parseFloat(usdtDepositAmount)).toLocaleString('en-US', {
+            console.log('tokenDepositAmount:', coinbaseBtcDepositAmount);
+            const coinbaseBtcDepositAmountUSD =
+                usdtPriceUSD && coinbaseBtcDepositAmount
+                    ? (usdtPriceUSD * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
                           style: 'currency',
                           currency: 'USD',
                       })
                     : '$0.00';
-            setUsdtDepositAmountUSD(usdtDepositAmountUSD);
+            setUsdtDepositAmountUSD(coinbaseBtcDepositAmountUSD);
         }
     };
 
@@ -307,9 +305,7 @@ export const DepositConfirmation = ({}) => {
     const handleModalClose = () => {
         setIsModalOpen(false);
         if (depositLiquidityStatus === DepositStatus.Confirmed) {
-            setUsdtDepositAmount('');
-            setBtcInputSwapAmount('');
-            setUsdtOutputSwapAmount('');
+            setCoinbaseBtcDepositAmount('');
             setBtcOutputAmount('');
 
             setDepositFlowState('0-not-started');
@@ -418,7 +414,7 @@ export const DepositConfirmation = ({}) => {
             const vaultIndexToOverwrite = findVaultIndexToOverwrite();
             const vaultIndexWithSameExchangeRate = findVaultIndexWithSameExchangeRate();
             const tokenDecmials = useStore.getState().validAssets[selectedInputAsset.name].decimals;
-            const tokenDepositAmountInSmallestTokenUnits = parseUnits(usdtDepositAmount, tokenDecmials);
+            const tokenDepositAmountInSmallestTokenUnits = parseUnits(coinbaseBtcDepositAmount, tokenDecmials);
             const tokenDepositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(tokenDepositAmountInSmallestTokenUnits, tokenDecmials);
             const bitcoinOutputAmountInSats = parseUnits(btcOutputAmount, BITCOIN_DECIMALS);
             console.log('bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
@@ -434,14 +430,19 @@ export const DepositConfirmation = ({}) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
 
+            // [2] deposit liquidity
             await depositLiquidity({
                 signer: signer,
                 riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
                 riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
                 tokenAddress: selectedInputAsset.tokenAddress,
-                tokenDepositAmountInSmallestTokenUnits: tokenDepositAmountInSmallestTokenUnits,
-                btcPayoutLockingScript: bitcoinPayoutLockingScript,
-                btcExchangeRate: clippedExchangeRate,
+                // ---- depositLiquidity() contract params ----- TODO - FILL IN
+                specifiedPayoutAddress: otcRecipientBaseAddress,
+                depositAmountInSmallestTokenUnit: depositAmountInSmallestTokenUnit,
+                expectedSats: bitcoinOutputAmountInSats,
+                btcPayoutScriptPubKey: btcPayoutScriptPubKey,
+                depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
+                confirmationBlocks: blockConfirmationsSliderValue, // TODO - make this an advanced settings slider (between 2-6?)
             });
         }
     };
@@ -578,7 +579,7 @@ export const DepositConfirmation = ({}) => {
                                                         borderRadius={'10px'}>
                                                         <Flex direction={'column'} py='10px' px='5px'>
                                                             <Text
-                                                                color={!usdtDepositAmount ? colors.offWhite : colors.textGray}
+                                                                color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray}
                                                                 fontSize={'13px'}
                                                                 letterSpacing={'-1px'}
                                                                 fontWeight={'normal'}
@@ -586,7 +587,7 @@ export const DepositConfirmation = ({}) => {
                                                                 You Deposit
                                                             </Text>
                                                             <Input
-                                                                value={usdtDepositAmount}
+                                                                value={coinbaseBtcDepositAmount}
                                                                 onChange={(e) => {
                                                                     handleTokenDepositChange(e);
                                                                 }}
@@ -608,14 +609,14 @@ export const DepositConfirmation = ({}) => {
                                                                 }}
                                                             />
                                                             <Text
-                                                                color={!usdtDepositAmount ? colors.offWhite : colors.textGray}
+                                                                color={!coinbaseBtcDepositAmount ? colors.offWhite : colors.textGray}
                                                                 fontSize={'13px'}
                                                                 mt='2px'
                                                                 ml='1px'
                                                                 letterSpacing={'-1px'}
                                                                 fontWeight={'normal'}
                                                                 fontFamily={'Aux'}>
-                                                                {usdtDepositAmountUSD}
+                                                                {coinbaseBtcDepositAmountUSD}
                                                             </Text>
                                                         </Flex>
                                                         <Spacer />
@@ -685,8 +686,8 @@ export const DepositConfirmation = ({}) => {
                                                             <Text color={colors.offWhite}>Your Exchange Rate</Text>
                                                             <Text>
                                                                 1 BTC = {/* amount of deposit asset / amount of BTC out ) * deposit asset price in USD */}
-                                                                {usdtDepositAmount && btcOutputAmount
-                                                                    ? ((parseFloat(usdtDepositAmount) / parseFloat(btcOutputAmount)) * usdtPriceUSD).toLocaleString('en-US', {
+                                                                {coinbaseBtcDepositAmount && btcOutputAmount
+                                                                    ? ((parseFloat(coinbaseBtcDepositAmount) / parseFloat(btcOutputAmount)) * usdtPriceUSD).toLocaleString('en-US', {
                                                                           style: 'currency',
                                                                           currency: 'USD',
                                                                       })
@@ -750,7 +751,7 @@ export const DepositConfirmation = ({}) => {
                                         bg={colors.purpleButtonBG}
                                         color={colors.offWhite}
                                         mb='10px'
-                                        _hover={{ bg: usdtDepositAmount && profitPercentage && btcOutputAmount ? colors.purpleHover : colors.purpleButtonBG }}
+                                        _hover={{ bg: coinbaseBtcDepositAmount && profitPercentage && btcOutputAmount ? colors.purpleHover : colors.purpleButtonBG }}
                                         mt='-5px'
                                         w='350px'
                                         borderRadius='10px'
@@ -758,11 +759,11 @@ export const DepositConfirmation = ({}) => {
                                         border='2px solid #445BCB'
                                         mr={3}
                                         onClick={() => {
-                                            usdtDepositAmount && profitPercentage && btcOutputAmount
+                                            coinbaseBtcDepositAmount && profitPercentage && btcOutputAmount
                                                 ? onClose()
                                                 : toastError('', { title: 'Empty Fields Required', description: 'Please fill in the profit percentage or bitcoin output amount' });
                                         }}
-                                        opacity={usdtDepositAmount && profitPercentage && btcOutputAmount ? 1 : 0.5}
+                                        opacity={coinbaseBtcDepositAmount && profitPercentage && btcOutputAmount ? 1 : 0.5}
                                         cursor={'pointer'}>
                                         UPDATE EXCHANGE RATE
                                     </Button>
@@ -793,17 +794,17 @@ export const DepositConfirmation = ({}) => {
                         {/* Deposit Button */}
                         <Flex
                             alignSelf={'center'}
-                            bg={isConnected ? (usdtDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
+                            bg={isConnected ? (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress ? colors.purpleBackground : colors.purpleBackgroundDisabled) : colors.purpleBackground}
                             _hover={{ bg: colors.purpleHover }}
                             w='300px'
                             mt='10px'
                             transition={'0.2s'}
                             h='45px'
                             onClick={async () => {
-                                console.log('usdtDepositAmount:', usdtDepositAmount);
+                                console.log('coinbaseBtcDepositAmount:', coinbaseBtcDepositAmount);
                                 console.log('btcOutputAmount:', btcOutputAmount);
                                 console.log('payoutBTCAddress:', payoutBTCAddress);
-                                if (usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
+                                if (coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress)) {
                                     initiateDeposit();
                                 } else toastError('', { title: 'Invalid Bitcoin Address', description: 'Please input a valid Segwit (bc1q...) Bitcoin payout address' });
                             }}
@@ -813,9 +814,9 @@ export const DepositConfirmation = ({}) => {
                             cursor={'pointer'}
                             borderRadius={'10px'}
                             justify={'center'}
-                            border={usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                            border={coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? '3px solid #445BCB' : '3px solid #3242a8'}>
                             <Text
-                                color={usdtDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? colors.offWhite : colors.darkerGray}
+                                color={coinbaseBtcDepositAmount && btcOutputAmount && payoutBTCAddress && validateBitcoinPayoutAddress(payoutBTCAddress) ? colors.offWhite : colors.darkerGray}
                                 fontFamily='Nostromo'>
                                 {isConnected ? 'Deposit Liquidity' : 'Connect Wallet'}
                             </Text>

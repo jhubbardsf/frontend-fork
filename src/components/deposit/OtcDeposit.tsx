@@ -811,7 +811,7 @@ export const OtcDeposit = ({}) => {
                                         <Text as='span' ml='4px' fontWeight='bold' color={realSliderPercent >= 0 ? 'green.300' : 'red.300'}>
                                             {realSliderPercent !== 0 && `${realSliderPercent.toFixed(2)}%`}
                                         </Text>
-                                        <Text as='span' ml='6px' color={realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'green.300' : 'red.300') : '#B8AF73'}>
+                                        <Text as='span' ml='6px' color={realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'green.300' : 'red.300') : colors.offWhite}>
                                             {realSliderPercent !== 0 ? (realSliderPercent >= 0 ? 'above market rate' : 'below market rate') : 'Current Market Rate'}
                                         </Text>
                                     </Box>
