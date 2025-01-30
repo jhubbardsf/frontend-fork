@@ -26,6 +26,9 @@ import {
     DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
     TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
     BITCOIN_DECIMALS,
+    MAINNET_DATA_ENGINE_URL,
+    DEVNET_DATA_ENGINE_URL,
+    TESTNET_DATA_ENGINE_URL,
 } from './utils/constants';
 import { ValidAsset } from './types';
 import riftExchangeABI from './abis/RiftExchange.json';
@@ -136,6 +139,7 @@ export const useStore = create<Store>((set) => {
             name: 'CoinbaseBTC',
             display_name: 'cbBTC',
             tokenAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CBBTC_TOKEN_ADDRESS, TESTNET_BASE_CBBTC_TOKEN_ADDRESS, DEVNET_BASE_CBBTC_TOKEN_ADDRESS),
+            dataEngineUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_DATA_ENGINE_URL, TESTNET_DATA_ENGINE_URL, DEVNET_DATA_ENGINE_URL),
             decimals: BITCOIN_DECIMALS,
             riftExchangeContractAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RIFT_EXCHANGE_ADDRESS, TESTNET_BASE_RIFT_EXCHANGE_ADDRESS, DEVNET_BASE_RIFT_EXCHANGE_ADDRESS),
             riftExchangeAbi: riftExchangeABI.abi,

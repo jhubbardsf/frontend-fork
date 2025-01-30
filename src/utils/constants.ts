@@ -10,10 +10,11 @@ export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
 
 // BASE DEVNET
 export const DEVNET_BASE_CHAIN_ID = 1337;
-export const DEVNET_BASE_ETHERSCAN_URL = 'http://localhost:50123';
-export const DEVNET_BASE_PAYMASTER_URL = 'http://localhost:50123';
-export const DEVNET_BASE_RPC_URL = 'http://localhost:50123';
-export const DEVNET_BASE_WS_URL = 'ws://localhost:50123';
+export const DEVNET_BASE_ETHERSCAN_URL = 'http://localhost:50101';
+export const DEVNET_BASE_PAYMASTER_URL = 'http://localhost:50101';
+export const DEVNET_BASE_RPC_URL = 'http://localhost:50101';
+export const DEVNET_BASE_WS_URL = 'ws://localhost:50101';
+export const DEVNET_DATA_ENGINE_URL = 'http://localhost:50100';
 export const DEVNET_BASE_CBBTC_TOKEN_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
 
@@ -22,6 +23,7 @@ export const TESTNET_BASE_CHAIN_ID = 84532;
 export const TESTNET_BASE_ETHERSCAN_URL = 'https://base-sepolia.g.alchemy.com/v2/demo';
 export const TESTNET_BASE_PAYMASTER_URL = 'https://rift-paymaster-base-sepolia.up.railway.app';
 export const TESTNET_BASE_RPC_URL = 'https://base-sepolia.g.alchemy.com/v2/demo';
+export const TESTNET_DATA_ENGINE_URL = 'null';
 export const TESTNET_BASE_CBBTC_TOKEN_ADDRESS = '0x83358384d0c3874356f590d220e1064212525379';
 export const TESTNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // TODO: REPLACE
 
@@ -30,6 +32,7 @@ export const MAINNET_BASE_CHAIN_ID = 8453;
 export const MAINNET_BASE_ETHERSCAN_URL = 'https://basescan.org/';
 export const MAINNET_BASE_PAYMASTER_URL = 'https://rift-paymaster-base.up.railway.app';
 export const MAINNET_BASE_RPC_URL = 'https://base.gateway.tenderly.co/2CozPE8XkkiFQIO8uj4Ug1';
+export const MAINNET_DATA_ENGINE_URL = 'null';
 export const MAINNET_BASE_CBBTC_TOKEN_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 export const MAINNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // TODO: REPLACE
 

@@ -68,6 +68,7 @@ export type ValidAsset = {
     name: string;
     display_name?: string;
     tokenAddress?: string;
+    dataEngineUrl?: string;
     decimals: number;
     riftExchangeContractAddress?: string;
     riftExchangeAbi?: any;
@@ -145,3 +146,9 @@ export enum DeploymentType {
     TESTNET = 'TESTNET',
     DEVNET = 'DEVNET',
 }
+
+export type BlockLeaf = {
+    blockHash: string;
+    height: number;
+    cumulativeChainwork: BigNumber;
+};

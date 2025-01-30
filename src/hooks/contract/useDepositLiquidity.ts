@@ -4,6 +4,7 @@ import { useStore } from '../../store';
 import { ERC20ABI } from '../../utils/constants';
 import { useAccount } from 'wagmi';
 import { useContractData } from '../../components/providers/ContractDataProvider';
+import { BlockLeaf } from '../../types';
 
 export enum DepositStatus {
     Idle = 'idle',
@@ -28,6 +29,9 @@ interface DepositLiquidityParams {
     btcPayoutScriptPubKey: string;
     depositSalt: string;
     confirmationBlocks: number;
+    tipBlockLeaf: BlockLeaf;
+    tipBlockSiblings: string[];
+    tipBlockPeaks: string[];
 }
 
 function useIsClient() {
@@ -91,6 +95,9 @@ export function useDepositLiquidity() {
                     params.btcPayoutScriptPubKey,
                     params.depositSalt,
                     params.confirmationBlocks,
+                    params.tipBlockLeaf,
+                    params.tipBlockSiblings,
+                    params.tipBlockPeaks,
                 );
                 const doubledGasLimit = estimatedGas.mul(2);
 
@@ -105,6 +112,9 @@ export function useDepositLiquidity() {
                     {
                         gasLimit: doubledGasLimit,
                     },
+                    params.tipBlockLeaf,
+                    params.tipBlockSiblings,
+                    params.tipBlockPeaks,
                 );
                 setStatus(DepositStatus.DepositPending);
 

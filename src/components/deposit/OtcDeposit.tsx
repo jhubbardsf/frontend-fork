@@ -43,7 +43,7 @@ import DepositStatusModal from './DepositStatusModal';
 import WhiteText from '../other/WhiteText';
 import OrangeText from '../other/OrangeText';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { BITCOIN_DECIMALS, opaqueBackgroundColor } from '../../utils/constants';
+import { BITCOIN_DECIMALS, DEVNET_DATA_ENGINE_URL, opaqueBackgroundColor } from '../../utils/constants';
 import { ArrowRightIcon, CheckCircleIcon, CheckIcon, ChevronLeftIcon, SettingsIcon } from '@chakra-ui/icons';
 import { HiOutlineXCircle, HiXCircle } from 'react-icons/hi';
 import { IoCheckmarkDoneCircle } from 'react-icons/io5';
@@ -57,6 +57,7 @@ import { toastError } from '../../hooks/toast';
 import WebAssetTag from '../other/WebAssetTag';
 import { DepositAmounts } from './DepositAmounts';
 import { MdArrowRight } from 'react-icons/md';
+import { getTipProof } from '../../utils/dataEngineClient';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -438,6 +439,11 @@ export const OtcDeposit = ({}) => {
             console.log('[IN] depositAmountInSmallestTokenUnit:', depositAmountInSmallestTokenUnit.toString());
             console.log('[OUT] bitcoinOutputAmountInSats:', bitcoinOutputAmountInSats.toString());
 
+            // gather tip block data TODO - ALPINE
+            const tipProof = await getTipProof(selectedInputAsset.dataEngineUrl);
+
+            console.log('[alpine] tipProof', tipProof);
+
             // [2] deposit liquidity
             await depositLiquidity({
                 signer: signer,
@@ -451,6 +457,9 @@ export const OtcDeposit = ({}) => {
                 btcPayoutScriptPubKey: btcPayoutScriptPubKey,
                 depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
                 confirmationBlocks: blockConfirmationsSliderValue, // TODO - make this an advanced settings slider (between 2-6?)
+                tipBlockLeaf: tipProof.leaf,
+                tipBlockSiblings: tipProof.siblings,
+                tipBlockPeaks: tipProof.peaks,
             });
         }
     };
@@ -531,7 +540,7 @@ export const OtcDeposit = ({}) => {
                                 {...opaqueBackgroundColor}
                                 borderWidth={3}
                                 borderColor={'rgba(255, 142, 40, 0.55)'}
-                                boxShadow='0px 0px 16px 4px rgba(255, 142, 40, 0.38)'
+                                boxShadow='0px 0px 16px 4px rgba(255, 142, 40, 0.2)'
                                 px='40px'
                                 fontFamily={FONT_FAMILIES.AUX_MONO}
                                 fontWeight='normal'
