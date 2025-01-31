@@ -32,11 +32,11 @@ const anvilChain = {
     },
     rpcUrls: {
         default: {
-            http: ['http://localhost:50123'], // Replace with your Anvil testnet RPC URL
+            http: ['http://localhost:50101'], // Replace with your Anvil testnet RPC URL
         },
     },
     blockExplorers: {
-        default: { name: 'Anvil Explorer', url: 'http://localhost:50123' }, // Replace with your block explorer URL if available
+        default: { name: 'Anvil Explorer', url: 'http://localhost:50101' }, // Replace with your block explorer URL if available
     },
     testnet: true,
 };

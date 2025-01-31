@@ -71,6 +71,7 @@ export function useDepositLiquidity() {
                 console.log('tokenContractAddress', params.tokenAddress);
                 console.log('riftExchangeContractAddress', params.riftExchangeContractAddress);
                 const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContractAddress, params.riftExchangeAbi, params.signer);
+                console.log("userEthAddress", userEthAddress);
 
                 // [0] TODO: Replace with n allowance system from alpine ------------------------
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
@@ -100,6 +101,7 @@ export function useDepositLiquidity() {
                     params.tipBlockPeaks,
                 );
                 const doubledGasLimit = estimatedGas.mul(2);
+                console.log("Estimate gas succeeded!");
 
                 // [2] deposit liquidity
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
@@ -109,12 +111,12 @@ export function useDepositLiquidity() {
                     params.btcPayoutScriptPubKey,
                     params.depositSalt,
                     params.confirmationBlocks,
-                    {
-                        gasLimit: doubledGasLimit,
-                    },
                     params.tipBlockLeaf,
                     params.tipBlockSiblings,
                     params.tipBlockPeaks,
+                    {
+                        gasLimit: doubledGasLimit,
+                    },
                 );
                 setStatus(DepositStatus.DepositPending);
 
