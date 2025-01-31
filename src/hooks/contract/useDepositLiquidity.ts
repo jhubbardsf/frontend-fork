@@ -5,6 +5,7 @@ import { ERC20ABI } from '../../utils/constants';
 import { useAccount } from 'wagmi';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { BlockLeaf } from '../../types';
+import { getSwapsForAddress } from '../../utils/dataEngineClient';
 
 export enum DepositStatus {
     Idle = 'idle',
@@ -125,6 +126,7 @@ export function useDepositLiquidity() {
                 setStatus(DepositStatus.Confirmed);
                 refreshAllDepositData();
                 console.log('Deposit confirmed');
+
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
@@ -140,7 +142,7 @@ export function useDepositLiquidity() {
             status: DepositStatus.Idle,
             error: null,
             txHash: null,
-            resetDepositState: () => {},
+            resetDepositState: () => { },
         };
     }
 
