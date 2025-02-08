@@ -35,10 +35,10 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
     const [profitAmountUSD, setProfitAmountUSD] = useState('$0.00');
     const [bitcoinOutputAmountUSD, setBitcoinOutputAmountUSD] = useState('$0.00');
     const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const bitcoinPriceUSD = useStore((state) => state.validAssets['BTC'].priceUSD);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const usdtPriceUSD = useStore.getState().validAssets[selectedInputAsset.name].priceUSD;
-    const { refreshAllDepositData, loading } = useContractData();
+    const { refreshUserSwapsFromAddress, loading } = useContractData();
     const [updateStatus, setUpdateStatus] = useState(UpdateStatus.Idle);
     const [error, setError] = useState('');
     const [txHash, setTxHash] = useState('');
@@ -230,7 +230,7 @@ const UpdateExchangeRateModal = ({ isOpen, onClose, selectedVault }) => {
             console.log('Exchange rate updated successfully');
             setProfitPercentage('');
             setBtcOutputAmount('');
-            refreshAllDepositData();
+            refreshUserSwapsFromAddress();
         } catch (error) {
             console.error('Failed to update exchange rate:', error);
             setError(error.message || 'An error occurred while updating the exchange rate');

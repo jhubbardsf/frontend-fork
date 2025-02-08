@@ -5,7 +5,6 @@ import { ERC20ABI } from '../../utils/constants';
 import { useAccount } from 'wagmi';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { BlockLeaf } from '../../types';
-import { getSwapsForAddress } from '../../utils/dataEngineClient';
 
 export enum DepositStatus {
     Idle = 'idle',
@@ -19,7 +18,7 @@ export enum DepositStatus {
 }
 
 interface DepositLiquidityParams {
-    signer: ethers.Signer;
+    signer: ethers.providers.JsonRpcSigner;
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContractAddress: string;
     tokenAddress: string;
@@ -48,8 +47,8 @@ export function useDepositLiquidity() {
     const [txHash, setTxHash] = useState<string | null>(null);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const userEthAddress = useStore((state) => state.userEthAddress);
-    const { refreshAllDepositData } = useContractData();
     const validAssets = useStore((state) => state.validAssets);
+    const { refreshUserSwapsFromAddress } = useContractData();
 
     const resetDepositState = useCallback(() => {
         if (isClient) {
@@ -72,7 +71,7 @@ export function useDepositLiquidity() {
                 console.log('tokenContractAddress', params.tokenAddress);
                 console.log('riftExchangeContractAddress', params.riftExchangeContractAddress);
                 const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContractAddress, params.riftExchangeAbi, params.signer);
-                console.log("userEthAddress", userEthAddress);
+                console.log('userEthAddress', userEthAddress);
 
                 // [0] TODO: Replace with n allowance system from alpine ------------------------
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
@@ -102,7 +101,7 @@ export function useDepositLiquidity() {
                     params.tipBlockPeaks,
                 );
                 const doubledGasLimit = estimatedGas.mul(2);
-                console.log("Estimate gas succeeded!");
+                console.log('Estimate gas succeeded!');
 
                 // [2] deposit liquidity
                 const depositTx = await riftExchangeContractInstance.depositLiquidity(
@@ -124,16 +123,15 @@ export function useDepositLiquidity() {
                 setTxHash(depositTx.hash);
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
-                refreshAllDepositData();
+                refreshUserSwapsFromAddress();
                 console.log('Deposit confirmed');
-
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
                 setStatus(DepositStatus.Error);
             }
         },
-        [isClient, userEthAddress, selectedInputAsset, validAssets, refreshAllDepositData],
+        [isClient, userEthAddress, selectedInputAsset, validAssets],
     );
 
     if (!isClient) {
@@ -142,7 +140,7 @@ export function useDepositLiquidity() {
             status: DepositStatus.Idle,
             error: null,
             txHash: null,
-            resetDepositState: () => { },
+            resetDepositState: () => {},
         };
     }
 

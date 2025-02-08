@@ -36,7 +36,7 @@ const Activity = () => {
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
     const { address, isConnected } = useAccount();
-    const { refreshAllDepositData, loading } = useContractData();
+    const { loading } = useContractData();
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const validAssets = useStore((state) => state.validAssets);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -80,16 +80,17 @@ const Activity = () => {
                                 WebkitBackgroundClip: 'text',
                             }}
                             bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
+                            opacity={0.8}
                             letterSpacing={'2px'}
                             mt='-10px'>
                             <Text userSelect={'none'} fontSize='70px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Swap Activity
+                                Activity
                             </Text>
                         </Flex>
                     </Flex>
                     {/* CHARTS */}
-                    <Flex w='100%' mt='25px' maxW='1100px' gap='12px' align='center' justify='center' direction='column'>
-                        {/* <Flex
+                    {/* <Flex w='100%' mt='25px' maxW='1100px' gap='12px' align='center' justify='center' direction='column'>
+                         <Flex
                             letterSpacing={'-2px'}
                             bg={colors.offBlack}
                             mb='10px'
@@ -112,17 +113,17 @@ const Activity = () => {
                                 availableLiquidity,
                                 selectedInputAsset.decimals,
                             )} ${selectedInputAsset.name}`}</Text>
-                        </Flex> */}
+                        </Flex> 
 
-                        <Flex w='100%' direction='row' gap='12px'>
+                 <Flex w='100%' direction='row' gap='12px'>
                             <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
                                 <ActiveLiquidityRawChart />
                             </ActivityChartContainer>
                             <ActivityChartContainer title='Monthly Volume' value='$21.23B'>
                                 <MonthlyValueRawChart />
                             </ActivityChartContainer>
-                        </Flex>
-                    </Flex>
+                        </Flex> 
+                    </Flex>*/}
                     <Flex w='100%' maxW='1200px' align={'center'} justify={'center'}>
                         <SwapHistory />
                     </Flex>

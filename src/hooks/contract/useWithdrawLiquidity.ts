@@ -25,7 +25,7 @@ export function useWithdrawLiquidity() {
     const [status, setStatus] = useState<WithdrawStatus>(WithdrawStatus.Idle);
     const [error, setError] = useState<string | null>(null);
     const [txHash, setTxHash] = useState<string | null>(null);
-    const { refreshAllDepositData } = useContractData();
+    const { refreshUserSwapsFromAddress } = useContractData();
 
     const resetWithdrawState = () => {
         setStatus(WithdrawStatus.Idle);
@@ -59,7 +59,7 @@ export function useWithdrawLiquidity() {
 
             console.log('Liquidity withdrawn successfully');
             setStatus(WithdrawStatus.Confirmed);
-            refreshAllDepositData();
+            refreshUserSwapsFromAddress();
         } catch (err) {
             console.error('Error in withdrawLiquidity:', err);
             setError(err instanceof Error ? err.message : String(err));

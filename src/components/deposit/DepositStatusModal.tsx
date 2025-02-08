@@ -30,7 +30,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const router = useRouter();
     const [isLoadingRedirect, setIsLoadingRedirect] = React.useState(false);
-    const { refreshAllDepositData, loading } = useContractData();
+    const { refreshUserSwapsFromAddress, loading } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -166,7 +166,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     borderColor={colors.purpleBorder}
                                     fontWeight={'normal'}
                                     onClick={() => {
-                                        refreshAllDepositData();
+                                        refreshUserSwapsFromAddress();
                                         handleNavigation('/manage');
                                         setIsLoadingRedirect(true);
                                         // onClose();

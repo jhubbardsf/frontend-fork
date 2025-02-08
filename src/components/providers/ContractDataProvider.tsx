@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
@@ -8,13 +8,14 @@ import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contra
 import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { getUSDPrices } from '../../utils/fetchUniswapPrices';
+import { getSwapsForAddress } from '../../utils/dataEngineClient';
 
 interface ContractDataContextType {
-    allDepositVaults: any;
     loading: boolean;
     error: any;
-    refreshAllDepositData: () => Promise<void>;
+    userSwapsFromAddress: any[];
     refreshConnectedUserBalance: () => Promise<void>;
+    refreshUserSwapsFromAddress: () => Promise<void>;
 }
 
 const ContractDataContext = createContext<ContractDataContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
     const validAssets = useStore((state) => state.validAssets);
+    const [isLoading, setIsLoading] = useState(true);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -117,30 +119,50 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         selectedInputAsset,
     ]);
 
+    // New useEffect to call fetchUserSwapsFromAddress every 10 seconds
+    useEffect(() => {
+        console.log('useEffect');
+        const swapsInterval = setInterval(() => {
+            console.log('CALLING fetchUserSwapsFromAddress');
+            fetchUserSwapsFromAddress();
+        }, 2000);
+
+        return () => clearInterval(swapsInterval); // Cleanup interval on component unmount
+    }, [address, selectedInputAsset]);
+
     // [4] fetch deposit vaults
-    // const { allFetchedDepositVaults, userActiveDepositVaults, userCompletedDepositVaults, allFetchedSwapReservations, loading, error, refreshAllDepositData } = useDepositVaults();
-    const isLoading = false; // todo make a new hook for the above to get deposit vaults with event logs with a new loading state
 
-    // [5] continuously refresh deposit data every 10 seconds
-    // useEffect(() => {
-    //     const continuouslyRefreshDepositData = async () => {
-    //         await refreshAllDepositData();
-    //         if (isConnected && address) {
-    //             await refreshConnectedUserBalance();
-    //         }
-    //     };
+    const fetchUserSwapsFromAddress = async () => {
+        console.log('fetchUserSwapsFromAddress');
+        if (!address) {
+            console.log('no wallet connected, cannot lookup swap data by address');
+            return;
+        }
+        if (!selectedInputAsset) {
+            console.log('no selected asset, cannot lookup swap data by address');
+            return;
+        }
+        setIsLoading(true);
+        const swaps = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
+            address: address,
+            page: 0,
+        });
+        console.log('swaps', swaps);
+        // setUserSwapsFromAddress(swaps);
+        setIsLoading(false);
+    };
 
-    //     continuouslyRefreshDepositData();
-    //     const intervalId = setInterval(continuouslyRefreshDepositData, 10000); // 10 seconds
-    //     return () => clearInterval(intervalId);
-    // }, [isConnected, address]);
+    // New function to refresh user swaps
+    const refreshUserSwapsFromAddress = async () => {
+        await fetchUserSwapsFromAddress();
+    };
 
     const value = {
-        allDepositVaults: [],
         loading: isLoading,
         error: null,
-        refreshAllDepositData: () => Promise.resolve(),
+        userSwapsFromAddress: [],
         refreshConnectedUserBalance,
+        refreshUserSwapsFromAddress,
     };
 
     return <ContractDataContext.Provider value={value}>{children}</ContractDataContext.Provider>;

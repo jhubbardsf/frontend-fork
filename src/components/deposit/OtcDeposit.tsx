@@ -199,7 +199,7 @@ export const OtcDeposit = ({}) => {
                 const formattedBitcoinOutputAmount = newBitcoinOutputAmount == 0 ? '0.0' : newBitcoinOutputAmount.toFixed(BITCOIN_DECIMALS);
 
                 if (validateBitcoinAmount(formattedBitcoinOutputAmount)) {
-                    setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
+                    // setBtcOutputAmount(formattedBitcoinOutputAmount === '0.0' ? '' : formattedBitcoinOutputAmount);
                 }
             }
         };

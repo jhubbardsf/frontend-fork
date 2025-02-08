@@ -13,7 +13,6 @@ import { BITCOIN_DECIMALS, MAX_SWAP_AMOUNT_SATS, MAX_SWAP_LP_OUTPUTS, MIN_SWAP_A
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
-import { DepositConfirmation } from './DepositConfirmation';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
@@ -51,7 +50,7 @@ export const DepositUI = () => {
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
-    const { refreshAllDepositData, refreshConnectedUserBalance, loading } = useContractData();
+    const { refreshUserSwapsFromAddress, refreshConnectedUserBalance, loading } = useContractData();
     const [isAboveMaxSwapLimitCoinbaseBtcDeposit, setIsAboveMaxSwapLimitCoinbaseBtcDeposit] = useState(false);
     const [isAboveMaxSwapLimitBtcOutput, setIsAboveMaxSwapLimitBtcOutput] = useState(false);
     const [isBelowMinCoinbaseBtcDeposit, setIsBelowMinCoinbaseBtcDeposit] = useState(false);
@@ -252,7 +251,13 @@ export const DepositUI = () => {
                 borderRight={borderColor}>
                 <Flex w='90%' direction={'column'}>
                     {depositFlowState === '1-confirm-deposit' ? (
-                        <DepositConfirmation />
+                        <Flex>
+                            <Flex w='100%' flexDir='column' position='relative'>
+                                <Flex>
+                                    <Text>Deposit Confirmation | 1-confirm-deposit</Text>
+                                </Flex>
+                            </Flex>
+                        </Flex>
                     ) : (
                         <>
                             <Flex w='100%' flexDir='column' position='relative'>

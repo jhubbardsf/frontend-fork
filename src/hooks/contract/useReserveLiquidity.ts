@@ -52,7 +52,7 @@ export function useReserveLiquidity() {
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const router = useRouter();
-    const { refreshAllDepositData } = useContractData();
+    const { refreshUserSwapsFromAddress } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -144,7 +144,7 @@ export function useReserveLiquidity() {
             } catch (e) {
                 console.error('Error creating Rift swap:', e);
             }
-            refreshAllDepositData();
+            refreshUserSwapsFromAddress();
 
             try {
                 handleNavigation(`/swap/${reservationUri}`);

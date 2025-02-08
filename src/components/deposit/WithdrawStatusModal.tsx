@@ -39,13 +39,12 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
     const chainId = useChainId();
     const { chains, switchChain } = useSwitchChain();
     const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
-    const { refreshAllDepositData, loading } = useContractData();
+    const { refreshUserSwapsFromAddress, loading } = useContractData();
 
     useEffect(() => {
         if (isOpen) {
             setWithdrawAmount('');
             setIsConfirmStep(true);
-
         }
     }, [isOpen, setWithdrawAmount]);
 
@@ -105,7 +104,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                 setSelectedVaultToManage(updatedVault);
             }
             setRefreshKey((prevKey) => prevKey + 1);
-            refreshAllDepositData();
+            refreshUserSwapsFromAddress();
         } catch (error) {
             console.error('Failed to process withdrawal:', error);
         }
@@ -210,8 +209,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                             filter: isError ? 'drop-shadow(0px 0px 40px rgba(183, 6, 6, 0.5))' : 'drop-shadow(0px 0px 50px rgba(6, 64, 183, 0.6))',
                         },
                     },
-                }}
-                >
+                }}>
                 <ModalHeader fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
                     {isConfirmStep ? 'Withdraw Liquidity' : 'Withdrawal Status'}
                 </ModalHeader>

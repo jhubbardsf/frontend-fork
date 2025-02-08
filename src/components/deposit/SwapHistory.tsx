@@ -26,7 +26,7 @@ export const SwapHistory = ({}) => {
     // const vaultsToDisplay = hideCompletedVaults ? userActiveDepositVaults : userActiveDepositVaults.concat(userCompletedDepositVaults);
     const vaultsToDisplay = allDepositVaults; // testing
     const { address, isConnected } = useAccount();
-    const { refreshAllDepositData, loading } = useContractData();
+    const { refreshUserSwapsFromAddress, loading } = useContractData();
     const allSwapReservations = useStore((state) => state.allSwapReservations);
     const router = useRouter();
     const userSwapReservations = allSwapReservations ? allSwapReservations.filter((reservation: SwapReservation) => reservation.owner.toLowerCase() === address?.toLowerCase()) : [];
@@ -45,7 +45,7 @@ export const SwapHistory = ({}) => {
     };
 
     useEffect(() => {
-        refreshAllDepositData();
+        refreshUserSwapsFromAddress();
     }, []);
 
     // Update selected vault with new data
@@ -140,7 +140,7 @@ export const SwapHistory = ({}) => {
                     py='12px'
                     align={'center'}
                     {...opaqueBackgroundColor}
-                    borderRadius={'20px'}
+                    borderRadius={'35px'}
                     mt={'16px'}
                     border='2px solid'
                     borderColor={colors.borderGray}

@@ -11,7 +11,6 @@ import React, { useEffect } from 'react';
 import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/deposit/DepositUI';
-import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
 import OfflinePage from '../components/background/OfflinePage';
@@ -63,6 +62,22 @@ const Home = () => {
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '18vh' : '100px'}>
+                    <Flex direction={'column'} align='center' mt={'-20px'} mb={'15px'} w='100%'>
+                        <Flex
+                            sx={{
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                            }}
+                            bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
+                            opacity={0.8}
+                            letterSpacing={'2px'}
+                            mt='-10px'>
+                            <Text userSelect={'none'} fontSize='70px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
+                                Direct Trade
+                            </Text>
+                        </Flex>
+                    </Flex>
                     <Flex
                         direction='column'
                         align='center'

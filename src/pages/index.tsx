@@ -11,7 +11,6 @@ import React, { useEffect } from 'react';
 import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/deposit/DepositUI';
-import { DepositConfirmation } from '../components/deposit/DepositConfirmation';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
 import OfflinePage from '../components/background/OfflinePage';

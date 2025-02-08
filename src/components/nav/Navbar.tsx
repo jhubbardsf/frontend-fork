@@ -201,10 +201,8 @@ export const Navbar = ({}) => {
             <Flex direction='row' w='100%' px={'30px'} pt='25px' zIndex={400}>
                 <Flex gap='12px'>
                     {navItem('Swap', '/')}
-                    {/* {navItem('Lending', '/lending')} */}
-                    {navItem('OTC', '/otc')}
                     {navItem('Activity', '/activity')}
-                    {navItem('About', '/about')}
+                    {navItem('OTC', '/otc')}
                 </Flex>
                 <Flex ml='25px' gap='30px' align='center'>
                     <a href='https://x.com/riftdex' target='_blank' rel='noopener noreferrer'>

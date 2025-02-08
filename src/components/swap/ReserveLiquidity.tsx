@@ -57,7 +57,7 @@ export const ReserveLiquidity = ({}) => {
     const [loadingReservation, setLoadingReservation] = useState(false);
     const [reservationError, setReservationError] = useState<string | null>(null);
 
-    const { refreshAllDepositData } = useContractData();
+    const { refreshUserSwapsFromAddress } = useContractData();
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -234,7 +234,7 @@ export const ReserveLiquidity = ({}) => {
             } catch (e) {
                 console.error('Error creating Rift swap:', e);
             }
-            refreshAllDepositData();
+            refreshUserSwapsFromAddress();
 
             try {
                 handleNavigation(`/swap/${reservationUri}`);

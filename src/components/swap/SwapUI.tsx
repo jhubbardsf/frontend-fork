@@ -64,7 +64,7 @@ export const SwapUI = () => {
     const [isBelowMinUsdtOutput, setIsBelowMinUsdtOutput] = useState(false);
     const [isBelowMinBtcInput, setIsBelowMinBtcInput] = useState(false);
     const [minBtcInputAmount, setMinBtcInputAmount] = useState('');
-    const { refreshAllDepositData, loading } = useContractData();
+    const { loading } = useContractData();
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
