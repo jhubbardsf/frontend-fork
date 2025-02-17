@@ -137,6 +137,11 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                 fontFamily={FONT_FAMILIES.NOSTROMO}
                                 textAlign='center'>
                                 {getStatusMessage()}
+                                {status === DepositStatus.Confirmed && (
+                                    <Text justifySelf={'center'} fontSize='16px' w='80%' fontWeight='bold' fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        Bitcoin will be sent to your wallet shortly!
+                                    </Text>
+                                )}
                             </Text>
                         </Flex>
                         {isCompleted && (
@@ -167,7 +172,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     fontWeight={'normal'}
                                     onClick={() => {
                                         refreshUserSwapsFromAddress();
-                                        handleNavigation('/manage');
+                                        handleNavigation('/'); // TODO - make this go to the activity page
                                         setIsLoadingRedirect(true);
                                         // onClose();
                                     }}

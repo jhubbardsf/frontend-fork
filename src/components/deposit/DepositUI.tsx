@@ -22,7 +22,8 @@ import BitcoinAddressValidation from '../other/BitcoinAddressValidation';
 import { createWalletClient } from 'viem';
 import { getTipProof } from '../../utils/dataEngineClient';
 import { BigNumber, ethers } from 'ethers';
-import { useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
+import { DepositStatus, useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
+import DepositStatusModal from './DepositStatusModal';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -148,6 +149,15 @@ export const DepositUI = () => {
 
     const checkLiquidityExceeded = (amount: number) => {
         if (isConnected) setUserBalanceExceeded(amount > parseFloat(userCoinbaseBtcBalance));
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        if (depositLiquidityStatus === DepositStatus.Confirmed) {
+            setCoinbaseBtcDepositAmount('');
+            setBtcOutputAmount('');
+            setBtcInputSwapAmount('');
+        }
     };
 
     // --------------- BTC OUTPUT ---------------
@@ -772,6 +782,7 @@ export const DepositUI = () => {
                         </>
                     )}
                 </Flex>
+                <DepositStatusModal isOpen={isModalOpen} onClose={handleModalClose} status={depositLiquidityStatus} error={depositLiquidityError} txHash={txHash} />
             </Flex>
         </>
     );
