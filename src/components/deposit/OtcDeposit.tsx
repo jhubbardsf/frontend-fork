@@ -33,7 +33,7 @@ import { colors } from '../../utils/colors';
 import { BTCSVG, Coinbase_BTC_Card, ETHSVG, InfoSVG } from '../other/SVGs';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useChainId, useSwitchChain, useWalletClient } from 'wagmi';
-import { ethToWei, weiToEth, btcToSats, satsToBtc, bufferTo18Decimals, convertToBitcoinLockingScript, addNetwork } from '../../utils/dappHelper';
+import { ethToWei, weiToEth, btcToSats, satsToBtc, bufferTo18Decimals, convertToBitcoinLockingScript, addNetwork, validateBitcoinPayoutAddress } from '../../utils/dappHelper';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
@@ -58,6 +58,7 @@ import WebAssetTag from '../other/WebAssetTag';
 import { DepositAmounts } from './DepositAmounts';
 import { MdArrowRight } from 'react-icons/md';
 import { getTipProof } from '../../utils/dataEngineClient';
+import BitcoinAddressValidation from '../other/BitcoinAddressValidation';
 
 type ActiveTab = 'swap' | 'liquidity';
 
@@ -278,33 +279,6 @@ export const OtcDeposit = ({}) => {
         setOtcRecipientUSDCAddress(otcRecipientBaseAddress);
     };
 
-    const validateBitcoinPayoutAddress = (address: string): boolean => {
-        try {
-            // attempt to decode the address
-            const decoded = bitcoin.address.fromBech32(address);
-
-            // ensure it's a mainnet address with prefix 'bc'
-            if (decoded.prefix !== 'bc') {
-                return false;
-            }
-
-            // ensure it's a segwit version 0 address (P2WPKH or P2WSH)
-            if (decoded.version !== 0) {
-                return false;
-            }
-
-            // additional check for data length (per BIP 173)
-            if (decoded.data.length !== 20 && decoded.data.length !== 32) {
-                return false;
-            }
-
-            return true; // address is valid
-        } catch (error) {
-            // decoding failed, address is invalid
-            return false;
-        }
-    };
-
     const handleModalClose = () => {
         setIsModalOpen(false);
         if (depositLiquidityStatus === DepositStatus.Confirmed) {
@@ -316,36 +290,6 @@ export const OtcDeposit = ({}) => {
             setBitcoinOutputAmountUSD('');
             setShowConfirmationScreen(false);
         }
-    };
-
-    const BitcoinAddressValidation: React.FC<{ address: string }> = ({ address }) => {
-        const isValid = validateBitcoinPayoutAddress(address);
-
-        if (address.length === 0) {
-            return <Text>...</Text>;
-        }
-
-        return (
-            <Flex align='center' fontFamily={FONT_FAMILIES.NOSTROMO} w='140px' ml='-30px' mr='0px' h='100%' justify='center' direction='column'>
-                {isValid ? (
-                    <Flex direction={'column'} align={'center'} justify={'center'} mr='22px'>
-                        <IoMdCheckmarkCircle color={colors.greenOutline} size={'25px'} />
-                        <Text color={colors.greenOutline} fontSize={'10px'} mt='3px'>
-                            Valid
-                        </Text>
-                    </Flex>
-                ) : (
-                    <Flex w='160px' ml='-8px' mt='-2px' align='cetner'>
-                        <Flex mt='5px'>
-                            <HiXCircle color='red' size={'35px'} />
-                        </Flex>
-                        <Text fontSize={'9px'} w='70px' mt='3px' ml='5px' color='red'>
-                            Invalid Segwit Address
-                        </Text>
-                    </Flex>
-                )}
-            </Flex>
-        );
     };
 
     // ---------- INITIATE DEPOSIT LOGIC ---------- //
@@ -450,16 +394,17 @@ export const OtcDeposit = ({}) => {
                 riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
                 riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
                 tokenAddress: selectedInputAsset.tokenAddress,
-                // ---- depositLiquidity() contract params -----
-                specifiedPayoutAddress: otcRecipientBaseAddress,
-                depositAmountInSmallestTokenUnit: depositAmountInSmallestTokenUnit,
-                expectedSats: bitcoinOutputAmountInSats,
-                btcPayoutScriptPubKey: btcPayoutScriptPubKey,
-                depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
-                confirmationBlocks: blockConfirmationsSliderValue, // TODO - make this an advanced settings slider (between 2-6?)
-                tipBlockLeaf: tipProof.leaf,
-                tipBlockSiblings: tipProof.siblings,
-                tipBlockPeaks: tipProof.peaks,
+                params: {
+                    specifiedPayoutAddress: otcRecipientBaseAddress,
+                    depositAmount: depositAmountInSmallestTokenUnit, // renamed from depositAmountInSmallestTokenUnit
+                    expectedSats: bitcoinOutputAmountInSats,
+                    btcPayoutScriptPubKey: btcPayoutScriptPubKey,
+                    depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
+                    confirmationBlocks: blockConfirmationsSliderValue, // TODO - make this an advanced settings slider (between 2-6?)
+                    tipBlockLeaf: tipProof.leaf,
+                    tipBlockSiblings: tipProof.siblings,
+                    tipBlockPeaks: tipProof.peaks,
+                },
             });
         }
     };

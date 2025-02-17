@@ -10,6 +10,7 @@ import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.js
 import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
 import depositVaultAggregatorABI from '../abis/DepositVaultsAggregator.json';
 import { arbitrumSepolia, arbitrum, Chain } from 'viem/chains';
+import { DepositStatus } from '../hooks/contract/useDepositLiquidity';
 
 // HELPER FUCTIONS
 export function weiToEth(wei: BigNumber): BigNumberish {
@@ -294,5 +295,32 @@ export const addNetwork = async (chain: Chain) => {
         console.log('Network added successfully');
     } catch (error) {
         console.error('Failed to add network:', error);
+    }
+};
+
+export const validateBitcoinPayoutAddress = (address: string): boolean => {
+    try {
+        // attempt to decode the address
+        const decoded = bitcoin.address.fromBech32(address);
+
+        // ensure it's a mainnet address with prefix 'bc'
+        if (decoded.prefix !== 'bc') {
+            return false;
+        }
+
+        // ensure it's a segwit version 0 address (P2WPKH or P2WSH)
+        if (decoded.version !== 0) {
+            return false;
+        }
+
+        // additional check for data length (per BIP 173)
+        if (decoded.data.length !== 20 && decoded.data.length !== 32) {
+            return false;
+        }
+
+        return true; // address is valid
+    } catch (error) {
+        // decoding failed, address is invalid
+        return false;
     }
 };

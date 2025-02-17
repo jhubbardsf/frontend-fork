@@ -2,7 +2,7 @@ import { Address } from 'viem';
 import { BlockLeaf } from '../types';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 
-const u8ArrayToHex = (bytes: number[]): string => "0x" + Buffer.from(bytes).toString('hex');
+const u8ArrayToHex = (bytes: number[]): string => '0x' + Buffer.from(bytes).toString('hex');
 
 export interface TipProof {
     leaf: BlockLeaf;
@@ -38,6 +38,7 @@ const decodeRawTipProof = (response: RawTipProof) => {
 
 export const getTipProof = async (baseUrl: string): Promise<TipProof> => {
     const response = await fetch(`${baseUrl}/tip-proof`);
+    console.log('[alpine] response', response);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     return decodeRawTipProof(await response.json());
 };
@@ -46,7 +47,6 @@ export interface VirtualSwapQuery {
     address: string;
     page: number;
 }
-
 
 interface DepositVault {
     vaultIndex: string;
@@ -76,10 +76,10 @@ interface ProposedSwap {
 }
 
 enum SwapStatus {
-    PaymentPending = "PaymentPending",
-    ChallengePeriod = "ChallengePeriod",
-    Completed = "Completed",
-    LiquidityWithdrawn = "LiquidityWithdrawn",
+    PaymentPending = 'PaymentPending',
+    ChallengePeriod = 'ChallengePeriod',
+    Completed = 'Completed',
+    LiquidityWithdrawn = 'LiquidityWithdrawn',
 }
 
 interface ChainAwareDeposit {
@@ -159,30 +159,29 @@ const decodeOtcSwap = (response: RawOTCSwap): OTCSwap => {
             deposit_block_hash: u8ArrayToHex(response.deposit.deposit_block_hash),
             deposit_txid: u8ArrayToHex(response.deposit.deposit_txid),
         },
-        swap_proofs: response.swap_proofs.map(swap => ({
+        swap_proofs: response.swap_proofs.map((swap) => ({
             ...swap,
             swap_proof_txid: u8ArrayToHex(swap.swap_proof_txid),
             swap_proof_block_hash: u8ArrayToHex(swap.swap_proof_block_hash),
-            release: swap.release ? {
-                release_txid: u8ArrayToHex(swap.release.release_txid),
-                release_block_hash: u8ArrayToHex(swap.release.release_block_hash),
-                release_block_number: swap.release.release_block_number,
-            } : undefined,
+            release: swap.release
+                ? {
+                      release_txid: u8ArrayToHex(swap.release.release_txid),
+                      release_block_hash: u8ArrayToHex(swap.release.release_block_hash),
+                      release_block_number: swap.release.release_block_number,
+                  }
+                : undefined,
         })),
         withdraw: response.withdraw
             ? {
-                ...response.withdraw,
-                withdraw_txid: u8ArrayToHex(response.withdraw.withdraw_txid),
-                withdraw_block_hash: u8ArrayToHex(response.withdraw.withdraw_block_hash),
-            }
+                  ...response.withdraw,
+                  withdraw_txid: u8ArrayToHex(response.withdraw.withdraw_txid),
+                  withdraw_block_hash: u8ArrayToHex(response.withdraw.withdraw_block_hash),
+              }
             : undefined,
     };
 };
 
-export const getSwapsForAddress = async (
-    baseUrl: string,
-    query: VirtualSwapQuery
-): Promise<OTCSwap[]> => {
+export const getSwapsForAddress = async (baseUrl: string, query: VirtualSwapQuery): Promise<OTCSwap[]> => {
     try {
         const params = new URLSearchParams({
             address: query.address,
@@ -190,9 +189,9 @@ export const getSwapsForAddress = async (
         });
 
         const response = await fetch(`${baseUrl}/swaps?${params}`, {
-            method: "GET",
+            method: 'GET',
             headers: {
-                Accept: "application/json",
+                Accept: 'application/json',
             },
         });
 

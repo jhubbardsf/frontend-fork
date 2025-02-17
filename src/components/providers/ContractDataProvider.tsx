@@ -31,7 +31,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
     const validAssets = useStore((state) => state.validAssets);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -68,9 +68,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         // [0] fetch price data
         const fetchPriceData = async () => {
             try {
-                let [btcPriceUSD, cbbtcPriceUsd] = await getUSDPrices();
+                let { btcPriceUSD, cbbtcPriceUSD } = await getUSDPrices();
                 updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
-                updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUsd));
+                updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
             } catch (e) {
                 console.error(e);
                 return;
@@ -120,18 +120,17 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     ]);
 
     // New useEffect to call fetchUserSwapsFromAddress every 10 seconds
-    useEffect(() => {
-        console.log('useEffect');
-        const swapsInterval = setInterval(() => {
-            console.log('CALLING fetchUserSwapsFromAddress');
-            fetchUserSwapsFromAddress();
-        }, 2000);
+    // useEffect(() => {
+    //     console.log('useEffect');
+    //     const swapsInterval = setInterval(() => {
+    //         console.log('CALLING fetchUserSwapsFromAddress');
+    //         fetchUserSwapsFromAddress();
+    //     }, 2000);
 
-        return () => clearInterval(swapsInterval); // Cleanup interval on component unmount
-    }, [address, selectedInputAsset]);
+    //     return () => clearInterval(swapsInterval); // Cleanup interval on component unmount
+    // }, [address, selectedInputAsset]);
 
     // [4] fetch deposit vaults
-
     const fetchUserSwapsFromAddress = async () => {
         console.log('fetchUserSwapsFromAddress');
         if (!address) {
@@ -142,14 +141,12 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             console.log('no selected asset, cannot lookup swap data by address');
             return;
         }
-        setIsLoading(true);
         const swaps = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
             address: address,
             page: 0,
         });
         console.log('swaps', swaps);
-        // setUserSwapsFromAddress(swaps);
-        setIsLoading(false);
+        // setUserSwapsFromAddress(swaps); TODO - finish this
     };
 
     // New function to refresh user swaps

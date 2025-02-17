@@ -46,52 +46,6 @@ export const calculateBTCAmountOut = (SwapAmountUSDC: number, GainPercentage: nu
     return btcOut;
 };
 
-// [1] find optimal swaps given a USDC input amount and a list of limit orders
-export const findOptimalSwapsUsdcInput = (usdcAmount: number, limitOrders: BtcLimitOrder[]): OptimalSwapsResult => {
-    // [0] sort limit orders by lowest gain percentage (highest bitcoin output)
-    const sortedOrders = [...limitOrders].sort((a, b) => a.gainPercentage - b.gainPercentage);
-
-    // [1] initialize variables
-    let remainingUSDC = usdcAmount;
-    const swaps: Swap[] = [];
-    let totalBTCOut = 0;
-    let totalUSDCInput = 0;
-
-    // [2] iterate through sorted limit orders and calculate bitcoin output for each order
-    for (const order of sortedOrders) {
-        // [0] break if no more USDC to swap
-        if (remainingUSDC <= 0) break;
-
-        // [1] calculate max USDC that can be used for the current order
-        const maxUSDCForOrder = order.totalSatsAvailable * btcPriceUSDC;
-        const usdcToSwap = Math.min(remainingUSDC, maxUSDCForOrder);
-
-        // [2] calculate bitcoin output for the current order
-        if (usdcToSwap > 0) {
-            const btcOut = calculateBTCAmountOut(usdcToSwap, order.gainPercentage);
-
-            swaps.push({
-                limitOrder: order,
-                inputAmount: usdcToSwap,
-                outputAmount: btcOut,
-            });
-
-            totalBTCOut += btcOut;
-            totalUSDCInput += usdcToSwap;
-            remainingUSDC -= usdcToSwap;
-        }
-    }
-
-    // [2] return swaps and total amounts
-    return {
-        swaps,
-        inputAsset: useStore.getState().validAssets.BASE_USDC,
-        outputAsset: useStore.getState().validAssets.BTC,
-        totalInputAmount: totalUSDCInput,
-        totalOutputAmount: totalBTCOut,
-    };
-};
-
 // --------------- TEST DATA ---------------
 export const btcLimitOrders: BtcLimitOrder[] = [
     { btcAddress: '0x6969', gainPercentage: 0, totalSatsAvailable: 1 }, // 0%

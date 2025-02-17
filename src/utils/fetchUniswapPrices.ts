@@ -87,10 +87,12 @@ export async function getPricesDataProvider(mainnetRpcIndex: number) {
     return dataProvider;
 }
 
-export async function getUSDPrices(): Promise<string[]> {
+export async function getUSDPrices(): Promise<{ btcPriceUSD: string; cbbtcPriceUSD: string }> {
     // TODO: get these BTC and CoinbaseBTC USD prices from coinbase API from MM server
-    return ['100000', '100000'];
-
+    return {
+        btcPriceUSD: '96900',
+        cbbtcPriceUSD: '96885',
+    };
     // for (let i = 0; i < MAINNET_ETH_RPC_URL.length; i++) {
     //     if (i > 0) {
     //         // first RPC failed, retrying `i`

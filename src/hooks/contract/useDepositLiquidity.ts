@@ -1,10 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ethers, BigNumber, BigNumberish } from 'ethers';
+import { ethers, BigNumber } from 'ethers';
 import { useStore } from '../../store';
 import { ERC20ABI } from '../../utils/constants';
-import { useAccount } from 'wagmi';
-import { useContractData } from '../../components/providers/ContractDataProvider';
 import { BlockLeaf } from '../../types';
+import { useContractData } from '../../components/providers/ContractDataProvider';
 
 export enum DepositStatus {
     Idle = 'idle',
@@ -17,21 +16,23 @@ export enum DepositStatus {
     Error = 'error',
 }
 
+// Updated to match the smart contract struct
 interface DepositLiquidityParams {
     signer: ethers.providers.JsonRpcSigner;
     riftExchangeAbi: ethers.ContractInterface;
     riftExchangeContractAddress: string;
     tokenAddress: string;
-    // ---- depositLiquidity() contract params -----
-    specifiedPayoutAddress: string;
-    depositAmountInSmallestTokenUnit: BigNumber;
-    expectedSats: BigNumber;
-    btcPayoutScriptPubKey: string;
-    depositSalt: string;
-    confirmationBlocks: number;
-    tipBlockLeaf: BlockLeaf;
-    tipBlockSiblings: string[];
-    tipBlockPeaks: string[];
+    params: {
+        specifiedPayoutAddress: string;
+        depositAmount: BigNumber;
+        expectedSats: BigNumber;
+        btcPayoutScriptPubKey: string;
+        depositSalt: string;
+        confirmationBlocks: number;
+        tipBlockLeaf: BlockLeaf;
+        tipBlockSiblings: string[];
+        tipBlockPeaks: string[];
+    };
 }
 
 function useIsClient() {
@@ -68,63 +69,34 @@ export function useDepositLiquidity() {
 
             try {
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
-                console.log('tokenContractAddress', params.tokenAddress);
-                console.log('riftExchangeContractAddress', params.riftExchangeContractAddress);
                 const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContractAddress, params.riftExchangeAbi, params.signer);
-                console.log('userEthAddress', userEthAddress);
 
-                // [0] TODO: Replace with n allowance system from alpine ------------------------
+                // Check allowance
                 const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
-                console.log('allowance:', allowance.toString());
-                console.log('tokenDepositAmountInSmallestTokenUnits:', params.depositAmountInSmallestTokenUnit.toString());
-                if (BigNumber.from(allowance).lt(BigNumber.from(params.depositAmountInSmallestTokenUnit))) {
+                if (BigNumber.from(allowance).lt(params.params.depositAmount)) {
                     setStatus(DepositStatus.WaitingForDepositTokenApproval);
                     const approveTx = await tokenContract.approve(params.riftExchangeContractAddress, validAssets[selectedInputAsset.name].connectedUserBalanceRaw);
 
                     setStatus(DepositStatus.ApprovalPending);
                     await approveTx.wait();
                 }
-                // --------------------------------
 
                 setStatus(DepositStatus.WaitingForWalletConfirmation);
 
-                // [1] set gas limit as 2x estimated gas
-                const estimatedGas = await riftExchangeContractInstance.estimateGas.depositLiquidity(
-                    params.specifiedPayoutAddress,
-                    params.depositAmountInSmallestTokenUnit,
-                    params.expectedSats,
-                    params.btcPayoutScriptPubKey,
-                    params.depositSalt,
-                    params.confirmationBlocks,
-                    params.tipBlockLeaf,
-                    params.tipBlockSiblings,
-                    params.tipBlockPeaks,
-                );
+                // Estimate gas with the new struct parameter
+                const estimatedGas = await riftExchangeContractInstance.estimateGas.depositLiquidity(params.params);
                 const doubledGasLimit = estimatedGas.mul(2);
-                console.log('Estimate gas succeeded!');
 
-                // [2] deposit liquidity
-                const depositTx = await riftExchangeContractInstance.depositLiquidity(
-                    params.specifiedPayoutAddress,
-                    params.depositAmountInSmallestTokenUnit,
-                    params.expectedSats,
-                    params.btcPayoutScriptPubKey,
-                    params.depositSalt,
-                    params.confirmationBlocks,
-                    params.tipBlockLeaf,
-                    params.tipBlockSiblings,
-                    params.tipBlockPeaks,
-                    {
-                        gasLimit: doubledGasLimit,
-                    },
-                );
+                // Call depositLiquidity with the new struct parameter
+                const depositTx = await riftExchangeContractInstance.depositLiquidity(params.params, {
+                    gasLimit: doubledGasLimit,
+                });
+
                 setStatus(DepositStatus.DepositPending);
-
                 setTxHash(depositTx.hash);
                 await depositTx.wait();
                 setStatus(DepositStatus.Confirmed);
                 refreshUserSwapsFromAddress();
-                console.log('Deposit confirmed');
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
                 setError(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
