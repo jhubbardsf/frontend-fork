@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import { CurrencyModalTitle, DepositVault, ReserveLiquidityParams, SwapReservation } from './types';
+import { CurrencyModalTitle, ReserveLiquidityParams, UserSwap } from './types';
 import { BigNumber, ethers } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo, Coinbase_BTC_Icon } from './components/other/SVGs';
 import {
@@ -55,28 +55,12 @@ type Store = {
     setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
 
     // contract data (deposit vaults, swap reservations)
-    allDepositVaults: any;
-    setAllDepositVaults: (allDepositVaults: DepositVault[]) => void;
-    userActiveDepositVaults: DepositVault[];
-    setUserActiveDepositVaults: (userActiveDepositVaults: DepositVault[]) => void;
-    userCompletedDepositVaults: DepositVault[];
-    setUserCompletedDepositVaults: (userCompletedDepositVaults: DepositVault[]) => void;
-    allSwapReservations: SwapReservation[];
-    setAllSwapReservations: (reservations: SwapReservation[]) => void;
-    userSwapReservations: SwapReservation[];
-    setUserSwapReservations: (reservations: SwapReservation[]) => void;
-    totalExpiredReservations: number;
-    setTotalExpiredReservations: (totalExpiredReservations: number) => void;
-    totalUnlockedReservations: number;
-    setTotalUnlockedReservations: (totalUnlockedReservations: number) => void;
-    totalCompletedReservations: number;
-    setTotalCompletedReservations: (totalCompletedReservations: number) => void;
-    currentlyExpiredReservationIndexes: number[];
-    setCurrentlyExpiredReservationIndexes: (indexes: number[]) => void;
+    setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
+    userSwapsFromAddress: UserSwap[];
 
     // manage deposits
-    selectedVaultToManage: DepositVault | null;
-    setSelectedVaultToManage: (vault: DepositVault | null) => void;
+    selectedSwapToManage: UserSwap | null;
+    setSelectedSwapToManage: (swap: UserSwap | null) => void;
     showManageDepositVaultsScreen: boolean;
     setShowManageDepositVaultsScreen: (show: boolean) => void;
 
@@ -107,8 +91,6 @@ type Store = {
     setSwapReservationNotFound: (notFound: boolean) => void;
     currentReservationState: string;
     setCurrentReservationState: (state: string) => void;
-    swapReservationData: SwapReservation | null;
-    setSwapReservationData: (data: SwapReservation | null) => void;
     areNewDepositsPaused: boolean;
     setAreNewDepositsPaused: (paused: boolean) => void;
     isGasFeeTooHigh: boolean;
@@ -224,28 +206,12 @@ export const useStore = create<Store>((set) => {
         setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 
         // contract data (deposit vaults, swap reservations)
-        allDepositVaults: [],
-        setAllDepositVaults: (allDepositVaults) => set({ allDepositVaults }),
-        userActiveDepositVaults: [],
-        setUserActiveDepositVaults: (userActiveDepositVaults) => set({ userActiveDepositVaults }),
-        userCompletedDepositVaults: [],
-        setUserCompletedDepositVaults: (userCompletedDepositVaults) => set({ userCompletedDepositVaults }),
-        allSwapReservations: [],
-        setAllSwapReservations: (allSwapReservations) => set({ allSwapReservations }),
-        userSwapReservations: [],
-        setUserSwapReservations: (userSwapReservations) => set({ userSwapReservations }),
-        totalExpiredReservations: 0,
-        setTotalExpiredReservations: (totalExpiredReservations) => set({ totalExpiredReservations }),
-        totalUnlockedReservations: 0,
-        setTotalUnlockedReservations: (totalUnlockedReservations) => set({ totalUnlockedReservations }),
-        totalCompletedReservations: 0,
-        setTotalCompletedReservations: (totalCompletedReservations) => set({ totalCompletedReservations }),
-        currentlyExpiredReservationIndexes: [],
-        setCurrentlyExpiredReservationIndexes: (currentlyExpiredReservationIndexes) => set({ currentlyExpiredReservationIndexes }),
+        setUserSwapsFromAddress: (swaps: UserSwap[]) => set({ userSwapsFromAddress: swaps }),
+        userSwapsFromAddress: [],
 
         // manage deposits
-        selectedVaultToManage: null,
-        setSelectedVaultToManage: (selectedVaultToManage) => set({ selectedVaultToManage }),
+        selectedSwapToManage: null,
+        setSelectedSwapToManage: (selectedSwapToManage) => set({ selectedSwapToManage }),
         showManageDepositVaultsScreen: false,
         setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
 
@@ -282,8 +248,6 @@ export const useStore = create<Store>((set) => {
         setSwapReservationNotFound: (swapReservationNotFound) => set({ swapReservationNotFound }),
         currentReservationState: '',
         setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
-        swapReservationData: null,
-        setSwapReservationData: (swapReservationData) => set({ swapReservationData }),
         areNewDepositsPaused: false,
         setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
         isGasFeeTooHigh: false,

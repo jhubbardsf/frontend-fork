@@ -10,24 +10,22 @@ export enum ReservationState {
     Expired,
 }
 
-export type SwapReservation = {
-    owner: string;
-    confirmationBlockHeight: number;
-    reservationTimestamp: number;
-    liquidityUnlockedTimestamp: number;
-    state: ReservationState;
-    stateOffChain?: ReservationState;
-    ethPayoutAddress: string;
-    lpReservationHash: string;
-    nonce: string;
-    indexInContract?: number;
-    totalSatsInputInlcudingProxyFee: BigNumber;
-    totalSwapOutputAmount: BigNumber;
-    proposedBlockHeight: BigNumber;
-    proposedBlockHash: string;
-    vaultIndexes: number[];
-    amountsToReserve: BigNumber[];
-    expectedSatsOutput: BigNumber[];
+export type UserSwap = {
+    vaultIndex: string;
+    depositTimestamp: number;
+    depositAmount: string;
+    depositFee: string;
+    expectedSats: number;
+    btcPayoutScriptPubKey: string;
+    specifiedPayoutAddress: string;
+    ownerAddress: string;
+    salt: string;
+    confirmationBlocks: number;
+    attestedBitcoinBlockHeight: number;
+    deposit_block_number: number;
+    deposit_block_hash: string;
+    deposit_txid: string;
+    swap_proofs: any[];
 };
 
 export type ReserveLiquidityParams = {
@@ -46,22 +44,6 @@ export type UpdateExchangeRateParams = {
     globalVaultIndex: number;
     newExchangeRate: BigNumberish;
     expiredSwapReservationIndexes: number[];
-};
-
-export type DepositVault = {
-    owner: string;
-    depositTimestamp: number;
-    initialBalance: BigNumberish;
-    unreservedBalanceFromContract: BigNumberish;
-    trueUnreservedBalance?: BigNumberish;
-    withdrawnAmount: BigNumberish;
-    activelyReservedAmount?: BigNumberish;
-    completedAmount?: BigNumberish;
-    provedAmount?: BigNumberish;
-    btcExchangeRate: BigNumberish;
-    btcPayoutLockingScript: string;
-    index?: number;
-    depositAsset: ValidAsset;
 };
 
 export type ValidAsset = {

@@ -37,8 +37,8 @@ export const Navbar = ({}) => {
     const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [formattedTotalAmount, setFormattedTotalAmount] = useState<string>('0');
     const protocolFeeAmountMicroUsdt = useStore((state) => state.protocolFeeAmountMicroUsdt);
-    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
-    const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
+    const setSelectedSwapToManage = useStore((state) => state.setSelectedSwapToManage);
+    const selectedSwapToManage = useStore((state) => state.selectedSwapToManage);
     const [localSelectedVaultToManage, setLocalSelectedVaultToManage] = useState<number | null>(null);
     const [isLoadingVault, setIsLoadingVault] = useState(false);
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
@@ -134,7 +134,7 @@ export const Navbar = ({}) => {
         try {
             const vaultData = await getDepositVaultByIndex(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, localSelectedVaultToManage);
             if (vaultData) {
-                setSelectedVaultToManage(vaultData);
+                setSelectedSwapToManage(vaultData);
                 alert(`Vault ${localSelectedVaultToManage} set to manage`);
             } else {
                 alert(`No vault found with index ${localSelectedVaultToManage}`);

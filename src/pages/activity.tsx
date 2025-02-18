@@ -1,7 +1,7 @@
 import { Flex, Text } from '@chakra-ui/react';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/other/HorizontalButtonSelector';
@@ -20,6 +20,7 @@ import MonthlyValueRawChart from '../components/charts/MonthlyValueRawChart';
 import { BigNumber } from 'ethers';
 import { FONT_FAMILIES } from '../utils/font';
 import { formatUnits } from 'ethers/lib/utils';
+import React from 'react';
 
 const Activity = () => {
     const { isMobile } = useWindowSize();
@@ -29,10 +30,10 @@ const Activity = () => {
     };
     const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
-    const allDepositVaults = useStore((state) => state.allDepositVaults);
+    const userSwapsFromAddress = useStore((state) => state.userSwapsFromAddress);
 
-    const selectedVaultToManage = useStore((state) => state.selectedVaultToManage);
-    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    const selectedSwapToManage = useStore((state) => state.selectedSwapToManage);
+    const setSelectedSwapToManage = useStore((state) => state.setSelectedSwapToManage);
     const showManageDepositVaultsScreen = useStore((state) => state.showManageDepositVaultsScreen);
     const setShowManageDepositVaultsScreen = useStore((state) => state.setShowManageDepositVaultsScreen);
     const { address, isConnected } = useAccount();
@@ -57,7 +58,7 @@ const Activity = () => {
     // reset selected vault when switching between screens
     useEffect(() => {
         if (selectedButton !== 'Manage Vaults') {
-            setSelectedVaultToManage(null);
+            setSelectedSwapToManage(null);
         }
     }, [selectedButton]);
 

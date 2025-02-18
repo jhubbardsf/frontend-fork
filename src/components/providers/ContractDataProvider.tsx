@@ -32,7 +32,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
     const validAssets = useStore((state) => state.validAssets);
     const [isLoading, setIsLoading] = useState(false);
-
+    const setUserSwapsFromAddress = useStore((state) => state.setUserSwapsFromAddress);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // [0] set ethers provider when selectedInputAsset changes
@@ -120,15 +120,15 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     ]);
 
     // New useEffect to call fetchUserSwapsFromAddress every 10 seconds
-    // useEffect(() => {
-    //     console.log('useEffect');
-    //     const swapsInterval = setInterval(() => {
-    //         console.log('CALLING fetchUserSwapsFromAddress');
-    //         fetchUserSwapsFromAddress();
-    //     }, 2000);
+    useEffect(() => {
+        console.log('useEffect');
+        const swapsInterval = setInterval(() => {
+            console.log('CALLING fetchUserSwapsFromAddress');
+            fetchUserSwapsFromAddress();
+        }, 2000);
 
-    //     return () => clearInterval(swapsInterval); // Cleanup interval on component unmount
-    // }, [address, selectedInputAsset]);
+        return () => clearInterval(swapsInterval); // Cleanup interval on component unmount
+    }, [address, selectedInputAsset]);
 
     // [4] fetch deposit vaults
     const fetchUserSwapsFromAddress = async () => {
@@ -141,12 +141,47 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             console.log('no selected asset, cannot lookup swap data by address');
             return;
         }
-        const swaps = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
+
+        const rawSwaps = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
             address: address,
             page: 0,
         });
-        console.log('swaps', swaps);
-        // setUserSwapsFromAddress(swaps); TODO - finish this
+
+        console.log('rawSwaps', rawSwaps);
+
+        // Transform the raw data into your flattened Swap type
+        const typedSwaps = rawSwaps.map((item: any) => {
+            const d = item.deposit.deposit; // the nested deposit object
+
+            return {
+                // Flattened from deposit.deposit
+                vaultIndex: d.vaultIndex,
+                depositTimestamp: d.depositTimestamp,
+                depositAmount: d.depositAmount,
+                depositFee: d.depositFee,
+                expectedSats: d.expectedSats,
+                btcPayoutScriptPubKey: d.btcPayoutScriptPubKey,
+                specifiedPayoutAddress: d.specifiedPayoutAddress,
+                ownerAddress: d.ownerAddress,
+                salt: d.salt,
+                confirmationBlocks: d.confirmationBlocks,
+                attestedBitcoinBlockHeight: d.attestedBitcoinBlockHeight,
+
+                // Flattened from deposit
+                deposit_block_number: item.deposit.deposit_block_number,
+                deposit_block_hash: item.deposit.deposit_block_hash,
+                deposit_txid: item.deposit.deposit_txid,
+
+                // Existing field
+                swap_proofs: item.swap_proofs,
+            };
+        });
+
+        // Now we have typed swaps according to your Swap interface
+        console.log('typedSwaps', typedSwaps);
+
+        // Finally, set them in your component state (or wherever you're storing them)
+        setUserSwapsFromAddress(typedSwaps);
     };
 
     // New function to refresh user swaps

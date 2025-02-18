@@ -31,7 +31,6 @@ export const DepositUI = () => {
     const fontSize = isMobile ? '20px' : '20px';
     const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
     const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
-    const allDepositVaults = useStore((state) => state.allDepositVaults);
     const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [userBalanceExceeded, setUserBalanceExceeded] = useState(false);

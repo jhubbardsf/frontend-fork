@@ -23,15 +23,15 @@ interface WithdrawStatusModalProps {
     isOpen: boolean;
     onClose: () => void;
     clearError: () => void;
-    selectedVaultToManage: DepositVault;
+    selectedSwapToManage: DepositVault;
 }
 
-const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClose, clearError, selectedVaultToManage }) => {
+const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClose, clearError, selectedSwapToManage }) => {
     const [isConfirmStep, setIsConfirmStep] = useState(true);
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
     const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
-    const setSelectedVaultToManage = useStore((state) => state.setSelectedVaultToManage);
+    const setSelectedSwapToManage = useStore((state) => state.setSelectedSwapToManage);
     const [_refreshKey, setRefreshKey] = useState(0);
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -62,7 +62,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
 
     // handle withdraw liquidity
     const handleWithdraw = async () => {
-        if (!window.ethereum || !selectedVaultToManage) {
+        if (!window.ethereum || !selectedSwapToManage) {
             console.error('Ethereum provider or selected vault not available');
             return;
         }
@@ -72,13 +72,13 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         console.log('withdrawAmount:', withdrawAmount);
-        const withdrawAmountInTokenSmallestUnit = parseUnits(withdrawAmount, selectedVaultToManage.depositAsset.decimals);
+        const withdrawAmountInTokenSmallestUnit = parseUnits(withdrawAmount, selectedSwapToManage.depositAsset.decimals);
 
-        const globalVaultIndex = selectedVaultToManage.index;
+        const globalVaultIndex = selectedSwapToManage.index;
 
         try {
             // get the liquidity provider's data
-            const liquidityProviderData = await getLiquidityProvider(provider, riftExchangeABI.abi, selectedVaultToManage.depositAsset.riftExchangeContractAddress, await signer.getAddress());
+            const liquidityProviderData = await getLiquidityProvider(provider, riftExchangeABI.abi, selectedSwapToManage.depositAsset.riftExchangeContractAddress, await signer.getAddress());
 
             // convert the depositVaultIndexes to strings for comparison
             const stringIndexes = liquidityProviderData.depositVaultIndexes.map((index) => BigNumber.from(index).toNumber());
@@ -93,15 +93,15 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
             await withdrawLiquidity({
                 signer,
                 riftExchangeAbi: riftExchangeABI.abi,
-                riftExchangeContract: selectedVaultToManage.depositAsset.riftExchangeContractAddress,
+                riftExchangeContract: selectedSwapToManage.depositAsset.riftExchangeContractAddress,
                 globalVaultIndex,
                 amountToWithdraw: withdrawAmountInTokenSmallestUnit,
                 expiredReservationIndexes: currentlyExpiredReservationIndexes,
             });
 
-            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedVaultToManage.index);
+            const updatedVault = userActiveDepositVaults.find((vault) => vault.index === selectedSwapToManage.index);
             if (updatedVault) {
-                setSelectedVaultToManage(updatedVault);
+                setSelectedSwapToManage(updatedVault);
             }
             setRefreshKey((prevKey) => prevKey + 1);
             refreshUserSwapsFromAddress();
@@ -163,8 +163,8 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
         const regex = /^\d*\.?\d*$/;
         if (!regex.test(value)) return withdrawAmount; // Return previous valid value if new input is invalid
         const parts = value.split('.');
-        if (parts.length > 1 && parts[1].length > selectedVaultToManage.depositAsset.decimals) {
-            return parts[0] + '.' + parts[1].slice(0, selectedVaultToManage.depositAsset.decimals);
+        if (parts.length > 1 && parts[1].length > selectedSwapToManage.depositAsset.decimals) {
+            return parts[0] + '.' + parts[1].slice(0, selectedSwapToManage.depositAsset.decimals);
         }
         return value;
     };
@@ -176,7 +176,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
         }
     };
 
-    const unreservedBalance = formatUnits(selectedVaultToManage.trueUnreservedBalance, selectedVaultToManage.depositAsset.decimals);
+    const unreservedBalance = formatUnits(selectedSwapToManage.trueUnreservedBalance, selectedSwapToManage.depositAsset.decimals);
 
     const isExceedingMax = parseFloat(withdrawAmount) > parseFloat(unreservedBalance);
 
@@ -251,12 +251,12 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                                     fontWeight='normal'
                                     fontFamily='Aux'>
                                     {isExceedingMax
-                                        ? `Exceeds max unreserved amount - ${unreservedBalance} ${selectedVaultToManage.depositAsset.name}`
-                                        : `${unreservedBalance} ${selectedVaultToManage.depositAsset.name}`}
+                                        ? `Exceeds max unreserved amount - ${unreservedBalance} ${selectedSwapToManage.depositAsset.name}`
+                                        : `${unreservedBalance} ${selectedSwapToManage.depositAsset.name}`}
                                     <Box
                                         ml='10px'
                                         as='span'
-                                        color={selectedVaultToManage.depositAsset.border_color_light}
+                                        color={selectedSwapToManage.depositAsset.border_color_light}
                                         fontSize='13px'
                                         cursor='pointer'
                                         onClick={handleSetMax}
