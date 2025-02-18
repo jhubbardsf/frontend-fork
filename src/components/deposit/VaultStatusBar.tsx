@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { DepositVault } from '../../types';
+import { UserSwap } from '../../types';
 
 interface VaultStatusBarProps {
     selectedVault: DepositVault;
