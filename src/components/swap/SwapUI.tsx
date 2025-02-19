@@ -9,7 +9,7 @@ import { ARBITRUM_LOGO, BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
 import { btcToSats, bufferTo18Decimals, ethToWei, formatAmountToString, formatBtcExchangeRate, unBufferFrom18Decimals, weiToEth } from '../../utils/dappHelper';
-import { ProxyWalletLiquidityProvider, ReservationState, ReserveLiquidityParams, SwapReservation } from '../../types';
+import { ProxyWalletLiquidityProvider, ReservationState, ReserveLiquidityParams } from '../../types';
 import {
     bitcoin_bg_color,
     bitcoin_dark_bg_color,
@@ -25,7 +25,6 @@ import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import WebAssetTag from '../other/WebAssetTag';
-import { getSwapReservations } from '../../utils/contractReadFunctions';
 import { useContractData } from '../providers/ContractDataProvider';
 import { parse } from 'path';
 import { toastError, toastInfo, toastLoad, toastSuccess } from '../../hooks/toast';
@@ -38,7 +37,6 @@ export const SwapUI = () => {
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
-    const allDepositVaults = useStore((state) => state.allDepositVaults);
     const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
     const coinbasebtcPriceUSD = useStore.getState().validAssets['CoinbaseBTC'].priceUSD;
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
@@ -81,7 +79,6 @@ export const SwapUI = () => {
     const [isAboveMaxSwapLimitUsdtOutput, setIsAboveMaxSwapLimitUsdtOutput] = useState(false);
     const [fastestProxyWalletFeeInSats, setFastestProxyWalletFeeInSats] = useState(500);
     const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
-    const currentlyExpiredReservationIndexes = useStore((state) => state.currentlyExpiredReservationIndexes);
     const [isLiquidityLoading, setIsLiquidityLoading] = useState(true);
     const coinbaseBtcOutputAmount = useStore((state) => state.coinbaseBtcOutputAmount);
     const setCoinbaseBtcOutputAmount = useStore((state) => state.setCoinbaseBtcOutputAmount);
@@ -114,16 +111,16 @@ export const SwapUI = () => {
         setIsAboveMaxSwapLimitUsdtOutput(false);
         setIsNoLiquidityAvailable(false);
 
-        if (allDepositVaults.length === 0) {
-            setIsNoLiquidityAvailableBtcInput(true);
-            setCoinbaseBtcDepositAmount('');
-            setBtcInputSwapAmount(btcValue);
-            setBtcOutputAmount(btcValue);
-            setLowestFeeReservationParams(null);
-            return;
-        } else {
-            setIsNoLiquidityAvailableBtcInput(false);
-        }
+        // if (allDepositVaults.length === 0) { // TODO: replace with if there are no MMs online
+        //     setIsNoLiquidityAvailableBtcInput(true);
+        //     setCoinbaseBtcDepositAmount('');
+        //     setBtcInputSwapAmount(btcValue);
+        //     setBtcOutputAmount(btcValue);
+        //     setLowestFeeReservationParams(null);
+        //     return;
+        // } else {
+        //     setIsNoLiquidityAvailableBtcInput(false);
+        // }
 
         if (parseFloat(btcValue) === 0 || !btcValue) {
             setUsdtExchangeRatePerBTC(null);
@@ -176,15 +173,14 @@ export const SwapUI = () => {
 
         if (validateUsdtOutputChange(usdtValue)) {
             // ensure there is liquidity available for minimum swap
-
-            if (allDepositVaults.length === 0) {
-                setIsNoLiquidityAvailable(true);
-                setBtcInputSwapAmount('');
-                setBtcOutputAmount('');
-                setCoinbaseBtcDepositAmount('');
-                setLowestFeeReservationParams(null);
-                return;
-            }
+            // if (allDepositVaults.length === 0) { // TODO: replace with if there are no MMs online
+            //     setIsNoLiquidityAvailable(true);
+            //     setBtcInputSwapAmount('');
+            //     setBtcOutputAmount('');
+            //     setCoinbaseBtcDepositAmount('');
+            //     setLowestFeeReservationParams(null);
+            //     return;
+            // }
         }
     };
 

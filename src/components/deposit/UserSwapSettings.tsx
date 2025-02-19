@@ -3,31 +3,29 @@ import { Button, Flex, Spacer, Text } from '@chakra-ui/react';
 import { BigNumber } from 'ethers';
 import { FaRegArrowAltCircleRight } from 'react-icons/fa';
 import { colors } from '../../utils/colors';
-import { bitcoin_border_color } from '../../utils/constants';
-import { convertLockingScriptToBitcoinAddress, calculateBtcOutputAmountFromExchangeRate, formatBtcExchangeRate } from '../../utils/dappHelper';
+import { bitcoin_border_color, BITCOIN_DECIMALS } from '../../utils/constants';
+import { convertLockingScriptToBitcoinAddress, calculateBtcOutputAmountFromExchangeRate, formatBtcExchangeRate, satsToBtc } from '../../utils/dappHelper';
 import { FONT_FAMILIES } from '../../utils/font';
 import { AssetTag } from '../other/AssetTag';
-import { VaultStatusBar } from './VaultStatusBar';
+// import { VaultStatusBar } from './VaultStatusBar';
 import WithdrawStatusModal from './WithdrawStatusModal';
-import { DepositVault, ValidAsset } from '../../types';
+import { UserSwap, ValidAsset } from '../../types';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { useWithdrawLiquidity } from '../../hooks/contract/useWithdrawLiquidity';
 import { useState } from 'react';
 import { useStore } from '../../store';
-import UpdateExchangeRateModal from './UpdateExchangeRateModal';
 import { toastError } from '../../hooks/toast';
 
-interface VaultSettingsProps {
-    selectedSwapToManage: DepositVault;
+interface UserSwapSettingsProps {
+    selectedSwapToManage: UserSwap;
     handleGoBack: () => void;
     selectedInputAsset: ValidAsset;
 }
 
-const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, handleGoBack, selectedInputAsset }) => {
+const UserSwapSettings: React.FC<UserSwapSettingsProps> = ({ selectedSwapToManage, handleGoBack, selectedInputAsset }) => {
     const { status: withdrawLiquidityStatus, error: withdrawLiquidityError, txHash: withdrawTxHash, resetWithdrawState } = useWithdrawLiquidity();
 
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-    const [isUpdateExchangeRateModalOpen, setIsUpdateExchangeRateModalOpen] = useState(false);
     // const [withdrawAmount, setWithdrawAmount] = useState('');
     const withdrawAmount = useStore((state) => state.withdrawAmount);
     const setWithdrawAmount = useStore((state) => state.setWithdrawAmount);
@@ -36,10 +34,6 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
         setIsWithdrawModalOpen(true);
         setWithdrawAmount('');
         resetWithdrawState();
-    };
-
-    const handleOpenUpdateExchangeRateModal = () => {
-        setIsUpdateExchangeRateModalOpen(true);
     };
 
     return (
@@ -64,7 +58,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
             </Flex>
             <Flex direction='column' align='center' mt='-26px' mb='20px' w='100%'>
                 <Text fontSize='22px' color={colors.offWhite} textAlign='center' mt='-12px' flex='1'>
-                    Manage Deposit Vault #{selectedSwapToManage.index}
+                    Manage Deposit Vault #{selectedSwapToManage.vaultIndex}
                 </Text>
                 <Text fontSize='12px' color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='6px' flex='1'>
                     Edit or Withdraw unreserved liquidity at anytime.{' '}
@@ -79,7 +73,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
                     </Text>
                     <Flex h='50px' mt='6px' w='100%' bg={colors.offBlackLighter} border={'3px solid'} borderColor={colors.borderGrayLight} borderRadius={'14px'} px='15px' align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing='-1px' fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {convertLockingScriptToBitcoinAddress(selectedSwapToManage.btcPayoutLockingScript)}
+                            {convertLockingScriptToBitcoinAddress(selectedSwapToManage.btcPayoutScriptPubKey)}
                         </Text>
 
                         <Spacer />
@@ -105,7 +99,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
                         pr='10px'
                         align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {formatUnits(BigNumber.from(selectedSwapToManage.initialBalance).toString(), selectedSwapToManage.depositAsset.decimals).toString()}
+                            {formatUnits(BigNumber.from(selectedSwapToManage.depositAmount).toString(), BITCOIN_DECIMALS).toString()}
                         </Text>
                         <Spacer />
                         <AssetTag assetName={'ARBITRUM_USDT'} width='110px' />
@@ -122,8 +116,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
                     </Text>
                     <Flex h='50px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
                         <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            {selectedSwapToManage.btcExchangeRate &&
-                                calculateBtcOutputAmountFromExchangeRate(selectedSwapToManage.initialBalance, selectedSwapToManage.depositAsset.decimals, selectedSwapToManage.btcExchangeRate)}
+                            {satsToBtc(BigNumber.from(selectedSwapToManage.expectedSats))}
                         </Text>
 
                         <Spacer />
@@ -137,77 +130,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
                     <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
                         Status
                     </Text>
-                    <VaultStatusBar selectedVault={selectedSwapToManage} minPercentageForText={5} />
-                </Flex>
-            </Flex>
-
-            {/* EXCHANGE RATE */}
-            <Flex w='100%' mt='20px'>
-                <Flex w='100%' direction='column'>
-                    <Text ml='8px' w='100%' fontSize='18px' color={colors.offWhite}>
-                        Exchange Rate{' '}
-                    </Text>
-                    <Flex
-                        h='50px'
-                        mt='6px'
-                        w='100%'
-                        bg={colors.offBlackLighter}
-                        border={'3px solid'}
-                        borderColor={colors.borderGrayLight}
-                        borderRadius={'14px'}
-                        px='15px'
-                        fontSize={'18px'}
-                        align={'center'}>
-                        <Flex
-                            mt='2px'
-                            color={colors.offWhite} // Change the default color to gray
-                            letterSpacing='-1px'
-                            fontFamily={FONT_FAMILIES.AUX_MONO}>
-                            <Text color={bitcoin_border_color}>1 BTC</Text>
-                            <Text mx='12px' color={bitcoin_border_color}>
-                                {' '}
-                                ={' '}
-                            </Text>
-                            <Text color={selectedSwapToManage.depositAsset.border_color_light}>
-                                {' '}
-                                {selectedSwapToManage.btcExchangeRate &&
-                                    Number(formatBtcExchangeRate(selectedSwapToManage.btcExchangeRate, selectedSwapToManage.depositAsset.decimals)).toLocaleString('en-US', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}{' '}
-                            </Text>
-                            <Text ml='12px' color={selectedSwapToManage.depositAsset.border_color_light}>
-                                {' '}
-                                {selectedSwapToManage.depositAsset.name}
-                            </Text>
-                            {/* <Flex mt='-29px' ml='12px'>
-                                <AssetTag assetName={selectedSwapToManage.depositAsset.name} width='76px' />
-                            </Flex> */}
-                        </Flex>
-
-                        <Spacer />
-                        <Button
-                            color={colors.offWhite}
-                            bg={colors.purpleButtonBG}
-                            onClick={() => {
-                                if (BigNumber.from(selectedSwapToManage.trueUnreservedBalance).gt(BigNumber.from(0))) {
-                                    handleOpenUpdateExchangeRateModal();
-                                } else {
-                                    toastError('', { title: 'No Unreserved Liquidity', description: 'There is no unreserved liquidity on this deposit vault to update' });
-                                }
-                            }}
-                            borderRadius='10px'
-                            border={`3px solid ${colors.purpleBorder}`}
-                            px='14px'
-                            _hover={{ bg: colors.purpleBorderDark }}
-                            mr='-19px'
-                            mt='1px'
-                            py={'16px'}
-                            h='114%'
-                            w='305px'>
-                            Update Exchange Rate
-                        </Button>
-                    </Flex>
+                    {/* <VaultStatusBar selectedVault={selectedSwapToManage} minPercentageForText={5} /> */}
                 </Flex>
             </Flex>
 
@@ -217,7 +140,7 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
                     <Button
                         h='45px'
                         onClick={() => {
-                            if (BigNumber.from(selectedSwapToManage.trueUnreservedBalance).gt(BigNumber.from(0))) {
+                            if (BigNumber.from(selectedSwapToManage.depositAmount).gt(BigNumber.from(0))) {
                                 handleOpenWithdrawModal();
                             } else {
                                 toastError('', { title: 'No Unreserved Liquidity', description: 'There is no unreserved liquidity on this deposit vault to withdraw' });
@@ -236,12 +159,9 @@ const VaultSettings: React.FC<VaultSettingsProps> = ({ selectedSwapToManage, han
 
                 {/* Withdraw Status Modal */}
                 <WithdrawStatusModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} clearError={resetWithdrawState} selectedSwapToManage={selectedSwapToManage} />
-
-                {/* Update Exchange Rate Modal  */}
-                <UpdateExchangeRateModal isOpen={isUpdateExchangeRateModalOpen} onClose={() => setIsUpdateExchangeRateModalOpen(false)} selectedVault={selectedSwapToManage} />
             </>
         </Flex>
     );
 };
 
-export default VaultSettings;
+export default UserSwapSettings;

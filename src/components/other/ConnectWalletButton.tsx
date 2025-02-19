@@ -7,7 +7,6 @@ import { colors } from '../../utils/colors';
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { BigNumber, ethers } from 'ethers';
-import { getLiquidityProvider } from '../../utils/contractReadFunctions';
 import { FONT_FAMILIES } from '../../utils/font';
 import { BITCOIN_DECIMALS } from '../../utils/constants';
 

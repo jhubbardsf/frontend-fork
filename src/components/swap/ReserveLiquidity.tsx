@@ -26,7 +26,7 @@ import { LockClosed } from 'react-ionicons';
 import { AssetTag } from '../other/AssetTag';
 import WebAssetTag from '../other/WebAssetTag';
 import { toastError, toastInfo } from '../../hooks/toast';
-import { listenForLiquidityReservedEvent, validateReserveLiquidity } from '../../utils/contractReadFunctions';
+import { listenForLiquidityReservedEvent } from '../../utils/contractReadFunctions';
 import { useContractData } from '../../components/providers/ContractDataProvider';
 import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper';
 import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
@@ -169,7 +169,7 @@ export const ReserveLiquidity = ({}) => {
             // NotEnoughLiquidity() -> 0x4323a555
             console.log('reservationRequest', reservationRequest);
             try {
-                let resp = await validateReserveLiquidity(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, reservationRequest);
+                // let resp = await validateReserveLiquidity(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, reservationRequest);
             } catch (e) {
                 if (e.toString().includes('0x4323a555')) {
                     // liquidity being unavail/changed

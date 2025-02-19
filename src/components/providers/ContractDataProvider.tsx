@@ -1,7 +1,6 @@
 import React, { createContext, useContext, ReactNode, useEffect, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import { useStore } from '../../store';
-import { useDepositVaults } from '../../hooks/contract/useDepositVaults';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contractReadFunctions';

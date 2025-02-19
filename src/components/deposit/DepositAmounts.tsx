@@ -8,12 +8,12 @@ import { FONT_FAMILIES } from '../../utils/font';
 import { opaqueBackgroundColor } from '../../utils/constants';
 
 export const DepositAmounts = () => {
-    const usdtDepositAmount = useStore((state) => state.usdtDepositAmount);
+    const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
-    const bitcoinPriceUSD = useStore((state) => state.bitcoinPriceUSD);
+    const bitcoinPriceUSD = 100000; // TODO: replace with actual price
 
     const renderContent = () => {
-        if (usdtDepositAmount === '-1' || btcOutputAmount === '-1') {
+        if (coinbaseBtcDepositAmount === '-1' || btcOutputAmount === '-1') {
             return (
                 <Flex align='center' justify='center'>
                     <Spinner size='lg' thickness='3px' color={colors.textGray} speed='0.65s' />
@@ -26,15 +26,14 @@ export const DepositAmounts = () => {
                 <Flex direction='column'>
                     <Flex>
                         <Text mr='15px' fontSize='36px' letterSpacing='-5px' color={colors.offWhite}>
-                            {usdtDepositAmount}
+                            {coinbaseBtcDepositAmount}
                         </Text>
                         <Flex mt='-14px' mb='-9px'>
-                                                            <AssetTag assetName='ARBITRUM_USDT' width='108px' />
-
+                            <AssetTag assetName='ARBITRUM_USDT' width='108px' />
                         </Flex>
                     </Flex>
                     <Text color={colors.textGray} fontSize='13px' mt='-12px' ml='6px' letterSpacing='-2px' fontWeight='normal' fontFamily='Aux'>
-                        ≈ ${parseFloat(usdtDepositAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                        ≈ ${parseFloat(coinbaseBtcDepositAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                     </Text>
                 </Flex>
 

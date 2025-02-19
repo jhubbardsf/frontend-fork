@@ -10,6 +10,10 @@ import { colors } from '../../utils/colors';
 import { UserSwap } from '../../types'; // <-- Your new Swap interface
 import { ValidAsset } from '../../types'; // <-- For selectedInputAsset
 import { AssetTag } from '../other/AssetTag';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { BITCOIN_DECIMALS } from '../../utils/constants';
+import { satsToBtc } from '../../utils/dappHelper';
+import WebAssetTag from '../other/WebAssetTag';
 
 interface SwapPreviewCardProps {
     swap?: UserSwap; // Uses the new Swap type
@@ -18,43 +22,26 @@ interface SwapPreviewCardProps {
     isActivityPage?: boolean;
 }
 
-const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAsset, onClick, isActivityPage }) => {
+const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAsset, onClick }) => {
     const { isMobile } = useWindowSize();
 
     if (!swap) {
         return null; // or some fallback UI
     }
 
-    // 1) TIMESTAMP
-    // swap.depositTimestamp is a Unix epoch (seconds).
+    // [1] TIMESTAMP
     const timestampMs = swap.depositTimestamp * 1000;
     const timeAgo = formatDistanceToNow(new Date(timestampMs), { addSuffix: true });
 
-    // 2) DEPOSIT AMOUNT (hex -> BigNumber -> decimal)
+    // [2] DEPOSIT AMOUNT (hex -> BigNumber -> formatUnits)
     const depositAmountDecimal = BigNumber.from(swap.depositAmount).toString();
-    const depositAmountDisplay = Number(depositAmountDecimal).toLocaleString();
+    const depositAmountDisplay = formatUnits(depositAmountDecimal, BITCOIN_DECIMALS);
 
-    // 3) EXPECTED SATS (convert satoshis to BTC)
-    const satsOutBtc = swap.expectedSats / 1e8;
-    const satsOutDisplay = satsOutBtc.toLocaleString(undefined, { minimumFractionDigits: 3 }) + ' BTC';
+    // [3] EXPECTED SATS (convert satoshis to BTC)
+    const satsOutBtc = satsToBtc(BigNumber.from(swap.expectedSats));
 
-    // 4) STATUS based on swap_proofs
+    // [4] STATUS based on swap_proofs
     const status = swap.swap_proofs.length > 0 ? 'Completed' : 'Pending';
-
-    // Helper: copy owner address (only if isActivityPage)
-    const renderOwnerAddress = (address?: string) => {
-        if (!address || !isActivityPage) return null;
-        const shortened = `${address.slice(0, 4)}...${address.slice(-4)}`;
-        const handleClick = (e: React.MouseEvent) => {
-            e.stopPropagation();
-            copyToClipboard(address, 'Address copied to clipboard.');
-        };
-        return (
-            <Text fontSize='10px' fontFamily={FONT_FAMILIES.NOSTROMO} letterSpacing='1px' color={colors.textGray} cursor='pointer' onClick={handleClick} _hover={{ textDecoration: 'underline' }}>
-                {shortened}
-            </Text>
-        );
-    };
 
     const SettingsWithTooltip = () => {
         const label = `Deposit TX: ${swap.deposit_txid}\nSettings`;
@@ -71,13 +58,13 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
         <Flex>
             <Flex
                 onClick={onClick}
-                cursor={isActivityPage ? 'normal' : 'pointer'}
+                cursor={'pointer'}
                 bg={colors.offBlack}
                 w='100%'
                 mb='10px'
                 fontSize='18px'
                 px='16px'
-                py={isActivityPage ? '24px' : '12px'}
+                py={'12px'}
                 align='flex-start'
                 justify='flex-start'
                 borderRadius='10px'
@@ -85,92 +72,71 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
                 color={colors.textGray}
                 borderColor={colors.borderGray}
                 gap='12px'
-                flexDirection={isActivityPage ? 'column' : 'row'}
+                flexDirection={'row'}
                 letterSpacing='-2px'
-                _hover={
-                    isActivityPage
-                        ? {}
-                        : {
-                              bg: colors.purpleBackground,
-                              borderColor: colors.purpleBorder,
-                          }
-                }>
-                {/* Left side: timeAgo */}
-                <Flex w='100%' direction={isMobile ? 'column' : 'row'}>
-                    <Text width='110px' pr='10px' fontSize='14px' fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight='normal'>
+                _hover={{
+                    bg: colors.purpleBackground,
+                    borderColor: colors.purpleBorder,
+                }}>
+                {/* TIMESTAMP */}
+                <Flex w='100%' align='center' direction={isMobile ? 'column' : 'row'}>
+                    <Text width='130px' pr='10px' fontSize='14px' fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight='normal'>
                         {timeAgo}
                     </Text>
 
-                    {/* Middle: deposit box / arrow / sats out box */}
-                    <Flex flex={1} w='100%' align='center' gap='12px' direction={isMobile ? 'column' : 'row'}>
-                        {isActivityPage && (
-                            <Flex w='100px' direction='column'>
-                                {renderOwnerAddress(swap.ownerAddress)}
-                            </Flex>
-                        )}
-
-                        {/* Deposit Amount Box */}
-                        <Flex flex={1} direction='column' align={isMobile ? 'center' : 'flex-start'} w={isMobile ? '100%' : 'auto'}>
+                    {/* SWAP INPUT & SWAP OUTPUT */}
+                    <Flex align='center' mt='-5px'>
+                        <Flex direction='column'>
                             <Flex
                                 h='50px'
-                                w={isMobile ? '100%' : '160px'}
+                                mt='6px'
+                                mr='30px'
+                                w='100%'
                                 bg={selectedInputAsset.dark_bg_color}
-                                border='2px solid'
+                                border='3px solid'
                                 borderColor={selectedInputAsset.bg_color}
-                                borderRadius='14px'
+                                borderRadius={'14px'}
                                 pl='15px'
                                 pr='10px'
-                                align='center'>
-                                <Text fontSize='16px' color={colors.offWhite} letterSpacing='-1px' fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                    {depositAmountDisplay}
+                                align={'center'}>
+                                <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    {formatUnits(BigNumber.from(swap.depositAmount).toString(), BITCOIN_DECIMALS).toString()}
                                 </Text>
                                 <Spacer />
-                                {/* If you want an asset tag, something like: */}
-                                <AssetTag assetName={selectedInputAsset.name} width='80px' />
+                                <AssetTag assetName={'cbBTC'} width='110px' />
                             </Flex>
                         </Flex>
-
-                        {/* Arrow */}
-                        <Flex mt='0px' fontSize='20px' opacity={0.9}>
+                        <Text mt='7px' mx='12px' fontSize='20px' opacity={0.9} fontWeight={'bold'} color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                             <FaRegArrowAltCircleRight color={colors.RiftOrange} />
-                        </Flex>
+                        </Text>
 
-                        {/* Sats Out Box */}
-                        <Flex flex={1} direction='column' align={isMobile ? 'center' : 'flex-start'} w={isMobile ? '100%' : 'auto'}>
-                            <Flex
-                                h='50px'
-                                w={isMobile ? '100%' : '160px'}
-                                bg={colors.offBlackLighter3}
-                                border='2px solid'
-                                borderColor={colors.borderGray}
-                                borderRadius='14px'
-                                pl='15px'
-                                pr='10px'
-                                align='center'>
-                                <Text fontSize='16px' color={colors.offWhite} letterSpacing='-1px' fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                    {satsOutDisplay}
+                        <Flex direction='column'>
+                            <Flex h='50px' mr='30px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
+                                <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    {satsToBtc(BigNumber.from(swap.expectedSats))}
                                 </Text>
+
                                 <Spacer />
-                                <AssetTag assetName='BTC' width='80px' />
+                                <AssetTag assetName={'BTC'} width='84px' />
                             </Flex>
                         </Flex>
                     </Flex>
-
-                    {/* Settings Icon (if not on activity page) */}
-                    {!isActivityPage && <SettingsWithTooltip />}
+                    <Spacer />
+                    {/* TXID */}
+                    <Text
+                        mr='100px'
+                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                        fontSize='14px'
+                        color={colors.textGray}
+                        cursor='pointer'
+                        onClick={() => window.open(`https://basescan.org/tx/${swap.deposit_txid}`, '_blank')}>
+                        {swap.deposit_txid.slice(0, 6)}...{swap.deposit_txid.slice(-6)}
+                    </Text>
+                    {/* STATUS  */}
+                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='12px' color={colors.offWhite} mr='40px'>
+                        {status}
+                    </Text>
                 </Flex>
-
-                {/* Bottom: If on activity page, show status or more info */}
-                {isActivityPage && (
-                    <Flex w='100%' direction={isMobile ? 'column' : 'row'} mt='16px'>
-                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='12px' color={colors.offWhite} mr='12px'>
-                            Status: {status}
-                        </Text>
-                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='12px' color={colors.offWhite}>
-                            Tx: {swap.deposit_txid.slice(0, 10)}...
-                        </Text>
-                    </Flex>
-                )}
             </Flex>
         </Flex>
     );

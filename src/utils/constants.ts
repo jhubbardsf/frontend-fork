@@ -1,5 +1,5 @@
 import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { ValidAsset, DepositVault, DeploymentType } from '../types';
+import { ValidAsset, DeploymentType } from '../types';
 import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 

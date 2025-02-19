@@ -5,7 +5,6 @@ import { useStore } from '../../store';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import HorizontalButtonSelector from '../other/HorizontalButtonSelector';
-import VaultSettings from './VaultSettings';
 import { useAccount } from 'wagmi';
 import { ConnectWalletButton } from '../other/ConnectWalletButton';
 import { createReservationUrl } from '../../utils/dappHelper';
@@ -13,6 +12,7 @@ import { useRouter } from 'next/router';
 import { opaqueBackgroundColor } from '../../utils/constants';
 import { useContractData } from '../providers/ContractDataProvider';
 import SwapPreviewCard from './SwapPreviewCard';
+import UserSwapSettings from './UserSwapSettings';
 
 export const SwapHistory = ({}) => {
     const selectedSwapToManage = useStore((state) => state.selectedSwapToManage);
@@ -138,7 +138,7 @@ export const SwapHistory = ({}) => {
                     borderColor={colors.borderGray}
                     flexDir='column'>
                     {selectedSwapToManage ? (
-                        <VaultSettings selectedSwapToManage={selectedSwapToManage} handleGoBack={handleGoBack} selectedInputAsset={selectedInputAsset} />
+                        <UserSwapSettings selectedSwapToManage={selectedSwapToManage} handleGoBack={handleGoBack} selectedInputAsset={selectedInputAsset} />
                     ) : (
                         <>
                             {userSwapsFromAddress.length > 0 ? (
@@ -158,15 +158,18 @@ export const SwapHistory = ({}) => {
                                     fontWeight='bold'
                                     color={colors.offWhite}
                                     gap='12px'>
-                                    <Text width='130px'>TIMESTAMP</Text>
+                                    <Text width='135px'>TIMESTAMP</Text>
                                     <Flex flex={1} gap='12px'>
-                                        <Text flex={1}>SWAP INPUT</Text>
+                                        <Text>SWAP INPUT</Text>
                                         <Flex w='20px' />
-                                        <Text flex={1}>SWAP OUTPUT</Text>
+                                        <Text ml='140px'>SWAP OUTPUT</Text>
+                                        <Text ml='140px' mr='52px'>
+                                            TXID
+                                        </Text>
+                                        <Text ml='60px' mr='52px'>
+                                            STATUS
+                                        </Text>
                                     </Flex>
-                                    <Text width='140px' ml='20px' mr='52px'>
-                                        STATUS
-                                    </Text>
                                 </Flex>
                             ) : null}
                             <style>

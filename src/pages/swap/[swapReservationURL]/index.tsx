@@ -4,7 +4,7 @@ import { useStore } from '../../../store';
 import { Text, Flex, Image, Center, Box, Button, color, Spinner, Input } from '@chakra-ui/react';
 import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
-import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, calculateOriginalAmountBeforeFee, decodeReservationUrl, fetchReservationDetails } from '../../../utils/dappHelper';
+import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl } from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
 import { MainSwapFlow } from '../../../components/swap/MainSwapFlow';
 import { SwapStatusTimeline } from '../../../components/swap/SwapStatusTimeline';
@@ -21,7 +21,6 @@ import { BigNumber } from 'ethers';
 import depositVaultAggregatorABI from '../../../abis/DepositVaultsAggregator.json';
 import { parseUnits } from 'viem';
 import { bitcoin } from 'bitcoinjs-lib/src/networks';
-import { SwapReservation } from '../../../types';
 import { LuCopy } from 'react-icons/lu';
 import { AssetTag } from '../../../components/other/AssetTag';
 import { FaClock } from 'react-icons/fa';
@@ -41,12 +40,9 @@ const ReservationDetails = () => {
     const setBitcoinSwapTransactionHash = useStore((state) => state.setBitcoinSwapTransactionHash);
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const setUsdtOutputSwapAmount = useStore((state) => state.setUsdtOutputSwapAmount);
-    const usdtOutputSwapAmount = useStore((state) => state.usdtOutputSwapAmount);
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
-    const swapReservationData = useStore((state) => state.swapReservationData);
-    const setSwapReservationData = useStore((state) => state.setSwapReservationData);
+    const userSwapsFromAddress = useStore((state) => state.userSwapsFromAddress);
     const [proxyWalletSwapInternalID, setProxyWalletSwapInternalID] = useState('');
     const currentReservationState = useStore((state) => state.currentReservationState);
     const setCurrentReservationState = useStore((state) => state.setCurrentReservationState);
@@ -80,30 +76,30 @@ const ReservationDetails = () => {
         return () => clearInterval(intervalId);
     }, []);
 
-    useEffect(() => {
-        const calculateTimeLeft = () => {
-            const reservationTime = new Date(swapReservationData?.reservationTimestamp * 1000);
-            const endTime = new Date(reservationTime.getTime() + FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000); // Add 1 hour
-            const now = new Date();
-            const difference = endTime.getTime() - now.getTime();
-            if (difference > 0) {
-                const minutes = Math.floor(difference / (1000 * 60));
-                const seconds = Math.floor((difference / 1000) % 60);
+    // useEffect(() => {
+    //     const calculateTimeLeft = () => {
+    //         const reservationTime = new Date(swapReservationData?.reservationTimestamp * 1000);
+    //         const endTime = new Date(reservationTime.getTime() + FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000); // Add 1 hour
+    //         const now = new Date();
+    //         const difference = endTime.getTime() - now.getTime();
+    //         if (difference > 0) {
+    //             const minutes = Math.floor(difference / (1000 * 60));
+    //             const seconds = Math.floor((difference / 1000) % 60);
 
-                setMinutesLeft(minutes);
-                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
+    //             setMinutesLeft(minutes);
+    //             return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    //         }
 
-            setMinutesLeft(0);
-            return;
-        };
+    //         setMinutesLeft(0);
+    //         return;
+    //     };
 
-        const timer = setInterval(() => {
-            setTimeLeft(calculateTimeLeft());
-        }, 1000);
+    //     const timer = setInterval(() => {
+    //         setTimeLeft(calculateTimeLeft());
+    //     }, 1000);
 
-        return () => clearInterval(timer);
-    }, [swapReservationData?.reservationTimestamp]);
+    //     return () => clearInterval(timer);
+    // }, [swapReservationData?.reservationTimestamp]);
 
     const handleNavigation = (route: string) => {
         router.push(route);
@@ -115,73 +111,73 @@ const ReservationDetails = () => {
         }
     }, [address, lowestFeeReservationParams, totalSwapAmountInSats]);
 
-    useEffect(() => {
-        if (!address || !totalSwapAmountInSats || btcInputSwapAmount === '-1' || usdtOutputSwapAmount === '-1' || !btcInputSwapAmount || !usdtOutputSwapAmount) {
-            setLoadingState(true);
-        } else {
-            setLoadingState(false);
-        }
-    }, [address, totalSwapAmountInSats]);
+    // useEffect(() => {
+    //     if (!address || !totalSwapAmountInSats || btcInputSwapAmount === '-1' || usdtOutputSwapAmount === '-1' || !btcInputSwapAmount || !usdtOutputSwapAmount) {
+    //         setLoadingState(true);
+    //     } else {
+    //         setLoadingState(false);
+    //     }
+    // }, [address, totalSwapAmountInSats]);
 
-    useEffect(() => {
-        setSwapFlowState('2-send-bitcoin');
-        setBtcInputSwapAmount('-1');
-        setUsdtOutputSwapAmount('-1');
-    }, []);
+    // useEffect(() => {
+    //     setSwapFlowState('2-send-bitcoin');
+    //     setBtcInputSwapAmount('-1');
+    //     setUsdtOutputSwapAmount('-1');
+    // }, []);
 
     // constantly look for swap status updates from proxy wallet
-    useEffect(() => {
-        const checkSwapStatus = async () => {
-            console.log('checkSwapStatus called');
-            // @ts-ignore
-            if (typeof window === 'undefined' || !window.rift || !window.rift.getRiftSwapStatus || !swapReservationData) {
-                setError('Rift wallet not detected or getRiftSwapStatus not available.');
-                return;
-            }
+    // useEffect(() => {
+    //     const checkSwapStatus = async () => {
+    //         console.log('checkSwapStatus called');
+    //         // @ts-ignore
+    //         if (typeof window === 'undefined' || !window.rift || !window.rift.getRiftSwapStatus || !swapReservationData) {
+    //             setError('Rift wallet not detected or getRiftSwapStatus not available.');
+    //             return;
+    //         }
 
-            setError(null);
+    //         setError(null);
 
-            if (swapReservationData) {
-                // @ts-ignore
-                const walletInfo = await window.rift.getProxyWallet({ orderNonceHex: swapReservationData.nonce });
-                if (walletInfo && walletInfo.address) {
-                    setAddress(walletInfo.address);
-                } else {
-                    setError('Unable to retrieve Bitcoin address from wallet info.');
-                }
-            }
+    //         if (swapReservationData) {
+    //             // @ts-ignore
+    //             const walletInfo = await window.rift.getProxyWallet({ orderNonceHex: swapReservationData.nonce });
+    //             if (walletInfo && walletInfo.address) {
+    //                 setAddress(walletInfo.address);
+    //             } else {
+    //                 setError('Unable to retrieve Bitcoin address from wallet info.');
+    //             }
+    //         }
 
-            if (typeof window !== 'undefined') {
-                // @ts-ignore
-                window.rift
-                    .getRiftSwapStatus({ internalId: swapReservationData.nonce })
-                    .then((status) => {
-                        console.log('Swap status from proxy wallet:', status);
-                        console.log('Swap flow state:', swapFlowState);
-                        console.log('Current reservation state:', currentReservationState);
+    //         if (typeof window !== 'undefined') {
+    //             // @ts-ignore
+    //             window.rift
+    //                 .getRiftSwapStatus({ internalId: swapReservationData.nonce })
+    //                 .then((status) => {
+    //                     console.log('Swap status from proxy wallet:', status);
+    //                     console.log('Swap flow state:', swapFlowState);
+    //                     console.log('Current reservation state:', currentReservationState);
 
-                        // check currentReservationState
-                        if (currentReservationState && currentReservationState === 'Completed') {
-                            console.log('Setting Swap status to 4-completed');
-                            setSwapFlowState('4-completed');
-                        } else if (status.status === 1 && currentReservationState === 'Created') {
-                            console.log('Setting Swap status to 3-receive-evm-token');
-                            setSwapFlowState('3-receive-evm-token');
-                            setProxyWalletSwapStatus(status.status);
-                            setBitcoinSwapTransactionHash(status.paymentTxid);
-                        }
-                        setProxyWalletSwapInternalID(status.internalId);
-                    })
-                    .catch((err) => {
-                        console.error('Error fetching swap status:', err);
-                    });
-            }
-        };
+    //                     // check currentReservationState
+    //                     if (currentReservationState && currentReservationState === 'Completed') {
+    //                         console.log('Setting Swap status to 4-completed');
+    //                         setSwapFlowState('4-completed');
+    //                     } else if (status.status === 1 && currentReservationState === 'Created') {
+    //                         console.log('Setting Swap status to 3-receive-evm-token');
+    //                         setSwapFlowState('3-receive-evm-token');
+    //                         setProxyWalletSwapStatus(status.status);
+    //                         setBitcoinSwapTransactionHash(status.paymentTxid);
+    //                     }
+    //                     setProxyWalletSwapInternalID(status.internalId);
+    //                 })
+    //                 .catch((err) => {
+    //                     console.error('Error fetching swap status:', err);
+    //                 });
+    //         }
+    //     };
 
-        checkSwapStatus();
-        const intervalId = setInterval(checkSwapStatus, 1000); // check every second
-        return () => clearInterval(intervalId);
-    }, [swapReservationData?.nonce]);
+    //     checkSwapStatus();
+    //     const intervalId = setInterval(checkSwapStatus, 1000); // check every second
+    //     return () => clearInterval(intervalId);
+    // }, [swapReservationData?.nonce]);
 
     const dumpWallet = async () => {
         const dumpWalletResult = await window.rift.sweepKeysToWallet(dumpWalletAddress);
@@ -189,53 +185,53 @@ const ReservationDetails = () => {
         setIsWalletDumped(true);
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (swapReservationURL && typeof swapReservationURL === 'string') {
-                try {
-                    const reservationDetails = await fetchReservationDetails(swapReservationURL, ethersRpcProvider, selectedInputAsset);
-                    console.log('Fetching reservation details...');
-                    console.log('Reservation details:', reservationDetails);
-                    setSwapReservationNotFound(false);
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         if (swapReservationURL && typeof swapReservationURL === 'string') {
+    //             try {
+    //                 const reservationDetails = await fetchReservationDetails(swapReservationURL, ethersRpcProvider, selectedInputAsset);
+    //                 console.log('Fetching reservation details...');
+    //                 console.log('Reservation details:', reservationDetails);
+    //                 setSwapReservationNotFound(false);
 
-                    const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
-                    setCurrentReservationState(currentReservationStateFromContract);
-                    // set swap flow state to expired if its been 4 hours since the reservation was created
-                    const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000;
+    //                 const currentReservationStateFromContract = getReservationStateString(reservationDetails.swapReservationData.state);
+    //                 setCurrentReservationState(currentReservationStateFromContract);
+    //                 // set swap flow state to expired if its been 4 hours since the reservation was created
+    //                 const isReservationExpired = Date.now() - reservationDetails.swapReservationData.reservationTimestamp * 1000 > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS * 1000;
 
-                    if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
-                        setSwapFlowState('5-expired');
-                    } else if (currentReservationStateFromContract === 'Proved') {
-                        setSwapFlowState('3-receive-evm-token');
-                    } else if (currentReservationStateFromContract === 'Completed') {
-                        setSwapFlowState('4-completed');
-                    } else if (currentReservationStateFromContract === 'Expired') {
-                        setSwapFlowState('5-expired');
-                    }
+    //                 if (currentReservationStateFromContract === 'Created' && isReservationExpired) {
+    //                     setSwapFlowState('5-expired');
+    //                 } else if (currentReservationStateFromContract === 'Proved') {
+    //                     setSwapFlowState('3-receive-evm-token');
+    //                 } else if (currentReservationStateFromContract === 'Completed') {
+    //                     setSwapFlowState('4-completed');
+    //                 } else if (currentReservationStateFromContract === 'Expired') {
+    //                     setSwapFlowState('5-expired');
+    //                 }
 
-                    setSwapReservationData(reservationDetails.swapReservationData);
+    //                 setSwapReservationData(reservationDetails.swapReservationData);
 
-                    const microUsdtOutputAmountWithoutFee = calculateOriginalAmountBeforeFee(reservationDetails.totalReservedAmountInMicroUsdt);
-                    console.log('proc reservationDetails.totalReservedAmountInMicroUsdt:', reservationDetails.totalReservedAmountInMicroUsdt.toString());
-                    console.log('proc calculateOriginalAmountBeforeFee', microUsdtOutputAmountWithoutFee.toString());
-                    const trueProtocolFee = reservationDetails.totalReservedAmountInMicroUsdt.sub(microUsdtOutputAmountWithoutFee).toString();
-                    console.log('proc trueProtocolFee:', trueProtocolFee);
-                    const trueMicroUsdtSwapOutputAmount = reservationDetails.totalReservedAmountInMicroUsdt.sub(trueProtocolFee).toString();
+    //                 const microUsdtOutputAmountWithoutFee = calculateOriginalAmountBeforeFee(reservationDetails.totalReservedAmountInMicroUsdt);
+    //                 console.log('proc reservationDetails.totalReservedAmountInMicroUsdt:', reservationDetails.totalReservedAmountInMicroUsdt.toString());
+    //                 console.log('proc calculateOriginalAmountBeforeFee', microUsdtOutputAmountWithoutFee.toString());
+    //                 const trueProtocolFee = reservationDetails.totalReservedAmountInMicroUsdt.sub(microUsdtOutputAmountWithoutFee).toString();
+    //                 console.log('proc trueProtocolFee:', trueProtocolFee);
+    //                 const trueMicroUsdtSwapOutputAmount = reservationDetails.totalReservedAmountInMicroUsdt.sub(trueProtocolFee).toString();
 
-                    setUsdtOutputSwapAmount(formatUnits(trueMicroUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
-                    setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
-                    setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
-                } catch (error) {
-                    setSwapReservationNotFound(true);
-                    console.error('Error fetching reservation details:', error);
-                }
-            }
-        };
+    //                 setUsdtOutputSwapAmount(formatUnits(trueMicroUsdtSwapOutputAmount.toString(), selectedInputAsset.decimals));
+    //                 setBtcInputSwapAmount(reservationDetails.btcInputSwapAmount);
+    //                 setTotalSwapAmountInSats(reservationDetails.totalSwapAmountInSats);
+    //             } catch (error) {
+    //                 setSwapReservationNotFound(true);
+    //                 console.error('Error fetching reservation details:', error);
+    //             }
+    //         }
+    //     };
 
-        fetchData();
-        const intervalId = setInterval(fetchData, 5000); // refresh every 5 seconds
-        return () => clearInterval(intervalId);
-    }, [swapReservationURL, ethersRpcProvider, selectedInputAsset]);
+    //     fetchData();
+    //     const intervalId = setInterval(fetchData, 5000); // refresh every 5 seconds
+    //     return () => clearInterval(intervalId);
+    // }, [swapReservationURL, ethersRpcProvider, selectedInputAsset]);
 
     enum ReservationState {
         None = 0,

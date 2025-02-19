@@ -14,21 +14,12 @@ import { ValidAsset } from '../../types';
 import { formatUnits } from 'ethers/lib/utils';
 import { isDismissWarning, onDismiss } from '../../utils/warningHelper';
 import GlowingShimmerText from '../other/GlowingText';
-import { getDepositVaultByIndex } from '../../utils/contractReadFunctions';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 
 export const Navbar = ({}) => {
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
-    const allSwapReservations = useStore((state) => state.allSwapReservations);
-    const allDepositVaults = useStore((state) => state.allDepositVaults);
-    const userActiveDepositVaults = useStore((state) => state.userActiveDepositVaults);
-    const userCompletedDepositVaults = useStore((state) => state.userCompletedDepositVaults);
-    const totalExpiredReservations = useStore((state) => state.totalExpiredReservations);
-    const setTotalUnlockedReservations = useStore((state) => state.setTotalUnlockedReservations);
-    const totalUnlockedReservations = useStore((state) => state.totalUnlockedReservations);
-    const totalCompletedReservations = useStore((state) => state.totalCompletedReservations);
     const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -124,29 +115,6 @@ export const Navbar = ({}) => {
         }
     };
 
-    const handleSetVaultToManage = async () => {
-        if (localSelectedVaultToManage === null) {
-            alert('Please enter a valid number');
-            return;
-        }
-
-        setIsLoadingVault(true);
-        try {
-            const vaultData = await getDepositVaultByIndex(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress, localSelectedVaultToManage);
-            if (vaultData) {
-                setSelectedSwapToManage(vaultData);
-                alert(`Vault ${localSelectedVaultToManage} set to manage`);
-            } else {
-                alert(`No vault found with index ${localSelectedVaultToManage}`);
-            }
-        } catch (error) {
-            console.error('Error fetching vault data:', error);
-            alert('Error fetching vault data. Please try again.');
-        } finally {
-            setIsLoadingVault(false);
-        }
-    };
-
     if (isMobile) return null;
 
     return (
@@ -202,7 +170,7 @@ export const Navbar = ({}) => {
                 <Flex gap='12px'>
                     {navItem('Swap', '/')}
                     {navItem('Activity', '/activity')}
-                    {navItem('OTC', '/otc')}
+                    {/* {navItem('OTC', '/otc')} */}
                 </Flex>
                 <Flex ml='25px' gap='30px' align='center'>
                     <a href='https://x.com/riftdex' target='_blank' rel='noopener noreferrer'>
@@ -326,14 +294,6 @@ export const Navbar = ({}) => {
 
                             <Flex position='absolute' top={windowSize.height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
                                 <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />
-                                <StatCard label='Total Deposits' value={allDepositVaults.length} />
-                                <StatCard label='My Active Deposits' value={userActiveDepositVaults.length} />
-                                <StatCard label='My Completed Deposits' value={userCompletedDepositVaults.length} />
-                                <StatCard label='Total Active Reservations' value={allSwapReservations.length - totalUnlockedReservations - totalCompletedReservations - totalExpiredReservations} />
-                                <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
-                                <StatCard label='Total Unlocked Reservations' value={totalUnlockedReservations} />
-                                <StatCard label='Total Completed Reservations' value={totalCompletedReservations} />
-                                <StatCard label='Total Expired Reservations' value={totalExpiredReservations} />
                             </Flex>
                         </>
                     )}

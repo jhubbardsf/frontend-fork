@@ -1,13 +1,12 @@
 import { BigNumber, BigNumberish, ethers, FixedNumber } from 'ethers';
 import BigNumberJs from 'bignumber.js';
-import { DepositVault, ReservationState, SwapReservation } from '../types';
+import { ReservationState } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR, SATS_PER_BTC } from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
-import { getDepositVaults, getSwapReservations } from '../utils/contractReadFunctions';
 import depositVaultAggregatorABI from '../abis/DepositVaultsAggregator.json';
 import { arbitrumSepolia, arbitrum, Chain } from 'viem/chains';
 import { DepositStatus } from '../hooks/contract/useDepositLiquidity';
@@ -174,14 +173,6 @@ export const formatAmountToString = (selectedInputAsset, number) => {
     return roundedNumber.replace(/(\.\d*?[1-9])0+$/, '$1').replace(/\.$/, ''); // Remove trailing zeros and pointless decimal
 };
 
-export function calculateFillPercentage(vault: DepositVault) {
-    // return 20;
-    const fillPercentageBigNumber = BigNumber.from(vault.initialBalance).sub(BigNumber.from(vault.unreservedBalanceFromContract)).div(BigNumber.from(vault.initialBalance)).mul(100);
-
-    const fillPercentage = fillPercentageBigNumber.toNumber();
-    return Math.min(Math.max(fillPercentage, 0), 100);
-}
-
 export function createReservationUrl(orderNonce: string, reservationId: string): string {
     const combined = `${orderNonce}:${reservationId}`;
     return btoa(combined);
@@ -193,77 +184,6 @@ export function decodeReservationUrl(url: string): { orderNonce: string; reserva
 
     return { orderNonce, reservationId };
 }
-
-export const fetchReservationDetails = async (swapReservationURL: string, ethersRpcProvider: ethers.providers.Provider, selectedInputAsset: any) => {
-    if (swapReservationURL) {
-        try {
-            // [0] Decode swap reservation details from URL
-            const reservationDetails = decodeReservationUrl(swapReservationURL);
-
-            console.log('URL reservationDetails:', reservationDetails);
-
-            // [1] Fetch and decode swap reservation details from contract
-            const swapAggregatorBytecode = swapReservationsAggregatorABI.bytecode;
-            const swapAggregatorAbi = swapReservationsAggregatorABI.abi;
-            const swapReservations = await getSwapReservations(ethersRpcProvider, swapAggregatorBytecode.object, swapAggregatorAbi, selectedInputAsset.riftExchangeContractAddress, [
-                parseInt(reservationDetails.reservationId),
-            ]);
-
-            const swapReservationData: SwapReservation = swapReservations[0];
-
-            // check if expired and update state
-            const currentTimestamp = Math.floor(Date.now() / 1000);
-            const isExpired = currentTimestamp - swapReservationData.reservationTimestamp > FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS;
-            if (isExpired && swapReservationData.state === ReservationState.Created) {
-                swapReservationData.state = ReservationState.Expired;
-            }
-
-            console.log('swapReservationData from URL:', swapReservationData);
-
-            const totalInputAmountInSatsIncludingProxyWalletFee = swapReservationData.totalSatsInputInlcudingProxyFee;
-            const totalReservedAmountInMicroUsdt = swapReservationData.totalSwapOutputAmount;
-
-            // [2] Convert BigNumber reserved vault indexes to numbers
-            const reservedVaultIndexesConverted = Array.isArray(swapReservationData.vaultIndexes) ? swapReservationData.vaultIndexes.map((index) => index) : [swapReservationData.vaultIndexes];
-
-            // [3] Fetch the reserved deposit vaults on the reservation
-            const depositVaultBytecode = depositVaultAggregatorABI.bytecode;
-            const depositVaultAbi = depositVaultAggregatorABI.abi;
-            const reservedVaults = await getDepositVaults(
-                ethersRpcProvider,
-                depositVaultBytecode.object,
-                depositVaultAbi,
-                selectedInputAsset.riftExchangeContractAddress,
-                reservedVaultIndexesConverted,
-            );
-
-            const reservedAmounts = swapReservationData.amountsToReserve;
-            console.log('reservedVaults:', reservedVaults);
-            console.log('reservedAmounts:', reservedAmounts[0].toString());
-
-            // Convert to USDT
-            const totalReservedAmountInUsdt = formatUnits(totalReservedAmountInMicroUsdt, selectedInputAsset.decimals);
-
-            const btcInputSwapAmount = formatUnits(totalInputAmountInSatsIncludingProxyWalletFee.toString(), BITCOIN_DECIMALS).toString();
-
-            const totalSwapAmountInSats = totalInputAmountInSatsIncludingProxyWalletFee.toNumber();
-
-            return {
-                swapReservationData,
-                totalReservedAmountInUsdt,
-                totalReservedAmountInMicroUsdt,
-                btcInputSwapAmount,
-                totalSwapAmountInSats,
-                reservedVaults,
-                reservedAmounts,
-            };
-        } catch (error) {
-            console.error('Error fetching reservation details:', error);
-            throw error;
-        }
-    }
-    throw new Error('swapReservationURL is required');
-};
 
 // Helper function to format chain data for MetaMask
 const formatChainForMetaMask = (chain: Chain) => {

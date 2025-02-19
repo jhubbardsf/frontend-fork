@@ -25,7 +25,7 @@ export const MainSwapFlow = () => {
 
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const currentReservationState = useStore((state) => state.currentReservationState);
-    const swapReservationData = useStore((state) => state.swapReservationData);
+    // const swapReservationData = useStore((state) => state.swapReservationData);
     const [timeLeft, setTimeLeft] = useState(0);
     const router = useRouter();
     const [dots, setDots] = useState('');
@@ -37,7 +37,7 @@ export const MainSwapFlow = () => {
 
     useEffect(() => {
         const checkSwapStatus = async () => {
-            if (!swapReservationData || !swapReservationData.nonce) return;
+            // if (!swapReservationData || !swapReservationData.nonce) return;
 
             try {
                 // @ts-ignore
@@ -99,19 +99,20 @@ export const MainSwapFlow = () => {
         }
     }, [bitcoinSwapTransactionHash]);
 
-    useEffect(() => {
-        const calculateTimeLeft = () => {
-            const currentTime = Math.floor(Date.now() / 1000);
-            const endTime = swapReservationData.liquidityUnlockedTimestamp; // unlock timestamp is actually the time when the swap becomes fully Proved
-            const remainingTime = endTime - currentTime;
-            setTimeLeft(remainingTime > 0 ? remainingTime : 0);
-        };
+    // TODO: add time left calculation
+    // useEffect(() => {
+    //     const calculateTimeLeft = () => {
+    //         const currentTime = Math.floor(Date.now() / 1000);
+    //         const endTime = swapReservationData.liquidityUnlockedTimestamp; // unlock timestamp is actually the time when the swap becomes fully Proved
+    //         const remainingTime = endTime - currentTime;
+    //         setTimeLeft(remainingTime > 0 ? remainingTime : 0);
+    //     };
 
-        calculateTimeLeft();
-        const interval = setInterval(calculateTimeLeft, 1000);
+    //     calculateTimeLeft();
+    //     const interval = setInterval(calculateTimeLeft, 1000);
 
-        return () => clearInterval(interval);
-    }, [swapReservationData]);
+    //     return () => clearInterval(interval);
+    // }, [swapReservationData]);
 
     const formatTime = (timeInSeconds) => {
         const minutes = Math.floor(timeInSeconds / 60);
