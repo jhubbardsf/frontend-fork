@@ -14,6 +14,8 @@ import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import { BITCOIN_DECIMALS } from '../../utils/constants';
 import { satsToBtc } from '../../utils/dappHelper';
 import WebAssetTag from '../other/WebAssetTag';
+import { HiOutlineExternalLink } from 'react-icons/hi';
+import GooSpinner from '../other/GooSpiner';
 
 interface SwapPreviewCardProps {
     swap?: UserSwap; // Uses the new Swap type
@@ -90,7 +92,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
                             <Flex
                                 h='50px'
                                 mt='6px'
-                                mr='30px'
+                                mr='40px'
                                 w='100%'
                                 bg={selectedInputAsset.dark_bg_color}
                                 border='3px solid'
@@ -111,7 +113,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
                         </Text>
 
                         <Flex direction='column'>
-                            <Flex h='50px' mr='30px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
+                            <Flex h='50px' mr='55px' mt='6px' w='100%' bg='#2E1C0C' border={'3px solid'} borderColor={'#78491F'} borderRadius={'14px'} pl='15px' pr='10px' align={'center'}>
                                 <Text fontSize='16px' color={colors.offWhite} letterSpacing={'-1px'} fontFamily={FONT_FAMILIES.AUX_MONO}>
                                     {satsToBtc(BigNumber.from(swap.expectedSats))}
                                 </Text>
@@ -121,21 +123,28 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
                             </Flex>
                         </Flex>
                     </Flex>
-                    <Spacer />
                     {/* TXID */}
-                    <Text
-                        mr='100px'
-                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                        fontSize='14px'
-                        color={colors.textGray}
+                    <Flex
+                        mx='40px'
+                        align='center'
                         cursor='pointer'
-                        onClick={() => window.open(`https://basescan.org/tx/${swap.deposit_txid}`, '_blank')}>
-                        {swap.deposit_txid.slice(0, 6)}...{swap.deposit_txid.slice(-6)}
-                    </Text>
+                        onClick={() => window.open(`https://basescan.org/tx/${swap.deposit_txid}`, '_blank')}
+                        _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
+                        p='8px'
+                        borderRadius='8px'>
+                        <Text mr='8px' fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='15px' color={colors.textGray}>
+                            {swap.deposit_txid.slice(0, 6)}...{swap.deposit_txid.slice(-6)}
+                        </Text>
+                        <HiOutlineExternalLink color={colors.textGray} />
+                    </Flex>
+
                     {/* STATUS  */}
-                    <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='12px' color={colors.offWhite} mr='40px'>
-                        {status}
-                    </Text>
+                    <Flex align='center' mt='10px' justify='center'>
+                        <GooSpinner flexSize={10} lRingSize={15} stroke={2} color={colors.textGray} />
+                        <Text ml='14px' mt='-14px' mr='30px' fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='15px' color={colors.textGray}>
+                            {status}
+                        </Text>
+                    </Flex>
                 </Flex>
             </Flex>
         </Flex>

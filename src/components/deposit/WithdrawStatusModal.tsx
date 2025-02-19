@@ -209,7 +209,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({ isOpen, onClo
                         </Flex>
                     ) : (
                         <Flex direction='column' align='center' justify='center' h='100%' pb={'15px'}>
-                            {isLoading && <GooSpinner size={100} color={colors.purpleBorder} />}
+                            {isLoading && <GooSpinner flexSize={100} color={colors.purpleBorder} />}
                             <Spacer />
                             <Text
                                 fontSize='12px'

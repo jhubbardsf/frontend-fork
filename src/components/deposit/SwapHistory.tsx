@@ -163,10 +163,10 @@ export const SwapHistory = ({}) => {
                                         <Text>SWAP INPUT</Text>
                                         <Flex w='20px' />
                                         <Text ml='140px'>SWAP OUTPUT</Text>
-                                        <Text ml='140px' mr='52px'>
+                                        <Text ml='124px' mr='56px'>
                                             TXID
                                         </Text>
-                                        <Text ml='60px' mr='52px'>
+                                        <Text ml='94px' mr='52px'>
                                             STATUS
                                         </Text>
                                     </Flex>

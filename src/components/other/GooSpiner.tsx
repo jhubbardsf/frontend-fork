@@ -1,7 +1,7 @@
 import { Flex } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 
-const GooSpinner = ({ size = 100, color = '#6B46C1' }) => {
+const GooSpinner = ({ flexSize = 100, lRingSize = 50, stroke = 6, color = '#6B46C1' }) => {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -19,8 +19,8 @@ const GooSpinner = ({ size = 100, color = '#6B46C1' }) => {
     }
 
     return (
-        <Flex w={`${size}px`} mt='-15px' h={`${size}px`} justifyContent='center' alignItems='center'>
-            <l-ring size='50' stroke='6' bg-opacity='0' speed='2' color={color}></l-ring>
+        <Flex w={`${flexSize}px`} mt='-15px' h={`${flexSize}px`} justifyContent='center' alignItems='center'>
+            <l-ring size={lRingSize} stroke={stroke} bg-opacity='0' speed='2' color={color}></l-ring>
         </Flex>
     );
 };
