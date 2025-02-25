@@ -8,7 +8,7 @@ import { useStore } from '../../store';
 import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
 import { addNetwork, btcToSats, convertToBitcoinLockingScript, ethToWei, formatAmountToString, satsToBtc, validateBitcoinPayoutAddress, weiToEth } from '../../utils/dappHelper';
-import { BITCOIN_DECIMALS, MAX_SWAP_AMOUNT_SATS, MAX_SWAP_LP_OUTPUTS, MIN_SWAP_AMOUNT_SATS, opaqueBackgroundColor } from '../../utils/constants';
+import { BITCOIN_DECIMALS, MAX_SWAP_AMOUNT_SATS, MAX_SWAP_LP_OUTPUTS, MIN_SWAP_AMOUNT_SATS, opaqueBackgroundColor, SAMEES_DEMO_CB_BTC_ADDRESS } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { custom, useAccount, useChainId } from 'wagmi';
 import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
@@ -364,7 +364,7 @@ export const DepositUI = () => {
                 tokenAddress: selectedInputAsset.tokenAddress,
                 params: {
                     depositOwnerAddress: userEthAddress,
-                    specifiedPayoutAddress: '0xA976a1F4Ee6DC8011e777133C6719087C10b6259', // TODO: hard coded samees address for demo
+                    specifiedPayoutAddress: SAMEES_DEMO_CB_BTC_ADDRESS, // TODO: rempve hard codeding address after demo
                     depositAmount: depositAmountInSmallestTokenUnit, // renamed from depositAmountInSmallestTokenUnit
                     expectedSats: bitcoinOutputAmountInSats,
                     btcPayoutScriptPubKey: btcPayoutScriptPubKey,

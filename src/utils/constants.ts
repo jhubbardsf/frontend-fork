@@ -7,6 +7,7 @@ export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.MAINNET; // Local 
 export const IS_FRONTEND_PAUSED = false;
 export const MIN_SWAP_AMOUNT_SATS = 1000; // 1000 sats = ~$0.96 currently
 export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
+export const SAMEES_DEMO_CB_BTC_ADDRESS = '0xA976a1F4Ee6DC8011e777133C6719087C10b6259';
 
 // BASE DEVNET
 export const DEVNET_BASE_CHAIN_ID = 1337;

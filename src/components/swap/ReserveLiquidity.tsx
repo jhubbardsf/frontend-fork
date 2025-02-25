@@ -117,31 +117,6 @@ export const ReserveLiquidity = ({}) => {
         }
     };
 
-    async function reserveByPaymaster(request: ReservationByPaymasterRequest, baseUrl: string = selectedInputAsset.paymasterUrl): Promise<ReservationByPaymasterResponse> {
-        try {
-            const response = await fetch(`${baseUrl}/reserve_by_paymaster`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(request),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return (await response.json()) as ReservationByPaymasterResponse;
-        } catch (error) {
-            console.error('Error in reserveByPaymaster:', error);
-            return {
-                status: false,
-                tx_hash: null,
-            };
-            toastError('', { title: 'Error reserving liquidity', description: 'There was an error reserving liquidity, please try again.' });
-        }
-    }
-
     const proceedWithReservationPayingFeesUsingBtc = async () => {
         // Reset the reserve state before starting a new reservation
         setLoadingReservation(true);
@@ -187,16 +162,17 @@ export const ReserveLiquidity = ({}) => {
             // [0] start listening for the liquidity reserved event
             let reservationsDetailPromise = listenForLiquidityReservedEvent(ethersRpcProvider, selectedInputAsset.riftExchangeContractAddress, riftExchangeABI.abi, ethPayoutAddress, blockHeight);
 
-            const result = await reserveByPaymaster(reservationRequest);
-            console.log('Reservation result:', result);
+            // deprecated concept of paymaster -- remove below
+            // const result = await reserveByPaymaster(reservationRequest);
+            // console.log('Reservation result:', result);
 
-            if (!result.status) {
-                console.error('Error reserving liquidity:', result);
-                toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
-                setSwapFlowState('0-not-started');
-                setLoadingReservation(false);
-                return;
-            }
+            // if (!result.status) {
+            //     console.error('Error reserving liquidity:', result);
+            //     toastError('', { title: 'Liquidity Unavailable', description: 'Someone else reserved your liquidity from under your feet :(' });
+            //     setSwapFlowState('0-not-started');
+            //     setLoadingReservation(false);
+            //     return;
+            // }
 
             // [1] wait for the reservation to confirm
             const reservationDetails = await reservationsDetailPromise;
