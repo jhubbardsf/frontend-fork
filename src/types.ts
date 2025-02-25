@@ -58,7 +58,6 @@ export type ValidAsset = {
     chainDetails?: any;
     contractRpcURL?: string;
     etherScanBaseUrl?: string;
-    paymasterUrl?: string;
     proverFee?: BigNumber;
     releaserFee?: BigNumber;
     icon_svg: any;

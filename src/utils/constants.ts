@@ -3,7 +3,7 @@ import { ValidAsset, DeploymentType } from '../types';
 import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
-export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.DEVNET; // Local devnet
+export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.MAINNET; // Local devnet
 export const IS_FRONTEND_PAUSED = false;
 export const MIN_SWAP_AMOUNT_SATS = 1000; // 1000 sats = ~$0.96 currently
 export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
@@ -11,7 +11,6 @@ export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
 // BASE DEVNET
 export const DEVNET_BASE_CHAIN_ID = 1337;
 export const DEVNET_BASE_ETHERSCAN_URL = 'http://localhost:50101';
-export const DEVNET_BASE_PAYMASTER_URL = 'http://localhost:50101';
 export const DEVNET_BASE_RPC_URL = 'http://localhost:50101';
 export const DEVNET_BASE_WS_URL = 'ws://localhost:50101';
 export const DEVNET_DATA_ENGINE_URL = 'http://localhost:50100';
@@ -21,7 +20,6 @@ export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb14
 // BASE TESTNET
 export const TESTNET_BASE_CHAIN_ID = 84532;
 export const TESTNET_BASE_ETHERSCAN_URL = 'https://base-sepolia.g.alchemy.com/v2/demo';
-export const TESTNET_BASE_PAYMASTER_URL = 'https://rift-paymaster-base-sepolia.up.railway.app';
 export const TESTNET_BASE_RPC_URL = 'https://base-sepolia.g.alchemy.com/v2/demo';
 export const TESTNET_DATA_ENGINE_URL = 'null';
 export const TESTNET_BASE_CBBTC_TOKEN_ADDRESS = '0x83358384d0c3874356f590d220e1064212525379';
@@ -30,11 +28,11 @@ export const TESTNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb1
 // BASE MAINNET
 export const MAINNET_BASE_CHAIN_ID = 8453;
 export const MAINNET_BASE_ETHERSCAN_URL = 'https://basescan.org/';
-export const MAINNET_BASE_PAYMASTER_URL = 'https://rift-paymaster-base.up.railway.app';
 export const MAINNET_BASE_RPC_URL = 'https://base.gateway.tenderly.co/2CozPE8XkkiFQIO8uj4Ug1';
-export const MAINNET_DATA_ENGINE_URL = 'null';
-export const MAINNET_BASE_CBBTC_TOKEN_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-export const MAINNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // TODO: REPLACE
+export const MAINNET_BASE_WS_URL = 'wss://base.gateway.tenderly.co/1kdqVUjJRd2taoV0LRvzV9';
+export const MAINNET_DATA_ENGINE_URL = 'https://ip-172-31-22-251.tail0a0b83.ts.net';
+export const MAINNET_BASE_CBBTC_TOKEN_ADDRESS = '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
+export const MAINNET_BASE_RIFT_EXCHANGE_ADDRESS = '0x14cacc70eb61a1340fcc28d1e21b367da5c21a70'; // TODO: REPLACE
 
 // // MAINNET ARBITRUM
 // export const MAINNET_ARBITRUM_CHAIN_ID = 42161;

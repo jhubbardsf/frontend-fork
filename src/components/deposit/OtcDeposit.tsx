@@ -142,6 +142,7 @@ export const OtcDeposit = ({}) => {
     const [isEthereumPayoutAddressValid, setIsEthereumPayoutAddressValid] = useState<boolean>(false);
     const [sliderT, setSliderT] = useState(0.5); // start at middle
     const [blockConfirmationsSliderValue, setBlockConfirmationsSlider] = useState(2); // 2 block confs default
+    const userEthAddress = useStore((state) => state.userEthAddress);
     const tickPercents = [-10, -6, -3, -1, 0, 1, 3, 6, 10];
     const blockConfirmationOptions = [2, 3, 4, 5, 6];
     const A = 56.56854249; // approx.
@@ -395,15 +396,16 @@ export const OtcDeposit = ({}) => {
                 riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
                 tokenAddress: selectedInputAsset.tokenAddress,
                 params: {
+                    depositOwnerAddress: userEthAddress,
                     specifiedPayoutAddress: otcRecipientBaseAddress,
                     depositAmount: depositAmountInSmallestTokenUnit, // renamed from depositAmountInSmallestTokenUnit
                     expectedSats: bitcoinOutputAmountInSats,
                     btcPayoutScriptPubKey: btcPayoutScriptPubKey,
                     depositSalt: generatedDepositSalt, // TODO: check contract for deposit salt input type
                     confirmationBlocks: blockConfirmationsSliderValue, // TODO - make this an advanced settings slider (between 2-6?)
-                    tipBlockLeaf: tipProof.leaf,
-                    tipBlockSiblings: tipProof.siblings,
-                    tipBlockPeaks: tipProof.peaks,
+                    safeBlockLeaf: tipProof.leaf,
+                    safeBlockSiblings: tipProof.siblings,
+                    safeBlockPeaks: tipProof.peaks,
                 },
             });
         }

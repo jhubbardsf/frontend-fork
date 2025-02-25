@@ -16,7 +16,7 @@ export enum DepositStatus {
     Error = 'error',
 }
 
-    /*
+/*
       *
      * @notice Struct for depositLiquidity parameters
      *
@@ -61,6 +61,7 @@ interface DepositLiquidityParams {
         safeBlockSiblings: string[];
         safeBlockPeaks: string[];
     };
+    forceError?: string;
 }
 
 function useIsClient() {
@@ -95,6 +96,12 @@ export function useDepositLiquidity() {
             setError(null);
             setTxHash(null);
 
+            if (params.forceError) {
+                setError(params.forceError);
+                setStatus(DepositStatus.Error);
+                return;
+            }
+
             try {
                 const tokenContract = new ethers.Contract(params.tokenAddress, ERC20ABI, params.signer);
                 const riftExchangeContractInstance = new ethers.Contract(params.riftExchangeContractAddress, params.riftExchangeAbi, params.signer);
@@ -127,7 +134,32 @@ export function useDepositLiquidity() {
                 refreshUserSwapsFromAddress();
             } catch (err) {
                 console.error('Error in depositLiquidity:', err);
-                setError(err instanceof Error ? err.message : JSON.stringify(err, null, 2));
+
+                // Improved error handling to capture contract error data
+                let errorMessage = '';
+                if (err instanceof Error) {
+                    errorMessage = err.message;
+
+                    // Try to extract error data from ethers error
+                    if (err.message.includes('UNPREDICTABLE_GAS_LIMIT')) {
+                        // Type assertion to access nested properties safely
+                        const errorObj = err as any;
+                        if (errorObj.error && typeof errorObj.error === 'object' && errorObj.error.data && typeof errorObj.error.data === 'object') {
+                            const errorData = errorObj.error.data.data;
+                            if (errorData) {
+                                // Store the error selector for later use
+                                errorMessage = JSON.stringify({
+                                    message: err.message,
+                                    data: errorData,
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    errorMessage = JSON.stringify(err, null, 2);
+                }
+
+                setError(errorMessage);
                 setStatus(DepositStatus.Error);
             }
         },

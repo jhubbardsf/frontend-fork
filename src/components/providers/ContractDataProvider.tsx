@@ -8,6 +8,7 @@ import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { getUSDPrices } from '../../utils/fetchUniswapPrices';
 import { getSwapsForAddress } from '../../utils/dataEngineClient';
+import { addNetwork } from '../../utils/dappHelper';
 
 interface ContractDataContextType {
     loading: boolean;
@@ -42,6 +43,65 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             setEthersRpcProvider(provider);
         }
     }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
+
+    // [1] check if MetaMask is on the correct network and switch if needed
+    useEffect(() => {
+        const checkAndSwitchNetwork = async () => {
+            if (!window.ethereum || !selectedInputAsset || !isConnected) return;
+
+            try {
+                // Get current chain ID from MetaMask
+                const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+                const currentChainId = parseInt(chainIdHex, 16);
+
+                // If already on the correct chain, no need to switch
+                if (currentChainId === selectedInputAsset.contractChainID) return;
+
+                console.log('Switching network to match selected asset');
+                console.log('Current chainId:', currentChainId);
+                console.log('Target chainId:', selectedInputAsset.contractChainID);
+
+                // Convert chainId to hex format for MetaMask
+                const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
+
+                try {
+                    // Attempt to switch to the target network
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: hexChainId }],
+                    });
+                    console.log('Switched to the existing network successfully');
+                } catch (error) {
+                    // Error code 4902 indicates the chain is not available
+                    console.error('Network switch error:', error);
+                    if (error.code === 4902) {
+                        console.log('Network not available in MetaMask. Attempting to add network.');
+
+                        try {
+                            // Attempt to add the network if it's not found
+                            await addNetwork(selectedInputAsset.chainDetails);
+                            console.log('Network added successfully');
+
+                            // After adding, attempt to switch to the new network
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: hexChainId }],
+                            });
+                            console.log('Switched to the newly added network successfully');
+                        } catch (addNetworkError) {
+                            console.error('Failed to add or switch to network:', addNetworkError);
+                        }
+                    } else {
+                        console.error('Error switching network:', error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking or switching network:', error);
+            }
+        };
+
+        checkAndSwitchNetwork();
+    }, [selectedInputAsset, isConnected]);
 
     // [1] fetch selected asset user balance
     const fetchSelectedAssetUserBalance = async () => {

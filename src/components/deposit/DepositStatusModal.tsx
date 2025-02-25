@@ -3,7 +3,7 @@ import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseBu
 import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
-import { AlertCircleOutline, OpenOutline } from 'react-ionicons';
+import { AlertCircleOutline, List, OpenOutline } from 'react-ionicons';
 import { HiOutlineExternalLink } from 'react-icons/hi';
 import { PiVaultBold } from 'react-icons/pi';
 import { IoIosCheckmarkCircle, IoMdSettings } from 'react-icons/io';
@@ -11,6 +11,7 @@ import { useStore } from '../../store';
 import { useRouter } from 'next/router';
 import GooSpinner from '../other/GooSpiner';
 import { useContractData } from '../providers/ContractDataProvider';
+import { getContractErrorMessage } from '../../utils/contractErrors';
 
 interface DepositStatusModalProps {
     isOpen: boolean;
@@ -54,7 +55,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                 if (error && error.toLowerCase().includes('user rejected transaction')) {
                     return 'User rejected transaction';
                 }
-                return `Error: ${error}`;
+                return `Error: ${getContractErrorMessage(error)}`;
             default:
                 return 'Confirming...';
         }
@@ -172,7 +173,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     fontWeight={'normal'}
                                     onClick={() => {
                                         refreshUserSwapsFromAddress();
-                                        handleNavigation('/'); // TODO - make this go to the activity page
+                                        handleNavigation('/activity'); // TODO - make this go to the activity page
                                         setIsLoadingRedirect(true);
                                         // onClose();
                                     }}
@@ -180,14 +181,14 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     borderRadius='md'>
                                     {!isLoadingRedirect && (
                                         <Flex mt='-2px ' mr='8px'>
-                                            <IoMdSettings size={'17px'} color={colors.offWhite} />
+                                            <List width={'18px'} color={colors.offWhite} />
                                         </Flex>
                                     )}
                                     {isLoadingRedirect ? (
                                         <Spinner size='sm' color={colors.offWhite} />
                                     ) : (
                                         <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
-                                            Manage Deposit Vaults
+                                            Swap Activity
                                         </Text>
                                     )}
                                 </Button>
@@ -199,7 +200,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     <Text overflowWrap={'anywhere'} fontSize='12px' color='#FF6B6B'>
                                         {typeof error === 'string' && error.toLowerCase().includes('user rejected transaction')
                                             ? 'User rejected the transaction, please try again.'
-                                            : error?.toString()}
+                                            : getContractErrorMessage(error)}
                                     </Text>
                                 </Box>
                                 <Button

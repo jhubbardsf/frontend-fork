@@ -122,10 +122,13 @@ export const ConnectWalletButton = ({}) => {
                                                 })()}
                                             </Flex>
                                             <Flex mt='-2px' mr='-2px' fontSize='17px' paddingX='22px' fontFamily={'aux'}>
-                                                {parseFloat(localBalance)
-                                                    .toFixed(BITCOIN_DECIMALS)
-                                                    .replace(/\.?0+$/, '')
-                                                    .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                {(() => {
+                                                    const num = parseFloat(localBalance);
+                                                    const formatted = num.toFixed(BITCOIN_DECIMALS).replace(/\.?0+$/, '');
+                                                    const parts = formatted.split('.');
+                                                    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                                                    return parts.join('.');
+                                                })()}
                                                 <Text color={colors.offWhite} ml='8px'>
                                                     {selectedInputAsset.display_name}
                                                 </Text>
