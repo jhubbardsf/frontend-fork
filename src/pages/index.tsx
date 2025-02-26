@@ -61,7 +61,7 @@ const Home = () => {
             {/* <OfflinePage> */}
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '18vh' : '100px'}>
+                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '15vh' : '100px'}>
                     {swapFlowState != '0-not-started' ? (
                         <ReserveLiquidityContainer />
                     ) : (
