@@ -55,7 +55,7 @@ type Store = {
     setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
     userSwapsFromAddress: UserSwap[];
 
-    // manage deposits
+    // activity page
     selectedSwapToManage: UserSwap | null;
     setSelectedSwapToManage: (swap: UserSwap | null) => void;
     showManageDepositVaultsScreen: boolean;
@@ -74,6 +74,8 @@ type Store = {
     setBtcOutputAmount: (amount: string) => void;
     coinbaseBtcOutputAmount: string;
     setCoinbaseBtcOutputAmount: (amount: string) => void;
+    payoutBTCAddress: string;
+    setPayoutBTCAddress: (address: string) => void;
     lowestFeeReservationParams: ReserveLiquidityParams | null;
     setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
     showManageReservationScreen: boolean;
@@ -206,7 +208,7 @@ export const useStore = create<Store>((set) => {
         setUserSwapsFromAddress: (swaps: UserSwap[]) => set({ userSwapsFromAddress: swaps }),
         userSwapsFromAddress: [],
 
-        // manage deposits
+        // activity page
         selectedSwapToManage: null,
         setSelectedSwapToManage: (selectedSwapToManage) => set({ selectedSwapToManage }),
         showManageDepositVaultsScreen: false,
@@ -225,6 +227,8 @@ export const useStore = create<Store>((set) => {
         setBtcOutputAmount: (btcOutputAmount) => set({ btcOutputAmount }),
         coinbaseBtcOutputAmount: '',
         setCoinbaseBtcOutputAmount: (coinbaseBtcOutputAmount) => set({ coinbaseBtcOutputAmount }),
+        payoutBTCAddress: '',
+        setPayoutBTCAddress: (payoutBTCAddress) => set({ payoutBTCAddress }),
         lowestFeeReservationParams: null,
         setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
         showManageReservationScreen: false,

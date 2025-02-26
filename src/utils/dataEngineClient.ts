@@ -1,6 +1,7 @@
 import { Address } from 'viem';
 import { BlockLeaf } from '../types';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { toastError } from '../hooks/toast';
 
 const u8ArrayToHex = (bytes: number[]): string => '0x' + Buffer.from(bytes).toString('hex');
 
@@ -203,6 +204,7 @@ export const getSwapsForAddress = async (baseUrl: string, query: VirtualSwapQuer
         const rawSwaps: RawOTCSwap[] = await response.json();
         return rawSwaps.map(decodeOtcSwap);
     } catch (error) {
-        throw new Error(`Error fetching swaps: ${error}`);
+        toastError('', { title: 'Failed to fetch swap data', description: 'Rift data engine is currently down. Please try again later.' });
+        return []; // Return empty array
     }
 };

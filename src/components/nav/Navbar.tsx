@@ -214,86 +214,8 @@ export const Navbar = ({}) => {
                             </VStack>
                             <Flex direction='column' mt='50vh' align='center' width='100%'>
                                 <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
-                                    Vault Selection Algo VISUALIZER
-                                </Text>
-                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
                                     If you found this, you're a wizard
                                 </Text>
-                                <Flex justify='center' wrap='wrap' gap={4} alignItems='center'>
-                                    {lowestFeeReservationParams?.vaultIndexesToReserve?.map((index, i) => (
-                                        <React.Fragment key={`${index}-${i}`}>
-                                            <Box
-                                                border='3px solid'
-                                                borderColor={colors.purpleBorder}
-                                                borderRadius='md'
-                                                p={3}
-                                                pt='10px'
-                                                bg={colors.purpleBackground}
-                                                width='250px'
-                                                height='95px'
-                                                display='flex'
-                                                flexDirection='column'
-                                                alignItems='center'
-                                                justifyContent='space-between'
-                                                boxShadow='md'>
-                                                <Text fontSize='12px' color={colors.textGray} fontWeight='bold'>
-                                                    Vault #{index}
-                                                </Text>
-                                                <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                                    {parseFloat(formatUnits(lowestFeeReservationParams.amountsInMicroUsdtToReserve[i], selectedInputAsset.decimals)).toFixed(2)}{' '}
-                                                    {selectedInputAsset.name}
-                                                </Text>
-                                                <Text fontSize='8px' color={colors.textGray} fontWeight='bold'>
-                                                    {BigNumber.from(lowestFeeReservationParams.btcExchangeRates[i]).toString()} μUsdt/Sat
-                                                </Text>
-                                            </Box>
-                                            {i < lowestFeeReservationParams.vaultIndexesToReserve.length - 1 ? (
-                                                <Text fontSize='24px' fontWeight='bold'>
-                                                    +
-                                                </Text>
-                                            ) : (
-                                                <Text fontSize='24px' fontWeight='bold'>
-                                                    =
-                                                </Text>
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                    <Box
-                                        border='3px solid'
-                                        borderColor={colors.greenOutline}
-                                        borderRadius='md'
-                                        p={3}
-                                        bg={colors.greenBackground}
-                                        width='250px'
-                                        height='90px'
-                                        display='flex'
-                                        flexDirection='column'
-                                        alignItems='center'
-                                        justifyContent='space-between'
-                                        boxShadow='md'>
-                                        <Text fontSize='12px' color={colors.offerWhite} fontWeight='bold'>
-                                            TOTAL AMOUNT
-                                        </Text>
-                                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} letterSpacing={'-2px'} fontSize='25px'>
-                                            {parseFloat(formattedTotalAmount.toString()).toFixed(2)} {selectedInputAsset.name}
-                                        </Text>
-                                    </Box>
-                                </Flex>
-
-                                {protocolFeeAmountMicroUsdt && (
-                                    <>
-                                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
-                                            {protocolFeeAmountMicroUsdt.toString()} MICRO {selectedInputAsset.name} PROTOCOL FEE
-                                        </Text>
-                                        <Text fontFamily={FONT_FAMILIES.AUX_MONO} fontSize='16px' fontWeight='normal' mt={4} color={colors.textGray}>
-                                            {parseFloat(formatUnits(protocolFeeAmountMicroUsdt, selectedInputAsset.decimals))} {selectedInputAsset.name} PROTOCOL FEE
-                                        </Text>
-                                    </>
-                                )}
-                            </Flex>
-
-                            <Flex position='absolute' top={windowSize.height - 140} gap={3} flexWrap='wrap' justifyContent='center'>
-                                <StatCard label='Total Available Liquidity' value={`${formatUnits(availableLiquidity, selectedInputAsset.decimals)} ${selectedInputAsset.name}`} />
                             </Flex>
                         </>
                     )}

@@ -123,12 +123,16 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
                             </Flex>
                         </Flex>
                     </Flex>
+                    <Spacer />
                     {/* TXID */}
                     <Flex
                         mx='40px'
                         align='center'
                         cursor='pointer'
-                        onClick={() => window.open(`https://basescan.org/tx/${swap.deposit_txid}`, '_blank')}
+                        onClick={(e) => {
+                            e.stopPropagation(); // Stop event propagation to parent
+                            window.open(`https://basescan.org/tx/${swap.deposit_txid}`, '_blank');
+                        }}
                         _hover={{ bg: 'rgba(255, 255, 255, 0.1)' }}
                         p='8px'
                         borderRadius='8px'>

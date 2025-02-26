@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button, Icon, Spinner } from '@chakra-ui/react';
 import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
@@ -81,14 +81,22 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                 borderRadius='20px'
                 fontFamily={FONT_FAMILIES.AUX_MONO}
                 color={colors.offWhite}
-                animation={`breathe 3s infinite ease-in-out`}
+                animation={`breathe${isError ? 'Error' : 'Success'} 3s infinite ease-in-out`}
                 sx={{
-                    '@keyframes breathe': {
+                    '@keyframes breatheSuccess': {
                         '0%, 100%': {
-                            filter: isError ? 'drop-shadow(0px 0px 30px rgba(183, 6, 6, 0.3))' : 'drop-shadow(0px 0px 30px rgba(6, 64, 183, 0.4))',
+                            filter: 'drop-shadow(0px 0px 30px rgba(6, 64, 183, 0.4))',
                         },
                         '50%': {
-                            filter: isError ? 'drop-shadow(0px 0px 40px rgba(183, 6, 6, 0.5))' : 'drop-shadow(0px 0px 50px rgba(6, 64, 183, 0.6))',
+                            filter: 'drop-shadow(0px 0px 50px rgba(6, 64, 183, 0.6))',
+                        },
+                    },
+                    '@keyframes breatheError': {
+                        '0%, 100%': {
+                            filter: 'drop-shadow(0px 0px 30px rgba(183, 6, 6, 0.3))',
+                        },
+                        '50%': {
+                            filter: 'drop-shadow(0px 0px 40px rgba(183, 6, 6, 0.5))',
                         },
                     },
                 }}>
@@ -139,7 +147,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                 textAlign='center'>
                                 {getStatusMessage()}
                                 {status === DepositStatus.Confirmed && (
-                                    <Text justifySelf={'center'} fontSize='16px' w='80%' fontWeight='bold' fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                    <Text mt='18px' mb='-5px' color={colors.textGray} fontWeight={'normal'} justifySelf={'center'} fontSize='13px' w='80%' fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         Bitcoin will be sent to your wallet shortly!
                                     </Text>
                                 )}
@@ -154,7 +162,10 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     _hover={{ bg: colors.borderGray }}
                                     borderRadius='md'
                                     h='45px'
-                                    onClick={() => window.open(getEtherscanUrl(), '_blank')}
+                                    onClick={() => {
+                                        window.open(getEtherscanUrl(), '_blank');
+                                        onClose();
+                                    }}
                                     isDisabled={!txHash}>
                                     <Flex mt='-4px ' mr='8px'>
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />

@@ -47,7 +47,6 @@ export const DepositUI = () => {
     const setDepositFlowState = useStore((state) => state.setDepositFlowState);
     const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
-    const [isWaitingForConnection, setIsWaitingForConnection] = useState(false);
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
     const [userCoinbaseBtcBalance, setUserCoinbaseBtcBalance] = useState('0.00');
@@ -61,12 +60,49 @@ export const DepositUI = () => {
     const [isBelowMinCoinbaseBtcDeposit, setIsBelowMinCoinbaseBtcDeposit] = useState(false);
     const [isBelowMinBtcOutput, setIsBelowMinBtcOutput] = useState(false);
     const areNewDepositsPaused = useStore((state) => state.areNewDepositsPaused);
-    const [payoutBTCAddress, setPayoutBTCAddress] = useState('');
+    const payoutBTCAddress = useStore((state) => state.payoutBTCAddress);
+    const setPayoutBTCAddress = useStore((state) => state.setPayoutBTCAddress);
     const chainId = useChainId();
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [dots, setDots] = useState('');
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Clear form values on component mount
+    useEffect(() => {
+        // Reset all input values when component mounts
+        setCoinbaseBtcDepositAmount('');
+        setBtcOutputAmount('');
+        setBtcInputSwapAmount('');
+        setPayoutBTCAddress('');
+
+        // Also reset validation states
+        setUserBalanceExceeded(false);
+        setIsAboveMaxSwapLimitCoinbaseBtcDeposit(false);
+        setIsBelowMinCoinbaseBtcDeposit(false);
+        setIsAboveMaxSwapLimitBtcOutput(false);
+        setIsBelowMinBtcOutput(false);
+    }, []);
+
+    // Helper function to check if all deposit conditions are met
+    const canProceedWithDeposit = () => {
+        return (
+            coinbaseBtcDepositAmount &&
+            !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
+            !isBelowMinCoinbaseBtcDeposit &&
+            !userBalanceExceeded &&
+            btcOutputAmount &&
+            validateBitcoinPayoutAddress(payoutBTCAddress) &&
+            !areNewDepositsPaused
+        );
+    };
+
+    // Modern approach using onKeyDown
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && canProceedWithDeposit()) {
+            initiateDeposit();
+        }
+    };
 
     // ---------- BTC PAYOUT ADDRESS ---------- //
     const handleBTCPayoutAddressChange = (e) => {
@@ -144,10 +180,14 @@ export const DepositUI = () => {
 
     const handleModalClose = () => {
         setIsModalOpen(false);
+        resetDepositState();
+
+        // Only clear form values if deposit was successful
         if (depositLiquidityStatus === DepositStatus.Confirmed) {
             setCoinbaseBtcDepositAmount('');
             setBtcOutputAmount('');
             setBtcInputSwapAmount('');
+            setPayoutBTCAddress('');
         }
     };
 
@@ -206,9 +246,8 @@ export const DepositUI = () => {
 
                 console.log('validAssets[selectedInputAsset.name].connectedUserBalanceFormatted:', validAssets[selectedInputAsset.name].connectedUserBalanceFormatted);
 
-                const userBalance = await refreshConnectedUserBalance();
-
-                // fetch the latest balance after refreshing
+                // fetch the latest user balance after refreshing
+                await refreshConnectedUserBalance();
                 const latestUserCoinbaseBtcBalance = validAssets[selectedInputAsset.name].connectedUserBalanceFormatted;
 
                 if (parseFloat(coinbaseBtcDepositAmount || '0') > parseFloat(latestUserCoinbaseBtcBalance || '0')) {
@@ -220,7 +259,7 @@ export const DepositUI = () => {
         };
 
         handleConnection();
-    }, [isConnected, isAwaitingConnection, refreshConnectedUserBalance, validAssets, selectedInputAsset, coinbaseBtcDepositAmount]);
+    }, [isConnected]);
 
     useEffect(() => {
         if (loading) {
@@ -235,7 +274,7 @@ export const DepositUI = () => {
     const initiateDeposit = async () => {
         // this function ensures user is connected, and switched to the correct chain before proceeding with the deposit attempt
         if (!isConnected) {
-            setIsWaitingForConnection(true);
+            setIsAwaitingConnection(true);
             openConnectModal();
             return;
         }
@@ -427,6 +466,7 @@ export const DepositUI = () => {
                                             <Input
                                                 value={coinbaseBtcDepositAmount}
                                                 onChange={handleCoinbaseBtcInputChange}
+                                                onKeyDown={handleKeyDown}
                                                 fontFamily={'Aux'}
                                                 border='none'
                                                 mt='6px'
@@ -561,6 +601,7 @@ export const DepositUI = () => {
                                             <Input
                                                 value={btcOutputAmount}
                                                 onChange={handleBtcOutputChange}
+                                                onKeyDown={handleKeyDown}
                                                 fontFamily={'Aux'}
                                                 border='none'
                                                 mt='6px'
@@ -649,6 +690,7 @@ export const DepositUI = () => {
                                         <Input
                                             value={payoutBTCAddress}
                                             onChange={handleBTCPayoutAddressChange}
+                                            onKeyDown={handleKeyDown}
                                             fontFamily={'Aux'}
                                             border='none'
                                             mt='3.5px'
@@ -723,24 +765,9 @@ export const DepositUI = () => {
                             </Flex>
                             {/* Exchange Button */}
                             <Flex
-                                bg={
-                                    coinbaseBtcDepositAmount &&
-                                    !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
-                                    !isBelowMinCoinbaseBtcDeposit &&
-                                    !userBalanceExceeded &&
-                                    validateBitcoinPayoutAddress(payoutBTCAddress)
-                                        ? colors.purpleBackground
-                                        : colors.purpleBackgroundDisabled
-                                }
+                                bg={canProceedWithDeposit() ? colors.purpleBackground : colors.purpleBackgroundDisabled}
                                 _hover={{
-                                    bg:
-                                        coinbaseBtcDepositAmount &&
-                                        !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
-                                        !isBelowMinCoinbaseBtcDeposit &&
-                                        !userBalanceExceeded &&
-                                        validateBitcoinPayoutAddress(payoutBTCAddress)
-                                            ? colors.purpleHover
-                                            : undefined,
+                                    bg: canProceedWithDeposit() ? colors.purpleHover : undefined,
                                 }}
                                 w='100%'
                                 mt='15px'
@@ -751,54 +778,19 @@ export const DepositUI = () => {
                                         ? null
                                         : isMobile
                                         ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
-                                        : coinbaseBtcDepositAmount &&
-                                          !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
-                                          !isBelowMinCoinbaseBtcDeposit &&
-                                          !userBalanceExceeded &&
-                                          btcOutputAmount &&
-                                          validateBitcoinPayoutAddress(payoutBTCAddress)
+                                        : canProceedWithDeposit()
                                         ? () => initiateDeposit()
                                         : null
                                 }
                                 fontSize={'16px'}
                                 align={'center'}
                                 userSelect={'none'}
-                                cursor={
-                                    coinbaseBtcDepositAmount &&
-                                    !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
-                                    !isBelowMinCoinbaseBtcDeposit &&
-                                    !userBalanceExceeded &&
-                                    btcOutputAmount &&
-                                    validateBitcoinPayoutAddress(payoutBTCAddress)
-                                        ? 'pointer'
-                                        : 'not-allowed'
-                                }
+                                cursor={canProceedWithDeposit() ? 'pointer' : 'not-allowed'}
                                 borderRadius={'10px'}
                                 justify={'center'}
-                                border={
-                                    coinbaseBtcDepositAmount &&
-                                    !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
-                                    !isBelowMinCoinbaseBtcDeposit &&
-                                    !userBalanceExceeded &&
-                                    btcOutputAmount &&
-                                    validateBitcoinPayoutAddress(payoutBTCAddress)
-                                        ? '3px solid #445BCB'
-                                        : '3px solid #3242a8'
-                                }>
-                                <Text
-                                    color={
-                                        coinbaseBtcDepositAmount &&
-                                        !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
-                                        !isBelowMinCoinbaseBtcDeposit &&
-                                        !userBalanceExceeded &&
-                                        btcOutputAmount &&
-                                        validateBitcoinPayoutAddress(payoutBTCAddress) &&
-                                        !areNewDepositsPaused
-                                            ? colors.offWhite
-                                            : colors.darkerGray
-                                    }
-                                    fontFamily='Nostromo'>
-                                    {areNewDepositsPaused ? 'NEW SWAPS ARE DISABLED FOR TESTING' : isConnected ? 'Exchange' : 'Connect Wallet'}
+                                border={canProceedWithDeposit() ? '3px solid #445BCB' : '3px solid #3242a8'}>
+                                <Text color={canProceedWithDeposit() ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                                    {canProceedWithDeposit() ? 'Exchange' : 'Connect Wallet'}
                                 </Text>
                             </Flex>
                         </>
