@@ -125,7 +125,7 @@ export const SwapHistory = ({}) => {
             ) : (
                 <Flex
                     w='100%'
-                    h='650px'
+                    h='780px'
                     px='24px'
                     justify={loading ? 'center' : userSwapsFromAddress.length > 0 ? 'flex-start' : 'center'}
                     py='12px'
