@@ -682,8 +682,23 @@ export const DepositUI = () => {
                                 </Flex>
 
                                 {/* BTC Payout Address */}
-                                <Text ml='8px' mt='18px' w='100%' mb='6px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                                <Text ml='8px' display='flex' alignItems='center' mt='18px' w='100%' mb='6px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                                     Bitcoin Payout Address
+                                    <Tooltip
+                                        fontFamily={'Aux'}
+                                        letterSpacing={'-0.5px'}
+                                        color={colors.offWhite}
+                                        ml='100px'
+                                        bg={'#121212'}
+                                        fontSize={'12px'}
+                                        label='Only P2WPKH, P2PKH, or P2SH Bitcoin addresses are supported.'
+                                        aria-label='A tooltip'>
+                                        <Flex pl='5px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
+                                            <Flex mt='0px' mr='2px'>
+                                                <InfoSVG width='12px' />
+                                            </Flex>
+                                        </Flex>
+                                    </Tooltip>
                                 </Text>
                                 <Flex mt='-4px' mb='10px' px='10px' bg='rgba(46, 29, 14, 0.66)' border='2px solid #78491F' w='100%' h='60px' borderRadius={'10px'}>
                                     <Flex direction={'row'} py='6px' px='5px'>
