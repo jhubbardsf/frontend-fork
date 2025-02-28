@@ -1,11 +1,17 @@
-import { create } from 'zustand';
-import { useEffect } from 'react';
-import { CurrencyModalTitle, ReserveLiquidityParams, UserSwap } from './types';
-import { BigNumber, ethers } from 'ethers';
-import { USDT_Icon, ETH_Icon, ETH_Logo, Coinbase_BTC_Icon } from './components/other/SVGs';
+// src/store.ts
+import { create, type StateCreator } from 'zustand';
+import { BigNumber, type ethers } from 'ethers';
+import type {
+    CurrencyModalTitle,
+    ReserveLiquidityParams,
+    UniswapToken,
+    UniswapTokenList,
+    UserSwap,
+    ValidAsset,
+    DeploymentType
+} from './types';
+import riftExchangeABI from './abis/RiftExchange.json';
 import {
-    ERC20ABI,
-    DEPLOYMENT_TYPE,
     MAINNET_BASE_CHAIN_ID,
     MAINNET_BASE_ETHERSCAN_URL,
     MAINNET_BASE_RPC_URL,
@@ -14,26 +20,33 @@ import {
     TESTNET_BASE_ETHERSCAN_URL,
     TESTNET_BASE_RIFT_EXCHANGE_ADDRESS,
     TESTNET_BASE_RPC_URL,
-    DEVNET_BASE_CHAIN_ID,
     DEVNET_BASE_RPC_URL,
+    MAINNET_BASE_ETHERSCAN_URL,
+    TESTNET_BASE_ETHERSCAN_URL,
     DEVNET_BASE_ETHERSCAN_URL,
     DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
     MAINNET_BASE_RIFT_EXCHANGE_ADDRESS,
+    TESTNET_BASE_RIFT_EXCHANGE_ADDRESS,
+    DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
     MAINNET_BASE_CBBTC_TOKEN_ADDRESS,
-    DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
     TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
+    DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
     BITCOIN_DECIMALS,
     MAINNET_DATA_ENGINE_URL,
     DEVNET_DATA_ENGINE_URL,
     TESTNET_DATA_ENGINE_URL,
+    DEFAULT_UNISWAP_ASSET,
+    DEPLOYMENT_TYPE
 } from './utils/constants';
-import { ValidAsset } from './types';
-import riftExchangeABI from './abis/RiftExchange.json';
-import { base, baseGoerli, baseSepolia } from 'viem/chains';
-import { DeploymentType } from './types';
 import { getDeploymentValue } from './utils/deploymentUtils';
+import { Coinbase_BTC_Icon } from './components/other/SVGs';
+import { base } from 'viem/chains';
+import { tokens } from '@/assets/json/tokenList.json';
 
-type Store = {
+import { getPriceFromAPI } from './utils/fetchPrice';
+
+// --- Slice Types ---
+type SetupSlice = {
     // setup & asset data
     userEthAddress: string;
     setUserEthAddress: (address: string) => void;
@@ -50,22 +63,25 @@ type Store = {
     setSelectedInputAsset: (asset: ValidAsset) => void;
     isPayingFeesInBTC: boolean;
     setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
+};
 
-    // contract data (deposit vaults, swap reservations)
-    setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
+type ContractSlice = {
     userSwapsFromAddress: UserSwap[];
+    setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
+};
 
-    // activity page
-    selectedSwapToManage: UserSwap | null;
-    setSelectedSwapToManage: (swap: UserSwap | null) => void;
-    showManageDepositVaultsScreen: boolean;
-    setShowManageDepositVaultsScreen: (show: boolean) => void;
+// manage deposits
+selectedSwapToManage: UserSwap | null;
+setSelectedSwapToManage: (swap: UserSwap | null) => void;
+showManageDepositVaultsScreen: boolean;
+setShowManageDepositVaultsScreen: (show: boolean) => void;
+};
 
-    // swap flow
+type SwapFlowSlice = {
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired';
-    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired') => void;
+    setSwapFlowState: (state: SwapFlowSlice['swapFlowState']) => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
-    setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
+    setDepositFlowState: (state: SwapFlowSlice['depositFlowState']) => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
     coinbaseBtcDepositAmount: string;
@@ -100,16 +116,18 @@ type Store = {
     setCurrentTotalBlockConfirmations: (confirmations: number) => void;
     proxyWalletSwapStatus: number;
     setProxyWalletSwapStatus: (status: number) => void;
+};
 
-    // modals
+type ModalSlice = {
     currencyModalTitle: CurrencyModalTitle;
     setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
     ethPayoutAddress: string;
     setEthPayoutAddress: (address: string) => void;
     bitcoinSwapTransactionHash: string;
     setBitcoinSwapTransactionHash: (hash: string) => void;
+};
 
-    // global
+type GlobalSlice = {
     isOnline: boolean;
     setIsOnline: (b: boolean) => void;
 };
@@ -128,6 +146,7 @@ export const useStore = create<Store>((set) => {
             chainDetails: base, // ONLY USE FOR MAINNET SWITCHING NETWORKS WITH METAMASK
             contractRpcURL: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RPC_URL, TESTNET_BASE_RPC_URL, DEVNET_BASE_RPC_URL),
             etherScanBaseUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_ETHERSCAN_URL, TESTNET_BASE_ETHERSCAN_URL, DEVNET_BASE_ETHERSCAN_URL),
+            paymasterUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_PAYMASTER_URL, TESTNET_BASE_PAYMASTER_URL, DEVNET_BASE_PAYMASTER_URL),
             proverFee: BigNumber.from(0),
             releaserFee: BigNumber.from(0),
             icon_svg: Coinbase_BTC_Icon,
@@ -136,7 +155,6 @@ export const useStore = create<Store>((set) => {
             border_color_light: '#3B70E8',
             dark_bg_color: 'rgba(9, 36, 97, 0.3)',
             light_text_color: '#365B9F',
-            exchangeRateInTokenPerBTC: 1.001,
             priceUSD: null,
             totalAvailableLiquidity: BigNumber.from(0),
             connectedUserBalanceRaw: BigNumber.from(0),
@@ -155,113 +173,96 @@ export const useStore = create<Store>((set) => {
         },
     };
 
-    return {
-        // setup & asset data
-        selectedInputAsset: validAssets.CoinbaseBTC,
-        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
+    const createSetupSlice: StateCreator<Store, [], [], SetupSlice> = (set, get, _api) => ({
         userEthAddress: '',
-        setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
-        //console log the new ethers provider
+        setUserEthAddress: (address: string) => set({ userEthAddress: address }),
         ethersRpcProvider: null,
-        setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
+        setEthersRpcProvider: (provider: ethers.providers.Provider) => set({ ethersRpcProvider: provider }),
         validAssets,
-        setValidAssets: (assets) => set({ validAssets: assets }),
-        updateValidValidAsset: (assetKey, updates) =>
+        setValidAssets: (assets: Record<string, ValidAsset>) => set({ validAssets: assets }),
+        updateValidValidAsset: (assetKey: string, updates: Partial<ValidAsset>) =>
             set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], ...updates },
-                },
+                validAssets: { ...state.validAssets, [assetKey]: { ...state.validAssets[assetKey], ...updates } },
             })),
-        updatePriceUSD: (assetKey, newPrice) =>
+        updatePriceUSD: (assetKey: string, newPrice: number) =>
             set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], priceUSD: newPrice },
-                },
+                validAssets: { ...state.validAssets, [assetKey]: { ...state.validAssets[assetKey], priceUSD: newPrice } },
             })),
-        updateTotalAvailableLiquidity: (assetKey, newLiquidity) =>
+        updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) =>
             set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], totalAvailableLiquidity: newLiquidity },
-                },
+                validAssets: { ...state.validAssets, [assetKey]: { ...state.validAssets[assetKey], totalAvailableLiquidity: newLiquidity } },
             })),
-        updateConnectedUserBalanceRaw: (assetKey, newBalance) =>
+        updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) =>
             set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceRaw: newBalance },
-                },
+                validAssets: { ...state.validAssets, [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceRaw: newBalance } },
             })),
-        updateConnectedUserBalanceFormatted: (assetKey, newBalance) =>
+        updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) =>
             set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceFormatted: newBalance },
-                },
+                validAssets: { ...state.validAssets, [assetKey]: { ...state.validAssets[assetKey], connectedUserBalanceFormatted: newBalance } },
             })),
+        selectedInputAsset: validAssets.CoinbaseBTC,
+        setSelectedInputAsset: (asset: ValidAsset) => set({ selectedInputAsset: asset }),
         isPayingFeesInBTC: true,
-        setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
+        setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => set({ isPayingFeesInBTC }),
+    });
 
-        // contract data (deposit vaults, swap reservations)
-        setUserSwapsFromAddress: (swaps: UserSwap[]) => set({ userSwapsFromAddress: swaps }),
+    const createContractSlice: StateCreator<Store, [], [], ContractSlice> = (set, _get, _api) => ({
         userSwapsFromAddress: [],
+        setUserSwapsFromAddress: (swaps: UserSwap[]) => set({ userSwapsFromAddress: swaps }),
+    });
 
-        // activity page
-        selectedSwapToManage: null,
+    // manage deposits
+    selectedSwapToManage: null,
         setSelectedSwapToManage: (selectedSwapToManage) => set({ selectedSwapToManage }),
-        showManageDepositVaultsScreen: false,
-        setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
+            showManageDepositVaultsScreen: false,
+                setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
 
-        // swap flow
-        swapFlowState: '0-not-started',
-        setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
-        depositFlowState: '0-not-started',
-        setDepositFlowState: (depositFlowState) => set({ depositFlowState }),
-        btcInputSwapAmount: '',
-        setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
-        coinbaseBtcDepositAmount: '',
-        setCoinbaseBtcDepositAmount: (coinbaseBtcDepositAmount) => set({ coinbaseBtcDepositAmount }),
-        btcOutputAmount: '',
-        setBtcOutputAmount: (btcOutputAmount) => set({ btcOutputAmount }),
-        coinbaseBtcOutputAmount: '',
-        setCoinbaseBtcOutputAmount: (coinbaseBtcOutputAmount) => set({ coinbaseBtcOutputAmount }),
-        payoutBTCAddress: '',
-        setPayoutBTCAddress: (payoutBTCAddress) => set({ payoutBTCAddress }),
-        lowestFeeReservationParams: null,
-        setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
-        showManageReservationScreen: false,
-        setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
-        depositMode: true,
-        setDepositMode: (depositMode) => set({ depositMode }),
-        withdrawAmount: '',
-        setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
-        currencyModalTitle: 'close',
-        setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
-        ethPayoutAddress: '',
-        setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
-        bitcoinSwapTransactionHash: '',
-        setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
-        protocolFeeAmountMicroUsdt: '',
-        setProtocolFeeAmountMicroUsdt: (protocolFeeAmountMicroUsdt) => set({ protocolFeeAmountMicroUsdt }),
-        swapReservationNotFound: false,
-        setSwapReservationNotFound: (swapReservationNotFound) => set({ swapReservationNotFound }),
-        currentReservationState: '',
-        setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
-        areNewDepositsPaused: false,
-        setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
-        isGasFeeTooHigh: false,
-        setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
-        confirmationBlocksNeeded: REQUIRED_BLOCK_CONFIRMATIONS,
-        setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
-        currentTotalBlockConfirmations: 0,
-        setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
-        proxyWalletSwapStatus: null,
-        setProxyWalletSwapStatus: (proxyWalletSwapStatus) => set({ proxyWalletSwapStatus }),
+                    // swap flow
+                    swapFlowState: '0-not-started',
+                        setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
+                            depositFlowState: '0-not-started',
+                                setDepositFlowState: (depositFlowState) => set({ depositFlowState }),
+                                    btcInputSwapAmount: '',
+                                        setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
+                                            coinbaseBtcDepositAmount: '',
+                                                setCoinbaseBtcDepositAmount: (coinbaseBtcDepositAmount) => set({ coinbaseBtcDepositAmount }),
+                                                    btcOutputAmount: '',
+                                                        setBtcOutputAmount: (btcOutputAmount) => set({ btcOutputAmount }),
+                                                            coinbaseBtcOutputAmount: '',
+                                                                setCoinbaseBtcOutputAmount: (coinbaseBtcOutputAmount) => set({ coinbaseBtcOutputAmount }),
+                                                                    lowestFeeReservationParams: null,
+                                                                        setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
+                                                                            showManageReservationScreen: false,
+                                                                                setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
+                                                                                    depositMode: true,
+                                                                                        setDepositMode: (depositMode) => set({ depositMode }),
+                                                                                            withdrawAmount: '',
+                                                                                                setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
+                                                                                                    currencyModalTitle: 'close',
+                                                                                                        setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
+                                                                                                            ethPayoutAddress: '',
+                                                                                                                setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
+                                                                                                                    bitcoinSwapTransactionHash: '',
+                                                                                                                        setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
+                                                                                                                            protocolFeeAmountMicroUsdt: '',
+                                                                                                                                setProtocolFeeAmountMicroUsdt: (protocolFeeAmountMicroUsdt) => set({ protocolFeeAmountMicroUsdt }),
+                                                                                                                                    swapReservationNotFound: false,
+                                                                                                                                        setSwapReservationNotFound: (swapReservationNotFound) => set({ swapReservationNotFound }),
+                                                                                                                                            currentReservationState: '',
+                                                                                                                                                setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
+                                                                                                                                                    areNewDepositsPaused: false,
+                                                                                                                                                        setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
+                                                                                                                                                            isGasFeeTooHigh: false,
+                                                                                                                                                                setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
+                                                                                                                                                                    confirmationBlocksNeeded: REQUIRED_BLOCK_CONFIRMATIONS,
+                                                                                                                                                                        setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
+                                                                                                                                                                            currentTotalBlockConfirmations: 0,
+                                                                                                                                                                                setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
+                                                                                                                                                                                    proxyWalletSwapStatus: null,
+                                                                                                                                                                                        setProxyWalletSwapStatus: (proxyWalletSwapStatus) => set({ proxyWalletSwapStatus }),
 
-        // global
-        isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true
-        setIsOnline: (b) => set({ isOnline: b }),
+                                                                                                                                                                                            // global
+                                                                                                                                                                                            isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true
+                                                                                                                                                                                                setIsOnline: (b) => set({ isOnline: b }),
     };
 });

@@ -3,10 +3,10 @@ import theme from '../theme';
 import Head from 'next/head';
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store';
-import { AppProps } from 'next/app';
+import type { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
-import testData from '../testData.json';
-import assets from '../assets.json';
+import testData from '../json/testData.json';
+import assets from '../json/assets.json';
 import { MdClose } from 'react-icons/md';
 import { colors } from '../utils/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
@@ -19,6 +19,7 @@ import { ContractDataProvider } from '../components/providers/ContractDataProvid
 import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 // Define the custom Anvil chain
 const anvilChain = {
@@ -45,7 +46,7 @@ const config = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
     //@ts-ignore
-    chains: [base],
+    chains: [anvilChain, base],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
@@ -239,6 +240,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                                     </ToastBar>
                                 )}
                             </Toaster>
+                            <ReactQueryDevtools initialIsOpen={false} />
                         </ContractDataProvider>
                     </ChakraProvider>
                 </RainbowKitProvider>

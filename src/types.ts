@@ -1,6 +1,7 @@
-import { BigNumber, BigNumberish, ethers } from 'ethers';
-import { ComponentType, ReactElement } from 'react';
-import { Chain } from 'viem';
+import type { BigNumber, BigNumberish, BytesLike, ethers } from 'ethers';
+import type { Address } from 'viem';
+import type { ISignatureTransfer } from './utils/typechain-types';
+import type { DepositLiquidityParamsStruct } from './utils/typechain-types/contracts/Bundler.sol/Bundler';
 
 export enum ReservationState {
     None,
@@ -89,7 +90,7 @@ export interface ProxyWalletSwapArgs {
     liquidityProviders: Array<ProxyWalletLiquidityProvider>;
 }
 
-export type AssetType = 'BTC' | 'USDT' | 'USDC' | 'ETH' | 'WETH' | 'WBTC' | 'CoinbaseBTC';
+export type AssetType = 'BTC' | 'USDT' | 'USDC' | 'ETH' | 'WETH' | 'WBTC' | 'CoinbaseBTC' | 'cbBTC';
 
 export type CurrencyModalTitle = 'send' | 'recieve' | 'deposit' | 'close';
 
@@ -133,3 +134,61 @@ export type BlockLeaf = {
     height: number;
     cumulativeChainwork: BigNumber;
 };
+
+// types/UniswapTokenList.ts
+
+type ChainIDString = string;
+
+/**
+ * Defines a Uniswap-compatible token list, e.g. from https://tokens.uniswap.org
+ */
+export interface UniswapTokenList {
+    name: string
+    timestamp: string
+    version: {
+        major: number
+        minor: number
+        patch: number
+    }
+    tags: Record<string, unknown>
+    logoURI: string
+    keywords: string[]
+    tokens: UniswapToken[]
+}
+
+/**
+ * Individual token entry in the Uniswap token list
+ */
+export interface UniswapToken {
+    chainId: number
+    address: string
+    name: string
+    symbol: string
+    decimals: number
+    logoURI?: string
+    extensions?: {
+        bridgeInfo?: Record<
+            ChainIDString,
+            {
+                tokenAddress: string
+            }
+        >
+    }
+}
+
+export type SingleExecuteSwapAndDeposit = [
+    amountIn: BigNumberish,
+    swapCalldata: BytesLike,
+    params: DepositLiquidityParamsStruct,
+    owner: Address,
+    permit: ISignatureTransfer.PermitTransferFromStruct,
+    signature: BytesLike
+]
+export type BatchExecuteSwapAndDeposit = [
+    batchPermit: ISignatureTransfer.PermitBatchTransferFromStruct,
+    transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+    owner: Address,
+    signature: BytesLike,
+    swapCalldata: BytesLike,
+    params: DepositLiquidityParamsStruct
+]

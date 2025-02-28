@@ -1,0 +1,15 @@
+{"avalible_assets": [
+  {
+    "name": "BTC",
+    "icon_svg": "path_to_btc_svg",
+    "bg_color": "#F7931A",  
+    "border_color": "#F7931A"
+  },
+  {
+    "name": "ETH",
+    "icon_svg": "ETH_Logo",
+    "bg_color": "#627EEA",  
+    "border_color": "#627EEA"
+  }
+]
+}

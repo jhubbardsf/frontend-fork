@@ -3,7 +3,7 @@ import { ValidAsset, DeploymentType } from '../types';
 import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
-export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.MAINNET; // Local devnet
+export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.DEVNET; // Local devnet
 export const IS_FRONTEND_PAUSED = false;
 export const MIN_SWAP_AMOUNT_SATS = 3000; // 1000 sats = ~$0.96 currently
 export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
@@ -30,8 +30,14 @@ export const DEVNET_BASE_CHAIN_ID = 1337;
 export const DEVNET_BASE_ETHERSCAN_URL = 'http://localhost:50101';
 export const DEVNET_BASE_RPC_URL = 'http://localhost:50101';
 export const DEVNET_DATA_ENGINE_URL = 'http://localhost:50100';
-export const DEVNET_BASE_CBBTC_TOKEN_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+export const DEVNET_BASE_CBBTC_TOKEN_ADDRESS = '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
+export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0x8B342f4Ddcc71Af65e4D2dA9CD00cc0E945cFD12';
+export const DEVNET_BASE_PAYMASTER_URL = 'http://localhost:50101';
+export const DEVNET_BASE_WS_URL = 'ws://localhost:50101';
+export const DEVNET_BASE_SWAP_ROUTER_02 = "0x2626664c2603336E57B271c5C0b26F421741e481"
+export const DEVNET_BASE_UNIVSERSAL_ROUTER = "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
+export const DEVNET_BASE_BUNDLER_ADDRESS = "0x4a8f268010D17ae7f90c8Ae63F41659b7C6d8328";
+export const DEVNET_BASE_PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 
 // // MAINNET ARBITRUM
 // export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
@@ -74,6 +80,15 @@ export const bitcoin_bg_color = '#c26920';
 export const bitcoin_border_color = '#FFA04C';
 export const bitcoin_dark_bg_color = '#372412';
 export const bitcoin_light_text_color = '#7d572e';
+
+export const DEFAULT_UNISWAP_ASSET = {
+    "chainId": 8453,
+    "name": "Coinbase Wrapped BTC",
+    "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+    "symbol": "cbBTC",
+    "decimals": 8,
+    "logoURI": "https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp"
+};
 
 export const ERC20ABI = [
     {

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, ReactNode, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useAccount } from 'wagmi';
@@ -166,6 +167,13 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                 checkIfNewDepositsArePausedFromContract();
             }, 12000);
         }
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
     }, [
         selectedInputAsset?.tokenAddress,
         address,
@@ -207,11 +215,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         });
 
         console.log('rawSwaps', rawSwaps);
-
         // Transform the raw data into your flattened Swap type
         const typedSwaps = rawSwaps.map((item: any) => {
             const d = item.deposit.deposit; // the nested deposit object
-
             return {
                 // Flattened from deposit.deposit
                 vaultIndex: d.vaultIndex,

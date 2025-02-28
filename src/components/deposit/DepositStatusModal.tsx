@@ -146,6 +146,9 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                 textAlign='center'>
                                 {getStatusMessage()}
                                 {status === DepositStatus.Confirmed && (
+                                    // Note, <Text>'s are wrapped by <p>, and
+                                    // two <p>'s can't be nested so this gives
+                                    // console errors.
                                     <Text mt='18px' mb='-5px' color={colors.textGray} fontWeight={'normal'} justifySelf={'center'} fontSize='13px' w='80%' fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         Bitcoin will be sent to your wallet shortly!
                                     </Text>
