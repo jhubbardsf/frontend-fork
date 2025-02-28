@@ -13,6 +13,7 @@ import { opaqueBackgroundColor } from '../../utils/constants';
 import { useContractData } from '../providers/ContractDataProvider';
 import SwapPreviewCard from './SwapPreviewCard';
 import UserSwapSettings from './UserSwapSettings';
+import GooSpinner from '../other/GooSpiner';
 
 export const SwapHistory = ({}) => {
     const selectedSwapToManage = useStore((state) => state.selectedSwapToManage);
@@ -27,6 +28,8 @@ export const SwapHistory = ({}) => {
         selected: selectedButtonVaultsVsReservations,
         setSelected: setOptionsButtonVaultsVsReservations,
     } = useHorizontalSelectorInput(['Vaults', 'Reservations'] as const);
+    const userSwapsLoadingState = useStore((state) => state.userSwapsLoadingState);
+    const [isWalletLoading, setIsWalletLoading] = useState(true);
 
     const handleGoBack = () => {
         setSelectedSwapToManage(null);
@@ -38,6 +41,14 @@ export const SwapHistory = ({}) => {
 
     useEffect(() => {
         refreshUserSwapsFromAddress();
+    }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsWalletLoading(false);
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, []);
 
     // Update selected vault with new data
@@ -55,7 +66,26 @@ export const SwapHistory = ({}) => {
     //     }
     // }, [selectedSwapToManage]);
 
-    return !isConnected ? (
+    return isWalletLoading ? (
+        <Flex w={'100%'} h='100%' flexDir={'column'} userSelect={'none'} align='center' mt='24px'>
+            <Flex
+                w='100%'
+                maxW='600px'
+                h='200px'
+                px='24px'
+                justify='center'
+                py='12px'
+                align={'center'}
+                borderRadius={'20px'}
+                mt={'16px'}
+                border='2px solid'
+                {...opaqueBackgroundColor}
+                borderColor={colors.borderGray}
+                flexDir='column'>
+                <GooSpinner flexSize={18} lRingSize={35} stroke={5} color={colors.purpleBorder} />
+            </Flex>
+        </Flex>
+    ) : !isConnected ? (
         <Flex
             w={'100%'}
             h='100%'
@@ -140,98 +170,102 @@ export const SwapHistory = ({}) => {
                         <UserSwapSettings selectedSwapToManage={selectedSwapToManage} handleGoBack={handleGoBack} selectedInputAsset={selectedInputAsset} />
                     ) : (
                         <>
-                            {userSwapsFromAddress.length > 0 ? (
-                                <Flex
-                                    w='100%'
-                                    h='30px'
-                                    py='5px'
-                                    mt='5px'
-                                    mb='9px'
-                                    pl='18px'
-                                    align='center'
-                                    justify='flex-start'
-                                    borderRadius={'10px'}
-                                    fontSize={'14px'}
-                                    fontFamily={FONT_FAMILIES.NOSTROMO}
-                                    borderColor={colors.borderGray}
-                                    fontWeight='bold'
-                                    color={colors.offWhite}
-                                    gap='12px'>
-                                    <Text width='135px'>TIMESTAMP</Text>
-                                    <Flex flex={1} gap='12px'>
-                                        <Text>SWAP INPUT</Text>
-                                        <Flex w='20px' />
-                                        <Text ml='140px'>SWAP OUTPUT</Text>
-                                        <Text ml='124px' mr='56px'>
-                                            TXID
-                                        </Text>
-                                        <Text ml='94px' mr='52px'>
-                                            STATUS
+                            {userSwapsLoadingState === 'loading' ? (
+                                <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
+                                    <GooSpinner flexSize={18} lRingSize={35} stroke={5} color={colors.purpleBorder} />
+                                    <Text fontSize={'18px'} mt='24px'>
+                                        LOADING SWAP ACTIVITY...
+                                    </Text>
+                                </Flex>
+                            ) : userSwapsLoadingState === 'error' ? (
+                                <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
+                                    <Text mb='10px'>Error loading swaps. Please try again later.</Text>
+                                    <Flex
+                                        bg={colors.purpleBorder}
+                                        _hover={{ bg: colors.purpleHover }}
+                                        w='320px'
+                                        mt='15px'
+                                        transition={'0.2s'}
+                                        h='80px'
+                                        onClick={() => handleNavigation('/')}
+                                        fontSize={'16px'}
+                                        align={'center'}
+                                        userSelect={'none'}
+                                        cursor={'pointer'}
+                                        borderRadius={'10px'}
+                                        justify={'center'}
+                                        border={'3px solid #445BCB'}>
+                                        <Text color={colors.offWhite} fontFamily='Nostromo'>
+                                            Return to swap
                                         </Text>
                                     </Flex>
                                 </Flex>
-                            ) : null}
-                            <style>
-                                {`
-                                .flex-scroll-dark::-webkit-scrollbar {
-                                    width: 8px;
-                                    padding-left: 10px;
-                                }
-                                .flex-scroll-dark::-webkit-scrollbar-track {
-                                    background: transparent;
-                                    margin-left: 10px;
-                                }
-                                .flex-scroll-dark::-webkit-scrollbar-thumb {
-                                    background-color: #555;
-                                    border-radius: 6px;
-                                    border: 2px solid #2D2D2D;
-                                }
-                            `}
-                            </style>
-                            <Flex
-                                className='flex-scroll-dark'
-                                overflowY={
-                                    (selectedButtonVaultsVsReservations === 'Vaults' && userSwapsFromAddress && userSwapsFromAddress.length > 0) ||
-                                    (selectedButtonVaultsVsReservations === 'Reservations' && userSwapsFromAddress && userSwapsFromAddress.length > 0)
-                                        ? 'scroll'
-                                        : 'hidden'
-                                }
-                                direction='column'
-                                w='100%'>
-                                {userSwapsFromAddress.length === 0 ? (
-                                    <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
-                                        <Text mb='10px'>No active swaps found with your address...</Text>
-                                        <Flex
-                                            bg={colors.purpleBackground}
-                                            _hover={{ bg: colors.purpleHover }}
-                                            w='320px'
-                                            mt='15px'
-                                            transition={'0.2s'}
-                                            h='48px'
-                                            onClick={() => handleNavigation('/')}
-                                            fontSize={'16px'}
-                                            align={'center'}
-                                            userSelect={'none'}
-                                            cursor={'pointer'}
-                                            borderRadius={'10px'}
-                                            justify={'center'}
-                                            border={'3px solid #445BCB'}>
-                                            <Text color={colors.offWhite} fontFamily='Nostromo'>
-                                                Create a swap
-                                            </Text>
-                                        </Flex>
+                            ) : userSwapsFromAddress.length === 0 && userSwapsLoadingState === 'received' ? (
+                                <Flex justify={'center'} direction='column' fontSize={'16px'} alignItems={'center'}>
+                                    <Text mb='10px'>No active swaps found with your address...</Text>
+                                    <Flex
+                                        bg={colors.purpleBackground}
+                                        _hover={{ bg: colors.purpleHover }}
+                                        w='320px'
+                                        mt='15px'
+                                        transition={'0.2s'}
+                                        h='48px'
+                                        onClick={() => handleNavigation('/')}
+                                        fontSize={'16px'}
+                                        align={'center'}
+                                        userSelect={'none'}
+                                        cursor={'pointer'}
+                                        borderRadius={'10px'}
+                                        justify={'center'}
+                                        border={'3px solid #445BCB'}>
+                                        <Text color={colors.offWhite} fontFamily='Nostromo'>
+                                            Create a swap
+                                        </Text>
                                     </Flex>
-                                ) : (
-                                    <>
-                                        {(() => {
-                                            // map user swaps to SwapPreviewCard components
-                                            return userSwapsFromAddress.map((swap, index) => (
-                                                <SwapPreviewCard key={`swap-${index}`} swap={swap} onClick={() => setSelectedSwapToManage(swap)} selectedInputAsset={selectedInputAsset} />
-                                            ));
-                                        })()}
-                                    </>
-                                )}
-                            </Flex>
+                                </Flex>
+                            ) : (
+                                <>
+                                    <style>
+                                        {`
+                                        .flex-scroll-dark::-webkit-scrollbar {
+                                            width: 8px;
+                                            padding-left: 10px;
+                                        }
+                                        .flex-scroll-dark::-webkit-scrollbar-track {
+                                            background: transparent;
+                                            margin-left: 10px;
+                                        }
+                                        .flex-scroll-dark::-webkit-scrollbar-thumb {
+                                            background-color: #555;
+                                            border-radius: 6px;
+                                            border: 2px solid #2D2D2D;
+                                        }
+                                    `}
+                                    </style>
+                                    <Flex
+                                        className='flex-scroll-dark'
+                                        overflowY={
+                                            (selectedButtonVaultsVsReservations === 'Vaults' && userSwapsFromAddress && userSwapsFromAddress.length > 0) ||
+                                            (selectedButtonVaultsVsReservations === 'Reservations' && userSwapsFromAddress && userSwapsFromAddress.length > 0)
+                                                ? 'scroll'
+                                                : 'hidden'
+                                        }
+                                        direction='column'
+                                        w='100%'>
+                                        {userSwapsFromAddress.map((swap, index) => (
+                                            <SwapPreviewCard
+                                                key={`swap-${index}`}
+                                                swap={swap}
+                                                onClick={() => {
+                                                    // setSelectedSwapToManage(swap); // TODO - add this back with abillity to withdraw swap after expied (8 hours)
+                                                    window.open(`https://basescan.org/tx/${swap.deposit_txid}`, '_blank');
+                                                }}
+                                                selectedInputAsset={selectedInputAsset}
+                                            />
+                                        ))}
+                                    </Flex>
+                                </>
+                            )}
                         </>
                     )}
                 </Flex>

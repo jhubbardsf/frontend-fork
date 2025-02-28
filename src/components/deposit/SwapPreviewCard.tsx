@@ -57,7 +57,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
     };
 
     return (
-        <Flex>
+        <Flex w='100%'>
             <Flex
                 onClick={onClick}
                 cursor={'pointer'}
@@ -69,7 +69,7 @@ const SwapPreviewCard: React.FC<SwapPreviewCardProps> = ({ swap, selectedInputAs
                 py={'12px'}
                 align='flex-start'
                 justify='flex-start'
-                borderRadius='10px'
+                borderRadius='12px'
                 border='2px solid'
                 color={colors.textGray}
                 borderColor={colors.borderGray}

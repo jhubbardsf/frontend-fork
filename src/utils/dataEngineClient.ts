@@ -2,6 +2,7 @@ import { Address } from 'viem';
 import { BlockLeaf } from '../types';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { toastError } from '../hooks/toast';
+import { useStore } from '../store';
 
 const u8ArrayToHex = (bytes: number[]): string => '0x' + Buffer.from(bytes).toString('hex');
 
@@ -182,7 +183,7 @@ const decodeOtcSwap = (response: RawOTCSwap): OTCSwap => {
     };
 };
 
-export const getSwapsForAddress = async (baseUrl: string, query: VirtualSwapQuery): Promise<OTCSwap[]> => {
+export const getSwapsForAddress = async (baseUrl: string, query: VirtualSwapQuery): Promise<{ swaps: OTCSwap[]; status: 'loading' | 'error' | 'received' }> => {
     try {
         const params = new URLSearchParams({
             address: query.address,
@@ -198,13 +199,15 @@ export const getSwapsForAddress = async (baseUrl: string, query: VirtualSwapQuer
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to fetch swaps: ${errorText}`);
+            console.error('Failed to fetch swap data', errorText);
+            toastError('', { title: 'Failed to fetch swap data', description: 'Rift data engine is currently down. Please try again later.' });
+            return { swaps: [], status: 'error' };
         }
 
         const rawSwaps: RawOTCSwap[] = await response.json();
-        return rawSwaps.map(decodeOtcSwap);
+        return { swaps: rawSwaps.map(decodeOtcSwap), status: 'received' };
     } catch (error) {
         toastError('', { title: 'Failed to fetch swap data', description: 'Rift data engine is currently down. Please try again later.' });
-        return []; // Return empty array
+        return { swaps: [], status: 'error' };
     }
 };

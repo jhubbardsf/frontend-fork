@@ -30,10 +30,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
-    const validAssets = useStore((state) => state.validAssets);
     const [isLoading, setIsLoading] = useState(false);
     const setUserSwapsFromAddress = useStore((state) => state.setUserSwapsFromAddress);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const setUserSwapsLoadingState = useStore((state) => state.setUserSwapsLoadingState);
 
     // [0] set ethers provider when selectedInputAsset changes
     useEffect(() => {
@@ -201,10 +201,12 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        const rawSwaps = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
+        const { swaps: rawSwaps, status } = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
             address: address,
             page: 0,
         });
+
+        setUserSwapsLoadingState(status);
 
         console.log('rawSwaps', rawSwaps);
 

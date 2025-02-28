@@ -167,7 +167,7 @@ export function convertToBitcoinLockingScript(address: string): string {
         return '0x' + padded.toString('hex');
     } catch (error) {
         console.error('Error converting address to locking script:', error);
-        throw error; // Re-throw the error for proper handling in the calling code
+        throw error;
     }
 }
 

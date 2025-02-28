@@ -54,6 +54,8 @@ type Store = {
     // contract data (deposit vaults, swap reservations)
     setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
     userSwapsFromAddress: UserSwap[];
+    userSwapsLoadingState: 'loading' | 'error' | 'received';
+    setUserSwapsLoadingState: (state: 'loading' | 'error' | 'received') => void;
 
     // activity page
     selectedSwapToManage: UserSwap | null;
@@ -207,6 +209,8 @@ export const useStore = create<Store>((set) => {
         // contract data (deposit vaults, swap reservations)
         setUserSwapsFromAddress: (swaps: UserSwap[]) => set({ userSwapsFromAddress: swaps }),
         userSwapsFromAddress: [],
+        userSwapsLoadingState: 'loading' as 'loading' | 'error' | 'received',
+        setUserSwapsLoadingState: (state: 'loading' | 'error' | 'received') => set({ userSwapsLoadingState: state }),
 
         // activity page
         selectedSwapToManage: null,
