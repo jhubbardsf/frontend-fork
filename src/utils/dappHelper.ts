@@ -163,6 +163,7 @@ export function convertToBitcoinLockingScript(address: string): string {
         const padded = Buffer.alloc(25);
         // Copy script into padded. If script is shorter than 25 bytes, the rest remains zero.
         // If script is longer than 25 bytes, only the first 25 bytes are copied.
+        // @ts-ignore
         script.copy(padded, 0, 0, Math.min(script.length, 25));
         return '0x' + padded.toString('hex');
     } catch (error) {
