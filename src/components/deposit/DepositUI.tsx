@@ -24,6 +24,9 @@ import { getTipProof } from '../../utils/dataEngineClient';
 import { BigNumber, ethers } from 'ethers';
 import { DepositStatus, useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
 import DepositStatusModal from './DepositStatusModal';
+import UniswapSwapWidget from '../uniswap/UniswapSwapWidget';
+import TokenButton from '../other/TokenButton';
+import GooSpinner from '../other/GooSpiner';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -66,7 +69,13 @@ export const DepositUI = () => {
     const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [dots, setDots] = useState('');
     const { depositLiquidity, status: depositLiquidityStatus, error: depositLiquidityError, txHash, resetDepositState } = useDepositLiquidity();
+
+    // New token stuff
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isUniswapSwapWidgetOpen, setIsUniswapSwapWidgetOpen] = useState(false);
+    const uniswapTokens = useStore((state) => state.uniswapTokens);
+    const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
+    const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
 
     // Clear form values on component mount
     useEffect(() => {
@@ -107,7 +116,7 @@ export const DepositUI = () => {
     // ---------- BTC PAYOUT ADDRESS ---------- //
     const handleBTCPayoutAddressChange = (e) => {
         const BTCPayoutAddress = e.target.value;
-        setPayoutBTCAddress(BTCPayoutAddress);
+        setPayoutBTCAddress('bc1qpy7q5sjv448kkaln44r7726pa9xyzsskk84tw7');
     };
 
     // update token price and available liquidity
@@ -552,11 +561,20 @@ export const DepositUI = () => {
 
                                     <Spacer />
                                     <Flex mr='6px'>
+                                        {/* JSH Deposit Button */}
                                         <WebAssetTag cursor='pointer' asset='CoinbaseBTC' onDropDown={() => setCurrencyModalTitle('deposit')} />
+                                        <TokenButton
+                                            cursor='pointer'
+                                            asset={uniswapTokens.find((t) => t.symbol === 'cbBTC')}
+                                            onDropDown={() => {
+                                                setIsUniswapSwapWidgetOpen(true);
+                                            }}
+                                        />
                                     </Flex>
                                 </Flex>
                                 {/* Switch Button */}
                                 <Flex
+                                    zIndex='overlay'
                                     w='36px'
                                     h='36px'
                                     borderRadius={'20%'}
@@ -582,7 +600,8 @@ export const DepositUI = () => {
                                     </svg>
                                 </Flex>
                                 {/* BTC Output */}
-                                <Flex mt={'5px'} px='10px' bg='rgba(46, 29, 14, 0.66)' w='100%' h='117px' border='2px solid #78491F' borderRadius={'10px'}>
+                                <Flex position='relative' mt={'5px'} px='10px' bg='rgba(46, 29, 14, 0.66)' w='100%' h='117px' border='2px solid #78491F' borderRadius={'10px'}>
+                                    {true && <GooSpinner overlay fullOverlay color={colors.purpleBorder} />}
                                     <Flex direction={'column'} py='10px' px='5px'>
                                         <Text
                                             color={
@@ -680,11 +699,27 @@ export const DepositUI = () => {
                                         <WebAssetTag cursor='pointer' asset='BTC' onDropDown={() => setCurrencyModalTitle('recieve')} />
                                     </Flex>
                                 </Flex>
+                                
 
                                 {/* BTC Payout Address */}
-                                <Text ml='8px' mt='18px' w='100%' mb='6px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                                <Box ml='8px' display='flex' alignItems='center' mt='18px' w='100%' mb='6px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
                                     Bitcoin Payout Address
-                                </Text>
+                                    <Tooltip
+                                        fontFamily={'Aux'}
+                                        letterSpacing={'-0.5px'}
+                                        color={colors.offWhite}
+                                        ml='100px'
+                                        bg={'#121212'}
+                                        fontSize={'12px'}
+                                        label='Only P2WPKH, P2PKH, or P2SH Bitcoin addresses are supported.'
+                                        aria-label='A tooltip'>
+                                        <Flex pl='5px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
+                                            <Flex mt='0px' mr='2px'>
+                                                <InfoSVG width='12px' />
+                                            </Flex>
+                                        </Flex>
+                                    </Tooltip>
+                                </Box>
                                 <Flex mt='-4px' mb='10px' px='10px' bg='rgba(46, 29, 14, 0.66)' border='2px solid #78491F' w='100%' h='60px' borderRadius={'10px'}>
                                     <Flex direction={'row'} py='6px' px='5px'>
                                         <Input
@@ -716,7 +751,7 @@ export const DepositUI = () => {
                                         )}
                                     </Flex>
                                 </Flex>
-                            </Flex>{' '}
+                            </Flex>
                             {/* Rate/Liquidity Details */}
                             <Flex mt='12px'>
                                 <Text color={colors.textGray} fontSize={'14px'} ml='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
@@ -797,6 +832,7 @@ export const DepositUI = () => {
                     )}
                 </Flex>
                 <DepositStatusModal isOpen={isModalOpen} onClose={handleModalClose} status={depositLiquidityStatus} error={depositLiquidityError} txHash={txHash} />
+                <UniswapSwapWidget isOpen={isUniswapSwapWidgetOpen} onClose={() => setIsUniswapSwapWidgetOpen(false)} onTokenSelected={setSelectedUniswapInputAsset} />
             </Flex>
         </>
     );
