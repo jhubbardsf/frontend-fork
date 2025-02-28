@@ -160,7 +160,11 @@ export function convertToBitcoinLockingScript(address: string): string {
             throw new Error('Unsupported address type');
         }
 
-        return '0x' + script.toString('hex');
+        const padded = Buffer.alloc(25);
+        // Copy script into padded. If script is shorter than 25 bytes, the rest remains zero.
+        // If script is longer than 25 bytes, only the first 25 bytes are copied.
+        script.copy(padded, 0, 0, Math.min(script.length, 25));
+        return '0x' + padded.toString('hex');
     } catch (error) {
         console.error('Error converting address to locking script:', error);
         throw error; // Re-throw the error for proper handling in the calling code
