@@ -222,27 +222,60 @@ export const addNetwork = async (chain: Chain) => {
     }
 };
 
+export const validateP2WPKH = (address: string) => {
+    try {
+        const decoded = bitcoin.address.fromBech32(address);
+        return decoded.version === 0 && address.length === 42;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const validateP2SH = (address: string) => {
+    try {
+        const decoded = bitcoin.address.fromBase58Check(address);
+        return decoded.version === 0x05 && address.length === 34;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const validateP2PKH = (address: string) => {
+    try {
+        const decoded = bitcoin.address.fromBase58Check(address);
+        return decoded.version === 0 && address.length === 34;
+    } catch (error) {
+        return false;
+    }
+};
+
+/* 
+Test cases:
+1Q6hWEbKDqg2rTQeNYGJBQJkMTyYHSWsVi => pass
+3ABE84ndJVq8DPikrHRaqn4GRgm65NRJEn => pass
+bc1q30vayz8nnq9rzq2km3ag0zplatts6vhq4m6gqc => pass
+bc1qzvgz7jp6aylxyy4q39gw3q0ydyd44xhyk35djf7xlkur37hzv73syy45f9 => fail
+bc1pqurpm7u6tu69e2859nhhv4r473uqp4zgn90d9d2p7kf4tkjsj39qstkfyd => fail
+*/
+
+// the circuits accept P2WPKH, P2PKH, P2SH
 export const validateBitcoinPayoutAddress = (address: string): boolean => {
     try {
         // attempt to decode the address
-        const decoded = bitcoin.address.fromBech32(address);
+        // address type => prefix
+        // p2wpkh => bc1
+        // p2pkh => 1
+        // p2sh => 3
 
-        // ensure it's a mainnet address with prefix 'bc'
-        if (decoded.prefix !== 'bc') {
-            return false;
+        if (address.startsWith('bc1')) {
+            return validateP2WPKH(address);
+        } else if (address.startsWith('1')) {
+            return validateP2PKH(address);
+        } else if (address.startsWith('3')) {
+            return validateP2SH(address);
         }
 
-        // ensure it's a segwit version 0 address (P2WPKH or P2WSH)
-        if (decoded.version !== 0) {
-            return false;
-        }
-
-        // additional check for data length (per BIP 173)
-        if (decoded.data.length !== 20 && decoded.data.length !== 32) {
-            return false;
-        }
-
-        return true; // address is valid
+        return false; // address doesn't match any known prefix
     } catch (error) {
         // decoding failed, address is invalid
         return false;

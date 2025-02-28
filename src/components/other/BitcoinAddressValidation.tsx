@@ -28,7 +28,7 @@ const BitcoinAddressValidation: React.FC<{ address: string }> = ({ address }) =>
                         <HiXCircle color='red' size={'35px'} />
                     </Flex>
                     <Text fontSize={'9px'} w='70px' mt='3px' ml='5px' color='red'>
-                        Invalid Segwit Address
+                        Invalid Bitcoin Address
                     </Text>
                 </Flex>
             )}
