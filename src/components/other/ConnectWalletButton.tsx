@@ -1,4 +1,4 @@
-import { Flex, Box, Button, Text, Avatar } from '@chakra-ui/react';
+import { Flex, Box, Button, Text, Avatar, Image } from '@chakra-ui/react';
 import { useStore } from '../../store';
 import useWindowSize from '../../hooks/useWindowSize';
 import { ETH_Logo, BTC_Logo, ETHSVG, ETH_Icon, USDT_Icon, ARBITRUM_LOGO, USDC_Icon, BASE_LOGO, Coinbase_BTC_Icon } from './SVGs'; // Assuming you also have a BTC logo
@@ -117,10 +117,11 @@ export const ConnectWalletButton = ({}) => {
                                                                 </Flex>
                                                             );
                                                         default:
-                                                            return null;
+                                                            return selectedInputAsset.fromTokenList ? <Image src={selectedInputAsset.icon_svg} alt='Token logo' width={26} height={26} /> : null;
                                                     }
                                                 })()}
                                             </Flex>
+                                            
                                             <Flex mt='-2px' mr='-2px' fontSize='17px' paddingX='22px' fontFamily={'aux'}>
                                                 {(() => {
                                                     const num = parseFloat(localBalance);

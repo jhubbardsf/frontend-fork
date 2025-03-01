@@ -1,4 +1,4 @@
-import type { UniswapToken } from "@/types";
+import type { TokenMeta } from "@/types";
 
 // Mapping of common networks to their Coingecko platform identifiers.
 const networkMapping: Record<string, string> = {

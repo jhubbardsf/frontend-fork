@@ -1,7 +1,7 @@
-import type { UniswapToken } from "@/types";
+import type { TokenMeta } from "@/types";
 import tokenImageMap from "@/json/tokenImageMap.json"; // Import the token image map
 
-export const getImageUrl = (token: UniswapToken): string => {
+export const getImageUrl = (token: TokenMeta): string => {
     if (!token.address || !token.symbol) return token.logoURI || "";
 
     const key = `${token.address}-${token.symbol}`;
@@ -19,7 +19,7 @@ export const getImageUrl = (token: UniswapToken): string => {
     return token.logoURI || "";
 };
 
-export const getOriginalImageUrl = (token: UniswapToken): string => {
+export const getOriginalImageUrl = (token: TokenMeta): string => {
     if (!token.address || !token.symbol) return token.logoURI || "";
 
     const key = `${token.address}-${token.symbol}`;

@@ -31,6 +31,7 @@ export default async function handler(
     try {
         const { inputToken, inputAmount } = req.body
         console.log("API 0: ", { inputToken, inputAmount })
+        console.log("API 0.1")
         if (!inputToken || !inputAmount) {
             throw new Error('Missing inputToken or inputAmount')
         }
@@ -39,8 +40,9 @@ export default async function handler(
 
         console.log("API 1")
         const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
+        console.log("API 1.1")
         const router = new AlphaRouter({ chainId: CHAIN_ID, provider })
-
+        console.log("API 1.2", { inputToken })
         const inputUniToken = new UniToken(
             inputToken.chainId,
             inputToken.address,
@@ -48,6 +50,7 @@ export default async function handler(
             inputToken.symbol,
             inputToken.name
         )
+        console.log("API 1.3")
         const outputUniToken = new UniToken(
             cbBTC.chainId,
             cbBTC.address,

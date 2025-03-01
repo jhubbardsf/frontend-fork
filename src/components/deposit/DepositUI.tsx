@@ -27,6 +27,9 @@ import DepositStatusModal from './DepositStatusModal';
 import UniswapSwapWidget from '../uniswap/UniswapSwapWidget';
 import TokenButton from '../other/TokenButton';
 import GooSpinner from '../other/GooSpiner';
+import { useQuery } from '@tanstack/react-query';
+import { useSwapRoute } from '@/hooks/useSwapRoute';
+import { useLogState } from '@/hooks/useLogState';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -76,7 +79,12 @@ export const DepositUI = () => {
     const uniswapTokens = useStore((state) => state.uniswapTokens);
     const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
     const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
+    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
 
+    const validAssetPriceUSD = validAssets[selectedInputAsset.name]?.priceUSD;
+    // Route finding
+    const { isPending, isLoading, isFetching, isPaused, isStale,isError, data, error } = useSwapRoute(selectedInputAsset, coinbaseBtcDepositAmount, chainId);
+    useLogState('Bun vars', { selectedInputAsset, coinbaseBtcDepositAmount, chainId, isPending, isError, data, error });
     // Clear form values on component mount
     useEffect(() => {
         // Reset all input values when component mounts
@@ -135,47 +143,56 @@ export const DepositUI = () => {
 
     // --------------- cbBTC INPUT ---------------
     const handleCoinbaseBtcInputChange = (e, amount = null) => {
+        const asset = useStore.getState().validAssets[selectedInputAsset.name];
+        console.log("Bun handleCoinbaseBtcInputChange", { e, amount });
         setIsAboveMaxSwapLimitBtcOutput(false);
         setIsBelowMinBtcOutput(false);
-        setUserBalanceExceeded(false);
-
-        const maxDecimals = useStore.getState().validAssets[selectedInputAsset.name]?.decimals;
+        setUserBalanceExceeded(false)
+        
+        const maxDecimals = asset?.decimals;
         const coinbaseBtcValue = amount !== null ? amount : e.target.value;
 
+        console.log("Change 1");
         const validateCoinbaseBtcInputChange = (value: string) => {
+            console.log({value})
             if (value === '') return true;
             const regex = new RegExp(`^\\d*\\.?\\d{0,${maxDecimals}}$`);
+            console.log({valid: regex.test(value), decimals: maxDecimals});
             return regex.test(value);
         };
-
+        console.log("Change 1.2");
         if (validateCoinbaseBtcInputChange(coinbaseBtcValue)) {
+            console.log("Change 1.3");
             setIsAboveMaxSwapLimitCoinbaseBtcDeposit(false);
             setIsBelowMinCoinbaseBtcDeposit(false);
-
+            console.log("Change 2");
             // check if input is above max swap limit
+            if (!asset.fromTokenList) // TODO: Skip next check for testing
             if (parseFloat(coinbaseBtcValue) > parseFloat(formatUnits(MAX_SWAP_AMOUNT_SATS, selectedInputAsset.decimals))) {
                 setIsAboveMaxSwapLimitCoinbaseBtcDeposit(true);
                 setCoinbaseBtcDepositAmount(coinbaseBtcValue);
                 setBtcOutputAmount('');
                 setBtcInputSwapAmount('');
+                console.log("ERR1");
                 return;
             }
-
+            console.log("Change 3");
             // check if input is below min required amount
             if (parseFloat(coinbaseBtcValue) > 0 && parseFloat(coinbaseBtcValue) < parseFloat(satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS)))) {
                 setIsBelowMinCoinbaseBtcDeposit(true);
                 setCoinbaseBtcDepositAmount(coinbaseBtcValue);
                 setBtcOutputAmount('');
                 setBtcInputSwapAmount('');
+                console.log("Change 3 ERR");
                 return;
             }
-
+            console.log("Change 4");
             setCoinbaseBtcDepositAmount(coinbaseBtcValue);
             // Use the actual exchange rate instead of hardcoded 0.999
             const outputAmount = parseFloat(coinbaseBtcValue) / coinbaseBtcExchangeRatePerBTC;
             setBtcOutputAmount(outputAmount > 0 ? outputAmount.toFixed(8) : '');
             setBtcInputSwapAmount(outputAmount > 0 ? outputAmount.toFixed(8) : '');
-
+            console.log("Change 5");
             // check if exceeds user balance
             if (isConnected) {
                 checkLiquidityExceeded(coinbaseBtcValue);
@@ -518,7 +535,7 @@ export const DepositUI = () => {
                                                         ? `Exceeds your available balance - `
                                                         : coinbaseBtcPriceUSD
                                                         ? coinbaseBtcDepositAmount
-                                                            ? (coinbaseBtcPriceUSD * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
+                                                            ? ((validAssetPriceUSD || coinbaseBtcPriceUSD) * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
                                                                   style: 'currency',
                                                                   currency: 'USD',
                                                               })
@@ -562,7 +579,7 @@ export const DepositUI = () => {
                                     <Spacer />
                                     <Flex mr='6px'>
                                         {/* JSH Deposit Button */}
-                                        <WebAssetTag cursor='pointer' asset='CoinbaseBTC' onDropDown={() => setCurrencyModalTitle('deposit')} />
+                                        {/* <WebAssetTag cursor='pointer' asset='CoinbaseBTC' onDropDown={() => setCurrencyModalTitle('deposit')} /> */}
                                         <TokenButton
                                             cursor='pointer'
                                             asset={uniswapTokens.find((t) => t.symbol === 'cbBTC')}
@@ -601,7 +618,7 @@ export const DepositUI = () => {
                                 </Flex>
                                 {/* BTC Output */}
                                 <Flex position='relative' mt={'5px'} px='10px' bg='rgba(46, 29, 14, 0.66)' w='100%' h='117px' border='2px solid #78491F' borderRadius={'10px'}>
-                                    {true && <GooSpinner overlay fullOverlay color={colors.purpleBorder} />}
+                                    {(isFetching) && <GooSpinner overlay fullOverlay color={colors.purpleBorder} />}
                                     <Flex direction={'column'} py='10px' px='5px'>
                                         <Text
                                             color={
@@ -699,7 +716,6 @@ export const DepositUI = () => {
                                         <WebAssetTag cursor='pointer' asset='BTC' onDropDown={() => setCurrencyModalTitle('recieve')} />
                                     </Flex>
                                 </Flex>
-                                
 
                                 {/* BTC Payout Address */}
                                 <Box ml='8px' display='flex' alignItems='center' mt='18px' w='100%' mb='6px' fontSize='15px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
@@ -832,7 +848,7 @@ export const DepositUI = () => {
                     )}
                 </Flex>
                 <DepositStatusModal isOpen={isModalOpen} onClose={handleModalClose} status={depositLiquidityStatus} error={depositLiquidityError} txHash={txHash} />
-                <UniswapSwapWidget isOpen={isUniswapSwapWidgetOpen} onClose={() => setIsUniswapSwapWidgetOpen(false)} onTokenSelected={setSelectedUniswapInputAsset} />
+                <UniswapSwapWidget isOpen={isUniswapSwapWidgetOpen} onClose={() => setIsUniswapSwapWidgetOpen(false)} onTokenSelected={setSelectedInputAsset} />
             </Flex>
         </>
     );

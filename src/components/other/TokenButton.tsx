@@ -27,16 +27,17 @@ interface TokenProps {
 const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer, greyedOut = false, cursor = 'default' }) => {
     const { isMobile } = useWindowSize();
     const selectedChainId = useStore((state) => state.selectedChainID);
-
+    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const adjustedH = h ?? isMobile ? '30px' : '36px';
     const adjustedFontSize = fontSize ?? `calc(${adjustedH} / 2 + 0px)`;
     const arrowSize = fontSize ?? `calc(${adjustedH} / 4)`;
     const adjustedBorderRadius = `calc(${adjustedH} / 4)`;
-    const tokenMapping = TokenImageMap[`${asset.address}-${asset.symbol}`];
-    const bgColor = greyedOut ? '#383838' : tokenMapping.bgColor;
-    const borderColor = greyedOut ? '#838383' : tokenMapping.borderColor;
+    console.log("Key: ", `${selectedInputAsset.address}-${selectedInputAsset.symbol}`)
+    const key = `${selectedInputAsset.tokenAddress}-${selectedInputAsset.symbol}`;
+    const tokenMapping = TokenImageMap[key];
+    const bgColor = greyedOut || !tokenMapping ? '#383838' : tokenMapping?.bgColor;
+    const borderColor = greyedOut || !tokenMapping ? '#838383' : tokenMapping?.borderColor;
     const pX = px ?? '20px';
-
 
     return (
         // cursor={cursor}
@@ -47,7 +48,7 @@ const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, 
                 cursor={cursor}
                 aspectRatio={1}
                 h={`calc(${adjustedH} + 2px)`}
-                bg={'white'}
+                bg={bgColor}
                 w={w}
                 borderRadius='400px'
                 mr={`calc(${adjustedH} / 1.6 * -1)`}
@@ -57,7 +58,7 @@ const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, 
                 overflow={'hidden'}
                 // cursor={onDropDown || pointer ? 'pointer' : 'auto'}
                 onClick={onDropDown}>
-                <Image src={getImageUrl(asset)} alt={`${asset.name} icon`} width={38} height={38} />
+                <Image src={selectedInputAsset.logoURI || selectedInputAsset.icon_svg} alt={`${selectedInputAsset.name} icon`} width={38} height={38} />
             </Flex>
             {/* Button Text */}
             <Flex
@@ -78,13 +79,13 @@ const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, 
                         <BASE_LOGO width='22' height='22' />
                     </Flex>
                 )}
-                {asset.symbol === 'cbBTC' ? (
+                {selectedInputAsset.symbol === 'cbBTC' ? (
                     <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
                         <span style={{ fontSize: '12px', marginRight: '1px' }}>cb</span>BTC
                     </Text>
                 ) : (
                     <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
-                        {asset.symbol}
+                        {selectedInputAsset.symbol}
                     </Text>
                 )}
                 {onDropDown && <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />}

@@ -1,7 +1,7 @@
 import type { BigNumber, BigNumberish, BytesLike, ethers } from 'ethers';
 import type { Address } from 'viem';
 import type { ISignatureTransfer } from './utils/typechain-types';
-import type { DepositLiquidityParamsStruct } from './utils/typechain-types/contracts/Bundler.sol/Bundler';
+import type { DepositLiquidityParamsStruct } from './utils/typechain-types/contracts/Bundler.sol/BundlerSwapAndDepositWithPermit2';
 
 export enum ReservationState {
     None,
@@ -73,7 +73,8 @@ export type ValidAsset = {
     totalAvailableLiquidity?: BigNumber;
     connectedUserBalanceRaw?: BigNumber;
     connectedUserBalanceFormatted?: string;
-};
+    fromTokenList?: boolean;
+} & Partial<TokenMeta>
 
 export type LiqudityProvider = {
     depositVaultIndexes: number[];
@@ -153,13 +154,13 @@ export interface UniswapTokenList {
     tags: Record<string, unknown>
     logoURI: string
     keywords: string[]
-    tokens: UniswapToken[]
+    tokens: TokenMeta[]
 }
 
 /**
  * Individual token entry in the Uniswap token list
  */
-export interface UniswapToken {
+export interface TokenMeta {
     chainId: number
     address: string
     name: string
@@ -175,7 +176,6 @@ export interface UniswapToken {
         >
     }
 }
-
 export type SingleExecuteSwapAndDeposit = [
     amountIn: BigNumberish,
     swapCalldata: BytesLike,
