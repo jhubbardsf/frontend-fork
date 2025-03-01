@@ -4,7 +4,7 @@ import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
 export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.MAINNET; // Local devnet
-export const IS_FRONTEND_PAUSED = false;
+export const IS_FRONTEND_PAUSED = true;
 export const MIN_SWAP_AMOUNT_SATS = 3000; // 1000 sats = ~$0.96 currently
 export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
 export const SAMEES_DEMO_CB_BTC_ADDRESS = '0xA976a1F4Ee6DC8011e777133C6719087C10b6259';
