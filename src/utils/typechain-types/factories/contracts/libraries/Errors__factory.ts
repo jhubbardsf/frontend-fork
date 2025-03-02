@@ -16,6 +16,17 @@ import type {
 
 const _abi = [
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "ApprovalError",
+    type: "error",
+  },
+  {
     inputs: [],
     name: "ApprovalToRiftExchangeFailed",
     type: "error",
@@ -173,7 +184,7 @@ const _abi = [
 ] as const;
 
 const _bytecode =
-  "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea26469706673582212200e95833e4f99d360c7f04ffe084ddbedb4f85efcb34a64a680733e6133ad4ddb64736f6c634300081c0033";
+  "0x60808060405234601757603a9081601d823930815050f35b600080fdfe600080fdfea264697066735822122070dec1d266cc46f6e5fd8be208d640655591ea1e40edff9112371763faa6e53d64736f6c634300081c0033";
 
 type ErrorsConstructorParams =
   | [signer?: Signer]

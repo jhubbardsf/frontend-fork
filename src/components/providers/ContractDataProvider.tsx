@@ -5,11 +5,12 @@ import { useStore } from '../../store';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contractReadFunctions';
-import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
+import { DEVNET_BASE_CHAIN_ID, DEVNET_BASE_RPC_URL, ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { getUSDPrices } from '../../utils/fetchUniswapPrices';
 import { getSwapsForAddress } from '../../utils/dataEngineClient';
 import { addNetwork } from '../../utils/dappHelper';
+import { TokenMeta, ValidAsset } from '../../types';
 
 interface ContractDataContextType {
     loading: boolean;
@@ -36,14 +37,18 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setUserSwapsFromAddress = useStore((state) => state.setUserSwapsFromAddress);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    const isTokenMeta = !('contractRpcURL' in selectedInputAsset);
+
+    const contractRpcURL = (selectedInputAsset as ValidAsset).contractRpcURL || DEVNET_BASE_RPC_URL;
+    const contractChainID = (selectedInputAsset as ValidAsset).contractChainID || DEVNET_BASE_CHAIN_ID;
     // [0] set ethers provider when selectedInputAsset changes
     useEffect(() => {
-        if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
-            const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.contractChainID, name: selectedInputAsset.name });
+        if ((contractRpcURL && window.ethereum) || !ethersRpcProvider) {
+            const provider = new ethers.providers.StaticJsonRpcProvider(contractRpcURL, { chainId: contractChainID, name: selectedInputAsset.name });
             if (!provider) return;
             setEthersRpcProvider(provider);
         }
-    }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
+    }, [contractRpcURL, address, isConnected]);
 
     // [1] check if MetaMask is on the correct network and switch if needed
     useEffect(() => {
@@ -56,14 +61,14 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                 const currentChainId = parseInt(chainIdHex, 16);
 
                 // If already on the correct chain, no need to switch
-                if (currentChainId === selectedInputAsset.contractChainID) return;
+                if (currentChainId === contractChainID) return;
 
                 console.log('Switching network to match selected asset');
                 console.log('Current chainId:', currentChainId);
-                console.log('Target chainId:', selectedInputAsset.contractChainID);
+                console.log('Target chainId:', contractChainID);
 
                 // Convert chainId to hex format for MetaMask
-                const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
+                const hexChainId = `0x${contractChainID.toString(16)}`;
 
                 try {
                     // Attempt to switch to the target network
@@ -129,8 +134,9 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         const fetchPriceData = async () => {
             try {
                 let { btcPriceUSD, cbbtcPriceUSD } = await getUSDPrices();
-                updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
-                updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
+                // TODO: This needs updating
+                if (btcPriceUSD !== '0') updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
+                if (cbbtcPriceUSD !== '0') updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
             } catch (e) {
                 console.error(e);
                 return;
@@ -216,7 +222,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
         console.log('rawSwaps', rawSwaps);
         // Transform the raw data into your flattened Swap type
-        const typedSwaps = rawSwaps.map((item: any) => {
+        const typedSwaps = rawSwaps.map((item) => {
             const d = item.deposit.deposit; // the nested deposit object
             return {
                 // Flattened from deposit.deposit

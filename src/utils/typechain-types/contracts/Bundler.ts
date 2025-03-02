@@ -23,7 +23,51 @@ import type {
   TypedContractMethod,
 } from "../common";
 
+export declare namespace ISignatureTransfer {
+  export type TokenPermissionsStruct = {
+    token: AddressLike;
+    amount: BigNumberish;
+  };
+
+  export type TokenPermissionsStructOutput = [token: string, amount: bigint] & {
+    token: string;
+    amount: bigint;
+  };
+
+  export type PermitTransferFromStruct = {
+    permitted: ISignatureTransfer.TokenPermissionsStruct;
+    nonce: BigNumberish;
+    deadline: BigNumberish;
+  };
+
+  export type PermitTransferFromStructOutput = [
+    permitted: ISignatureTransfer.TokenPermissionsStructOutput,
+    nonce: bigint,
+    deadline: bigint
+  ] & {
+    permitted: ISignatureTransfer.TokenPermissionsStructOutput;
+    nonce: bigint;
+    deadline: bigint;
+  };
+}
+
 export declare namespace Types {
+  export type BundlerResultStruct = {
+    initialCbBTCBalance: BigNumberish;
+    finalCbBTCBalance: BigNumberish;
+    cbBTCReceived: BigNumberish;
+  };
+
+  export type BundlerResultStructOutput = [
+    initialCbBTCBalance: bigint,
+    finalCbBTCBalance: bigint,
+    cbBTCReceived: bigint
+  ] & {
+    initialCbBTCBalance: bigint;
+    finalCbBTCBalance: bigint;
+    cbBTCReceived: bigint;
+  };
+
   export type BlockLeafStruct = {
     blockHash: BytesLike;
     height: BigNumberish;
@@ -72,66 +116,22 @@ export declare namespace Types {
     safeBlockSiblings: string[];
     safeBlockPeaks: string[];
   };
-
-  export type BundlerResultStruct = {
-    initialCbBTCBalance: BigNumberish;
-    finalCbBTCBalance: BigNumberish;
-    cbBTCReceived: BigNumberish;
-  };
-
-  export type BundlerResultStructOutput = [
-    initialCbBTCBalance: bigint,
-    finalCbBTCBalance: bigint,
-    cbBTCReceived: bigint
-  ] & {
-    initialCbBTCBalance: bigint;
-    finalCbBTCBalance: bigint;
-    cbBTCReceived: bigint;
-  };
-}
-
-export declare namespace ISignatureTransfer {
-  export type TokenPermissionsStruct = {
-    token: AddressLike;
-    amount: BigNumberish;
-  };
-
-  export type TokenPermissionsStructOutput = [token: string, amount: bigint] & {
-    token: string;
-    amount: bigint;
-  };
-
-  export type PermitTransferFromStruct = {
-    permitted: ISignatureTransfer.TokenPermissionsStruct;
-    nonce: BigNumberish;
-    deadline: BigNumberish;
-  };
-
-  export type PermitTransferFromStructOutput = [
-    permitted: ISignatureTransfer.TokenPermissionsStructOutput,
-    nonce: bigint,
-    deadline: bigint
-  ] & {
-    permitted: ISignatureTransfer.TokenPermissionsStructOutput;
-    nonce: bigint;
-    deadline: bigint;
-  };
 }
 
 export interface BundlerInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "approveAndDepositTest"
+      | "_permitTransfer"
+      | "approveForSpender"
       | "cbBTC"
       | "executeSwap"
       | "executeSwapAndDeposit"
       | "executeSwapAndDepositTest"
       | "permit2"
-      | "permitTransfer"
+      | "permitTransferAndSwapDepositTest"
       | "permitTransferAndSwapTest"
       | "riftExchange"
       | "swapRouter"
-      | "testFunction"
       | "universalRouter"
   ): FunctionFragment;
 
@@ -144,8 +144,17 @@ export interface BundlerInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
-    functionFragment: "approveAndDepositTest",
-    values: [Types.DepositLiquidityParamsStruct, BigNumberish]
+    functionFragment: "_permitTransfer",
+    values: [
+      AddressLike,
+      BigNumberish,
+      ISignatureTransfer.PermitTransferFromStruct,
+      BytesLike
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "approveForSpender",
+    values: [BigNumberish, AddressLike, AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "cbBTC", values?: undefined): string;
   encodeFunctionData(
@@ -175,12 +184,14 @@ export interface BundlerInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "permit2", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "permitTransfer",
+    functionFragment: "permitTransferAndSwapDepositTest",
     values: [
       AddressLike,
       BigNumberish,
       ISignatureTransfer.PermitTransferFromStruct,
-      BytesLike
+      BytesLike,
+      BytesLike,
+      Types.DepositLiquidityParamsStruct
     ]
   ): string;
   encodeFunctionData(
@@ -202,16 +213,16 @@ export interface BundlerInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "testFunction",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "universalRouter",
     values?: undefined
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "approveAndDepositTest",
+    functionFragment: "_permitTransfer",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "approveForSpender",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "cbBTC", data: BytesLike): Result;
@@ -229,7 +240,7 @@ export interface BundlerInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "permit2", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "permitTransfer",
+    functionFragment: "permitTransferAndSwapDepositTest",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -241,10 +252,6 @@ export interface BundlerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "swapRouter", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "testFunction",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "universalRouter",
     data: BytesLike
@@ -358,8 +365,19 @@ export interface Bundler extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  approveAndDepositTest: TypedContractMethod<
-    [params: Types.DepositLiquidityParamsStruct, cbBTCReceived: BigNumberish],
+  _permitTransfer: TypedContractMethod<
+    [
+      owner: AddressLike,
+      amountIn: BigNumberish,
+      permitted: ISignatureTransfer.PermitTransferFromStruct,
+      signature: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  approveForSpender: TypedContractMethod<
+    [amountIn: BigNumberish, spender: AddressLike, tokenIn: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -404,15 +422,17 @@ export interface Bundler extends BaseContract {
 
   permit2: TypedContractMethod<[], [string], "view">;
 
-  permitTransfer: TypedContractMethod<
+  permitTransferAndSwapDepositTest: TypedContractMethod<
     [
       owner: AddressLike,
       amountIn: BigNumberish,
       permitted: ISignatureTransfer.PermitTransferFromStruct,
-      signature: BytesLike
+      signature: BytesLike,
+      swapCalldata: BytesLike,
+      params: Types.DepositLiquidityParamsStruct
     ],
     [void],
-    "nonpayable"
+    "payable"
   >;
 
   permitTransferAndSwapTest: TypedContractMethod<
@@ -431,8 +451,6 @@ export interface Bundler extends BaseContract {
 
   swapRouter: TypedContractMethod<[], [string], "view">;
 
-  testFunction: TypedContractMethod<[], [boolean], "nonpayable">;
-
   universalRouter: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -440,9 +458,21 @@ export interface Bundler extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "approveAndDepositTest"
+    nameOrSignature: "_permitTransfer"
   ): TypedContractMethod<
-    [params: Types.DepositLiquidityParamsStruct, cbBTCReceived: BigNumberish],
+    [
+      owner: AddressLike,
+      amountIn: BigNumberish,
+      permitted: ISignatureTransfer.PermitTransferFromStruct,
+      signature: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "approveForSpender"
+  ): TypedContractMethod<
+    [amountIn: BigNumberish, spender: AddressLike, tokenIn: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -492,16 +522,18 @@ export interface Bundler extends BaseContract {
     nameOrSignature: "permit2"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "permitTransfer"
+    nameOrSignature: "permitTransferAndSwapDepositTest"
   ): TypedContractMethod<
     [
       owner: AddressLike,
       amountIn: BigNumberish,
       permitted: ISignatureTransfer.PermitTransferFromStruct,
-      signature: BytesLike
+      signature: BytesLike,
+      swapCalldata: BytesLike,
+      params: Types.DepositLiquidityParamsStruct
     ],
     [void],
-    "nonpayable"
+    "payable"
   >;
   getFunction(
     nameOrSignature: "permitTransferAndSwapTest"
@@ -522,9 +554,6 @@ export interface Bundler extends BaseContract {
   getFunction(
     nameOrSignature: "swapRouter"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "testFunction"
-  ): TypedContractMethod<[], [boolean], "nonpayable">;
   getFunction(
     nameOrSignature: "universalRouter"
   ): TypedContractMethod<[], [string], "view">;

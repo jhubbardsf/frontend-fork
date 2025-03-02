@@ -54,13 +54,13 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
     const selectedChainID = useStore((state) => state.selectedChainID);
     const validAssets = useStore((state) => state.validAssets);
     const effectiveChainID = getEffectiveChainID(selectedChainID);
+    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     // Filter tokens for the effective chain.
     const tokensForChain = uniswapTokens.filter((t) => t.chainId === effectiveChainID);
-    const setValidAssetPriceUSD = useStore((state) => state.setValidAssetPriceUSD);
+
     // Find default token by symbol.
     // const defaultToken = tokensForChain.find((t) => t.symbol === 'cbBTC') ||
     // null;
-    
 
     const filteredTokens = tokensForChain.filter((token: TokenMeta) => {
         const term = searchTerm.toLowerCase();
@@ -75,24 +75,24 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
      * @param existingAssets - (Optional) Existing valid assets record to merge into.
      * @returns A new record of ValidAsset objects keyed by token symbol.
      */
-    function mergeTokenIntoValidAssets(token: TokenMeta, defaultAssetTemplate = validAssets.CoinbaseBTC): ValidAsset {
-        // Start with the provided existing assets
+    // function mergeTokenIntoValidAssets(token: TokenMeta, defaultAssetTemplate = validAssets.CoinbaseBTC): ValidAsset {
+    //     // Start with the provided existing assets
+    //     console.log('Mergig token into valid assets', token);
+    //     console.log('Mergig token into valid assets', defaultAssetTemplate);
+    //     return {
+    //         ...defaultAssetTemplate,
+    //         ...token,
+    //         // Override with token-specific data:
+    //         name: token.name,
+    //         display_name: token.name,
+    //         tokenAddress: token.address,
+    //         decimals: token.decimals,
+    //         // If available, use the token's logo URI; otherwise, fall back to the template icon.
+    //         icon_svg: token.logoURI || defaultAssetTemplate.icon_svg,
+    //         fromTokenList: true,
+    //     };
+    // }
 
-        return {
-            ...defaultAssetTemplate,
-            ...token,
-            // Override with token-specific data:
-            name: token.name,
-            display_name: token.name,
-            tokenAddress: token.address,
-            decimals: token.decimals,
-            // If available, use the token's logo URI; otherwise, fall back to the template icon.
-            icon_svg: token.logoURI || defaultAssetTemplate.icon_svg,
-            fromTokenList: true
-        };
-    }
-
-    // TODO: Move to TanStack
     const fetchTokenPrice = async (token: TokenMeta, cb: () => void) => {
         const url = `https://li.quest/v1/token?chain=8453&token=${token.symbol}`;
         const options = { method: 'GET', headers: { accept: 'application/json' } };
@@ -100,15 +100,21 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
         fetch(url, options)
             .then((res) => res.json())
             .then((json) => {
-                setValidAssetPriceUSD(token.name, json.priceUSD);
+                console.log('Token price:', json);
+                console.log('Token:', token.name);
+                updatePriceUSD(token.name, json.priceUSD);
                 cb();
             })
             .catch((err) => console.error(err));
     };
 
     const handleTokenClick = (token: TokenMeta) => {
-        onTokenSelected(mergeTokenIntoValidAssets(token));
+        // fetchTokenPrice(token, onClose);
+        onClose();
+        console.log('Selected token: ', { validAssets, selected: validAssets[token.name] });
+        fetchTokenPrice({ ...token, name: 'CoinbaseBTC', symbol: 'cbBTC' }, () => {});
         fetchTokenPrice(token, onClose);
+        onTokenSelected(validAssets[token.name]);
     };
 
     return (

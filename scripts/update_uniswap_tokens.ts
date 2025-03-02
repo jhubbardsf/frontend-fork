@@ -1,4 +1,4 @@
-import type { UniswapToken } from '@/types';
+import type { TokenMeta } from '@/types';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -140,7 +140,7 @@ async function fetchTokenData() {
         const tokenImageMap: Record<string, { borderColor: string; bgColor: string; image: string }> = {};
 
         // Store only one icon per symbol
-        tokenList.tokens.forEach((token: UniswapToken) => {
+        tokenList.tokens.forEach((token: TokenMeta) => {
             if (token.symbol && token.logoURI && !uniqueTokens.has(token.symbol)) {
                 uniqueTokens.set(token.symbol, token.logoURI);
             }

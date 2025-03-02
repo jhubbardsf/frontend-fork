@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useEffect } from 'react';
-import type { CurrencyModalTitle, ReserveLiquidityParams, UniswapToken, UniswapTokenList, UserSwap } from './types';
+import type { CurrencyModalTitle, ReserveLiquidityParams, TokenMeta, UniswapTokenList, UserSwap } from './types';
 import type { ethers } from 'ethers';
 import { BigNumber } from 'ethers';
 import { USDT_Icon, ETH_Icon, ETH_Logo, Coinbase_BTC_Icon } from './components/other/SVGs';
@@ -117,14 +117,14 @@ type Store = {
     setIsOnline: (b: boolean) => void;
 
     // uniswap swap widget
-    selectedUniswapInputAsset: UniswapToken;
-    setSelectedUniswapInputAsset: (selectedUniswapInputAsset: UniswapToken) => void;
+    selectedUniswapInputAsset: TokenMeta;
+    setSelectedUniswapInputAsset: (selectedUniswapInputAsset: TokenMeta) => void;
     selectedChainID: number;
     setSelectChainID: (selectedChainID: number) => void;
     uniswapTokenList: UniswapTokenList[];
     setUniswapTokenList: (tokens: UniswapTokenList[]) => void;
-    uniswapTokens: UniswapToken[];
-    setUniswapTokens: (tokens: UniswapToken[]) => void;
+    uniswapTokens: TokenMeta[];
+    setUniswapTokens: (tokens: TokenMeta[]) => void;
     loadingTokens: boolean;
     setLoadingTokens: (loading: boolean) => void;
 };

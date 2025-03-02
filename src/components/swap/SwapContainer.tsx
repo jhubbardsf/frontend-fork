@@ -6,8 +6,7 @@ import { SwapUI } from './SwapUI';
 import type { UniswapTokenList } from '@/types';
 import { useEffect } from 'react';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID, TESTNET_BASE_CHAIN_ID } from '@/utils/constants';
-
-
+import { useLifiPriceUpdater } from '@/hooks/useLifiPriceUpdate';
 
 export const SwapContainer = ({}) => {
     const { isMobile } = useWindowSize();
@@ -15,6 +14,10 @@ export const SwapContainer = ({}) => {
     const depositMode = useStore((state) => state.depositMode);
     const selectedChainID = useStore((state) => state.selectedChainID);
     const setUniswapTokens = useStore((state) => state.setUniswapTokens);
+    const validAssets = useStore((state) => state.validAssets);
+    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
+    
+    useLifiPriceUpdater(8453);
 
     // Prefetch token list when the component mounts
     // TODO: Either move this to the network select when it's implemented or add
@@ -33,7 +36,6 @@ export const SwapContainer = ({}) => {
                 console.error('Error fetching token list', err);
             }
         };
-
         fetchTokens().catch((err) => console.error('Error fetching token list', err));
     }, [selectedChainID, setUniswapTokens]);
 

@@ -5,6 +5,7 @@ import {
     DEVNET_BASE_BUNDLER_ADDRESS,
     DEVNET_DATA_ENGINE_URL,
     ERC20ABI,
+    DEVNET_BASE_RPC_URL,
 } from "./constants";
 import { getTipProof } from "./dataEngineClient";
 import { parseUnits } from "ethers/lib/utils";
@@ -117,7 +118,7 @@ export const bundleCaller = () => {
     ): Promise<boolean> => {
         try {
             console.log("Bundler: Checking if Permit2 is approved as spender");
-            const provider = new ethers.providers.JsonRpcProvider("http://localhost:50101");
+            const provider = new ethers.providers.JsonRpcProvider(DEVNET_BASE_RPC_URL);
             const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, provider);
             const allowance: BigNumber = await tokenContract.allowance(
                 await owner.getAddress(),

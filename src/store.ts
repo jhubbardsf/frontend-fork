@@ -50,19 +50,19 @@ export function mergeTokenListIntoValidAssets(
     chainId: number,
     existingAssets: Record<string, ValidAsset> = {},
 ): Record<string, ValidAsset> {
-    const convertIpfsUri = (uri: string | undefined, gateway: string = "https://ipfs.io/ipfs/") => {
+    const convertIpfsUri = (uri: string | undefined, gateway: string = 'https://ipfs.io/ipfs/') => {
         if (!uri) return null;
-        if (uri.startsWith("ipfs://")) {
+        if (uri.startsWith('ipfs://')) {
             // Remove the "ipfs://" prefix.
-            let cid = uri.slice("ipfs://".length);
+            let cid = uri.slice('ipfs://'.length);
             // If the CID starts with "ipfs/", remove that segment.
-            if (cid.startsWith("ipfs/")) {
-                cid = cid.slice("ipfs/".length);
+            if (cid.startsWith('ipfs/')) {
+                cid = cid.slice('ipfs/'.length);
             }
             return gateway + cid;
         }
         return uri;
-    }
+    };
 
     // Start with the provided existing assets
     const mergedAssets: Record<string, ValidAsset> = { ...existingAssets };
@@ -75,11 +75,10 @@ export function mergeTokenListIntoValidAssets(
         if (token.chainId === devChainID) {
             mergedAssets[token.name] = {
                 ...defaultAssetTemplate,
+                ...token,
                 // Override with token-specific data:
-                name: token.name,
                 display_name: token.symbol,
                 tokenAddress: token.address,
-                decimals: token.decimals,
                 // If available, use the token's logo URI; otherwise, fall back to the template icon.
                 icon_svg: convertIpfsUri(token.logoURI) || defaultAssetTemplate.icon_svg,
                 fromTokenList: true,
@@ -98,10 +97,10 @@ type Store = {
     setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
     validAssets: Record<string, ValidAsset>;
     setValidAssets: (assets: Record<string, ValidAsset>) => void;
-    setValidAssetPriceUSD: (assetKey: string, priceUSD: number) => void;
     updateValidValidAsset: (assetKey: string, updates: Partial<ValidAsset>) => void;
     mergeValidAssets: (assets: Record<string, ValidAsset>) => void;
     updatePriceUSD: (assetKey: string, newPrice: number) => void;
+    updatePriceUSDByAddress: (address: string, newPrice: number) => void;
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
@@ -121,8 +120,22 @@ type Store = {
     setShowManageDepositVaultsScreen: (show: boolean) => void;
 
     // swap flow
-    swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired';
-    setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired') => void;
+    swapFlowState:
+        | '0-not-started'
+        | '1-reserve-liquidity'
+        | '2-send-bitcoin'
+        | '3-receive-evm-token'
+        | '4-completed'
+        | '5-expired';
+    setSwapFlowState: (
+        state:
+            | '0-not-started'
+            | '1-reserve-liquidity'
+            | '2-send-bitcoin'
+            | '3-receive-evm-token'
+            | '4-completed'
+            | '5-expired',
+    ) => void;
     depositFlowState: '0-not-started' | '1-confirm-deposit';
     setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
     btcInputSwapAmount: string;
@@ -188,15 +201,45 @@ export const useStore = create<Store>((set, get) => {
         CoinbaseBTC: {
             name: 'CoinbaseBTC',
             display_name: 'cbBTC',
-            tokenAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CBBTC_TOKEN_ADDRESS, TESTNET_BASE_CBBTC_TOKEN_ADDRESS, DEVNET_BASE_CBBTC_TOKEN_ADDRESS),
-            dataEngineUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_DATA_ENGINE_URL, TESTNET_DATA_ENGINE_URL, DEVNET_DATA_ENGINE_URL),
+            tokenAddress: getDeploymentValue(
+                DEPLOYMENT_TYPE,
+                MAINNET_BASE_CBBTC_TOKEN_ADDRESS,
+                TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
+                DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
+            ),
+            dataEngineUrl: getDeploymentValue(
+                DEPLOYMENT_TYPE,
+                MAINNET_DATA_ENGINE_URL,
+                TESTNET_DATA_ENGINE_URL,
+                DEVNET_DATA_ENGINE_URL,
+            ),
             decimals: BITCOIN_DECIMALS,
-            riftExchangeContractAddress: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RIFT_EXCHANGE_ADDRESS, TESTNET_BASE_RIFT_EXCHANGE_ADDRESS, DEVNET_BASE_RIFT_EXCHANGE_ADDRESS),
+            riftExchangeContractAddress: getDeploymentValue(
+                DEPLOYMENT_TYPE,
+                MAINNET_BASE_RIFT_EXCHANGE_ADDRESS,
+                TESTNET_BASE_RIFT_EXCHANGE_ADDRESS,
+                DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
+            ),
             riftExchangeAbi: riftExchangeABI.abi,
-            contractChainID: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CHAIN_ID, TESTNET_BASE_CHAIN_ID, DEVNET_BASE_CHAIN_ID),
+            contractChainID: getDeploymentValue(
+                DEPLOYMENT_TYPE,
+                MAINNET_BASE_CHAIN_ID,
+                TESTNET_BASE_CHAIN_ID,
+                DEVNET_BASE_CHAIN_ID,
+            ),
             chainDetails: base, // ONLY USE FOR MAINNET SWITCHING NETWORKS WITH METAMASK
-            contractRpcURL: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_RPC_URL, TESTNET_BASE_RPC_URL, DEVNET_BASE_RPC_URL),
-            etherScanBaseUrl: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_ETHERSCAN_URL, TESTNET_BASE_ETHERSCAN_URL, DEVNET_BASE_ETHERSCAN_URL),
+            contractRpcURL: getDeploymentValue(
+                DEPLOYMENT_TYPE,
+                MAINNET_BASE_RPC_URL,
+                TESTNET_BASE_RPC_URL,
+                DEVNET_BASE_RPC_URL,
+            ),
+            etherScanBaseUrl: getDeploymentValue(
+                DEPLOYMENT_TYPE,
+                MAINNET_BASE_ETHERSCAN_URL,
+                TESTNET_BASE_ETHERSCAN_URL,
+                DEVNET_BASE_ETHERSCAN_URL,
+            ),
             proverFee: BigNumber.from(0),
             releaserFee: BigNumber.from(0),
             icon_svg: Coinbase_BTC_Icon,
@@ -211,8 +254,8 @@ export const useStore = create<Store>((set, get) => {
             connectedUserBalanceRaw: BigNumber.from(0),
             connectedUserBalanceFormatted: '0',
             symbol: 'cbBTC',
-            address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
-            logoURI: 'https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp'
+            address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf',
+            logoURI: 'https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp',
         },
         BTC: {
             name: 'BTC',
@@ -223,10 +266,15 @@ export const useStore = create<Store>((set, get) => {
             border_color_light: '#FFA04C',
             dark_bg_color: '#372412',
             light_text_color: '#7d572e',
-            priceUSD: null,
+            priceUSD: 88000, // TEST
         },
     };
-    const updatedValidAssets = mergeTokenListIntoValidAssets(UniswapListJSON, validAssets.CoinbaseBTC, DEVNET_BASE_CHAIN_ID, validAssets);
+    const updatedValidAssets = mergeTokenListIntoValidAssets(
+        UniswapListJSON,
+        validAssets.CoinbaseBTC,
+        DEVNET_BASE_CHAIN_ID,
+        validAssets,
+    );
 
     return {
         // setup & asset data
@@ -237,16 +285,8 @@ export const useStore = create<Store>((set, get) => {
         //console log the new ethers provider
         ethersRpcProvider: null,
         setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
-        validAssets: updatedValidAssets
-        ,
+        validAssets: updatedValidAssets,
         setValidAssets: (assets) => set({ validAssets: assets }),
-        setValidAssetPriceUSD: (assetKey, priceUSD) =>
-            set((state) => ({
-                validAssets: {
-                    ...state.validAssets,
-                    [assetKey]: { ...state.validAssets[assetKey], priceUSD },
-                },
-            })),
         updateValidValidAsset: (assetKey, updates) =>
             set((state) => ({
                 validAssets: {
@@ -268,6 +308,20 @@ export const useStore = create<Store>((set, get) => {
                     [assetKey]: { ...state.validAssets[assetKey], priceUSD: newPrice },
                 },
             })),
+        updatePriceUSDByAddress: (address, newPrice) =>
+            set((state) => {
+                const validAssets = state.validAssets;
+                const assetKey = Object.keys(validAssets).find((key) => validAssets[key].tokenAddress === address);
+                if (assetKey) {
+                    return {
+                        validAssets: {
+                            ...state.validAssets,
+                            [assetKey]: { ...state.validAssets[assetKey], priceUSD: newPrice },
+                        },
+                    };
+                }
+                return state;
+            }),
         updateTotalAvailableLiquidity: (assetKey, newLiquidity) =>
             set((state) => ({
                 validAssets: {
@@ -356,8 +410,15 @@ export const useStore = create<Store>((set, get) => {
         uniswapInputAssetPriceUSD: 0,
         setUniswapInputAssetPriceUSD: (price: number) => set({ uniswapInputAssetPriceUSD: price }),
         selectedUniswapInputAsset: DEFAULT_UNISWAP_ASSET,
-        setSelectedUniswapInputAsset: (asset: TokenMeta) => { set({ selectedUniswapInputAsset: asset }) },
-        selectedChainID: getDeploymentValue(DEPLOYMENT_TYPE, MAINNET_BASE_CHAIN_ID, TESTNET_BASE_CHAIN_ID, DEVNET_BASE_CHAIN_ID),
+        setSelectedUniswapInputAsset: (asset: TokenMeta) => {
+            set({ selectedUniswapInputAsset: asset });
+        },
+        selectedChainID: getDeploymentValue(
+            DEPLOYMENT_TYPE,
+            MAINNET_BASE_CHAIN_ID,
+            TESTNET_BASE_CHAIN_ID,
+            DEVNET_BASE_CHAIN_ID,
+        ),
         setSelectChainID: (chainID: number) => set({ selectedChainID: chainID }),
         uniswapTokens: UniswapListJSON.tokens.filter((t: TokenMeta) => t.chainId === 8453),
         setUniswapTokens: (tokens: TokenMeta[]) => set({ uniswapTokens: tokens }),
