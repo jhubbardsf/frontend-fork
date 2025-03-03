@@ -19,7 +19,6 @@ interface LifiResponse {
     };
 }
 
-
 export function useLifiPriceUpdater(chainId = 8453) {
     const LIFI_API_URL = 'https://li.quest/v1/tokens?chains=8453&chainTypes=EVM';
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
@@ -30,7 +29,7 @@ export function useLifiPriceUpdater(chainId = 8453) {
         queryFn: async () => {
             const response = await fetch(LIFI_API_URL, {
                 method: 'GET',
-                headers: { accept: 'application/json' }
+                headers: { accept: 'application/json' },
             });
 
             if (!response.ok) {
@@ -49,6 +48,6 @@ export function useLifiPriceUpdater(chainId = 8453) {
                 resolve(json);
             });
         },
-        refetchInterval: 15000, // poll every 15 seconds 
+        refetchInterval: 15000, // poll every 15 seconds
     });
 }

@@ -1,5 +1,6 @@
 // Map of contract error selectors to human-readable messages
 export const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
+    '0x815e1d64': 'Swap router slippage tolerance exceeded.',
     '0xa5f611fd': 'Cannot overwrite an ongoing swap.',
     '0x1e002fd4': 'Chainwork is too low.',
     '0xe1965c65': 'Checkpoint is not established.',
@@ -45,6 +46,7 @@ export function getContractErrorMessage(error: any): string {
     const dataMatch = errorString.match(/"data":\s*"(0x[a-f0-9]{8})"/i);
     if (dataMatch && dataMatch[1]) {
         const errorSelector = dataMatch[1];
+        console.log('+++++++', errorSelector);
         return CONTRACT_ERROR_MESSAGES[errorSelector] || `Contract error: ${errorSelector}`;
     }
 
@@ -52,8 +54,11 @@ export function getContractErrorMessage(error: any): string {
     const selectorMatch = errorString.match(/data":"(0x[a-f0-9]{8})"/i);
     if (selectorMatch && selectorMatch[1]) {
         const errorSelector = selectorMatch[1];
+        console.log('+++++++', errorSelector);
         return CONTRACT_ERROR_MESSAGES[errorSelector] || `Contract error: ${errorSelector}`;
     }
+
+    if (errorString.includes('0x815e1d64')) return 'Swap router slippage tolerance exceeded.';
 
     return typeof error === 'string' ? error : error.message ? error.message : 'Unknown contract error';
 }

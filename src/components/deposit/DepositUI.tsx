@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
@@ -65,8 +65,8 @@ import { useDebounce } from '@uidotdev/usehooks';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
-    const router = useRouter();
-    const fontSize = isMobile ? '20px' : '20px';
+    // const router = useRouter();
+    // const fontSize = isMobile ? '20px' : '20px';
     const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
     const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
     const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
@@ -74,16 +74,16 @@ export const DepositUI = () => {
     const [userBalanceExceeded, setUserBalanceExceeded] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const coinbaseBtcPriceUSD = useStore.getState().validAssets['CoinbaseBTC']?.priceUSD;
-    const [availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
+    const [_availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [coinbaseBtcExchangeRatePerBTC, setCoinbaseBtcExchangeRatePerBTC] = useState(0);
-    const depositMode = useStore((state) => state.depositMode);
-    const setDepositMode = useStore((state) => state.setDepositMode);
+    // const depositMode = useStore((state) => state.depositMode);
+    // const setDepositMode = useStore((state) => state.setDepositMode);
     const validAssets = useStore((state) => state.validAssets);
     const { address, isConnected } = useAccount();
     const { openConnectModal } = useConnectModal();
     const depositFlowState = useStore((state) => state.depositFlowState);
-    const setDepositFlowState = useStore((state) => state.setDepositFlowState);
-    const setSwapFlowState = useStore((state) => state.setSwapFlowState);
+    // const setDepositFlowState = useStore((state) => state.setDepositFlowState);
+    // const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
@@ -92,7 +92,7 @@ export const DepositUI = () => {
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const [isAwaitingConnection, setIsAwaitingConnection] = useState(false);
-    const { refreshUserSwapsFromAddress, refreshConnectedUserBalance, loading } = useContractData();
+    const { refreshConnectedUserBalance, loading } = useContractData();
     const [isAboveMaxSwapLimitCoinbaseBtcDeposit, setIsAboveMaxSwapLimitCoinbaseBtcDeposit] = useState(false);
     const [isAboveMaxSwapLimitBtcOutput, setIsAboveMaxSwapLimitBtcOutput] = useState(false);
     const [isBelowMinCoinbaseBtcDeposit, setIsBelowMinCoinbaseBtcDeposit] = useState(false);
@@ -118,26 +118,31 @@ export const DepositUI = () => {
     const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
     const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
-    const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
-
+    const inputRef = useRef(null);
     const validAssetPriceUSD = validAssets[selectedInputAsset.name]?.priceUSD;
+    // inputToken.chainId,
+    //         inputToken.address,
+    //         inputToken.decimals,
+    //         inputToken.symbol,
+    //         inputToken.name,
     // Route finding
+    const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
     const {
         isFetching,
         data: swapRouteData,
         isRefetching,
         error,
+        ...rest
     } = useSwapQuery(selectedInputAsset, debouncedCoinbaseBtcDepositAmount, chainId);
-    useLogState('Bun swap routes', { isFetching, swapRouteData, isRefetching, error });
+
+    useLogState('Bun swap routes', { isFetching, swapRouteData, isRefetching, error, swapRouterRest: rest });
 
     const handleCoinbaseBtcInputChange = (e, amount = null) => {
         console.log('JSH+ handleCoinbaseBtcInputChange2', { e, amount });
-
         setCoinbaseBtcDepositAmount(e.target.value);
     };
 
-    // Clear form values on component mount
-    useEffect(() => {
+    const clearFields = () => {
         // Reset all input values when component mounts
         setCoinbaseBtcDepositAmount('');
         setBtcOutputAmount('');
@@ -150,12 +155,16 @@ export const DepositUI = () => {
         setIsBelowMinCoinbaseBtcDeposit(false);
         setIsAboveMaxSwapLimitBtcOutput(false);
         setIsBelowMinBtcOutput(false);
+    };
+    // Clear form values on component mount
+    useEffect(() => {
+        clearFields();
     }, []);
 
     // Helper function to check if all deposit conditions are met
     const canProceedWithDeposit = () => {
         return (
-            coinbaseBtcDepositAmount &&
+            coinbaseBtcDepositAmount !== '' &&
             !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
             !isBelowMinCoinbaseBtcDeposit &&
             !userBalanceExceeded &&
@@ -393,7 +402,7 @@ export const DepositUI = () => {
             console.log('Deposit Switching or adding network');
             console.log('Deposit current chainId:', chainId);
             console.log('Deposit target chainId:', selectedInputAsset.contractChainID);
-            setIsWaitingForCorrectNetwork(true);
+            // setIsWaitingForCorrectNetwork(true); // JSH: Not being used
 
             const client = createWalletClient({
                 transport: custom(window.ethereum),
@@ -499,7 +508,6 @@ export const DepositUI = () => {
                 console.log('Deposit [alpine] tipProof', tipProof);
             } catch (error) {
                 console.error('[alpine] error', error);
-                // manually set the error state in the depositLiquidity hook (this doesnt actually try to deposit)
                 setIsModalOpen(true);
                 depositLiquidity({
                     signer,
@@ -526,8 +534,6 @@ export const DepositUI = () => {
                 return;
             }
 
-            // if (selected)
-
             // [2] deposit liquidity with valid tip proof
             await depositLiquidity(
                 {
@@ -549,6 +555,7 @@ export const DepositUI = () => {
                     },
                 },
                 swapRouteData?.swapRoute,
+                coinbaseBtcDepositAmount,
             );
         }
     };
@@ -628,6 +635,7 @@ export const DepositUI = () => {
                                                 onKeyDown={handleKeyDown}
                                                 fontFamily={'Aux'}
                                                 border='none'
+                                                ref={inputRef}
                                                 mt='6px'
                                                 mr='-150px'
                                                 ml='-5px'
@@ -1102,7 +1110,11 @@ export const DepositUI = () => {
                 <UniswapSwapWidget
                     isOpen={isUniswapSwapWidgetOpen}
                     onClose={() => setIsUniswapSwapWidgetOpen(false)}
-                    onTokenSelected={setSelectedInputAsset}
+                    onTokenSelected={(token) => {
+                        clearFields();
+                        inputRef.current.focus();
+                        setSelectedInputAsset(token);
+                    }}
                 />
             </Flex>
         </>

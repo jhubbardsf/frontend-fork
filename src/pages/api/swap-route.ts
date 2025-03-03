@@ -53,13 +53,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         console.log('API 3');
         const swapConfig: SwapOptions = {
             recipient: DEVNET_BASE_BUNDLER_ADDRESS,
-            slippageTolerance: new Percent(50, 10000), // 0.50% slippage
-            deadline: Math.floor(Date.now() / 1000 + 18000000000000000), // Math.floor(Date.now() / 1000 + 1800),
+            slippageTolerance: new Percent(100, 10000), // 1.0% slippage
+            deadline: Math.floor(Date.now() / 1000 + 1800), // Math.floor(Date.now() / 1000 + 1800),
             type: Number(SwapType.SWAP_ROUTER_02),
         };
         console.log('API 4');
         const route = await router.route(currencyAmountIn, outputUniToken, TradeType.EXACT_INPUT, swapConfig, {
-            blockNumber: 27028094,
+            blockNumber: 27091805,
         });
         if (!route || !route.trade) {
             return res.status(500).json({ error: 'No route found' });

@@ -24,14 +24,16 @@ import type { Address } from 'viem';
 import type { SingleExecuteSwapAndDeposit } from '@/types';
 import type { DepositLiquidityParamsStruct } from './typechain-types/contracts/Bundler.sol/BundlerSwapAndDepositWithPermit2';
 import { useLogState } from '@/hooks/useLogState';
-import { getContract } from 'viem';
+import { getContract, setErrorConfig } from 'viem';
 import { useBundlerContract } from '@/utils/wagmiClients';
 import { extendTheme } from '@chakra-ui/react';
 import { useAccount } from 'wagmi';
 import { useCallback } from 'react';
 import { useWatchPendingTransactions } from 'wagmi';
 import { DepositStatus } from '@/hooks/contract/useDepositLiquidity';
-
+import { waitForTransactionReceipt } from '@wagmi/core';
+import { rainbowConfig } from '@/pages/_app';
+import { getContractErrorMessage } from './contractErrors';
 /**
  * Fetches the next available nonce for a given owner from the Permit2 contract.
  *
@@ -63,7 +65,7 @@ const log = (str: string, obj?: object) => {
     if (enabled) console.log(str, obj);
 };
 
-const buildPermit = async (swapRoute: SwapRoute, totalInputAmount: ethers.BigNumber) => {
+const buildPermit = async (swapRoute: SwapRoute, totalInputAmount: ethers.BigNumber, setStatus) => {
     console.log('Bundler: ', { swapRoute });
     const tokenPath = swapRoute.route[0].tokenPath;
     const token = tokenPath[0];
@@ -98,6 +100,7 @@ const buildPermit = async (swapRoute: SwapRoute, totalInputAmount: ethers.BigNum
 
     // Now sign the typed data:
     console.log('bundler: ', { domain, types, values });
+    setStatus(DepositStatus.SignSpendingCap);
     const signature = await signer._signTypedData(domain, types, values);
 
     //  transferDetails,
@@ -123,9 +126,11 @@ const approvePermit2AsSpender = async (
     tokenAddress: string,
     amount: ethers.BigNumberish,
     owner: Signer,
+    setStatus,
 ): Promise<void> => {
     try {
         const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, owner);
+        setStatus(DepositStatus.ApprovePermit2);
         const tx = await tokenContract.approve(PERMIT2_ADDRESS, amount);
         const receipt = await tx.wait();
 
@@ -143,7 +148,7 @@ const approvePermit2AsSpender = async (
 export const useBundlerCaller = () => {
     // const store = useStore.getState();
     const selectedInputAsset = useStore((store) => store.selectedInputAsset);
-    const coinbaseBtcDepositAmount = useStore((store) => store.coinbaseBtcDepositAmount);
+    // const coinbaseBtcDepositAmount = useStore((store) => store.coinbaseBtcDepositAmount);
     const btcOutputAmount = useStore((store) => store.btcOutputAmount);
     const { executeSwapAndDeposit, ...rest } = useBundlerContract();
     const { address: userAddress } = useAccount();
@@ -151,206 +156,108 @@ export const useBundlerCaller = () => {
     useLogState('BundlerCaller useBundlerContract Rest: ', { rest });
     const BITCOIN_DECIMALS = 8;
     const payoutBTCAddress = 'bc1qpy7q5sjv448kkaln44r7726pa9xyzsskk84tw7';
-    useLogState('Bundle Caller: ', { selectedInputAsset, coinbaseBtcDepositAmount, btcOutputAmount, payoutBTCAddress });
+    useLogState('Bundle Caller: ', { selectedInputAsset, btcOutputAmount, payoutBTCAddress });
     useWatchPendingTransactions({
         onTransactions(transactions) {
             console.log('Bun New transactions!', transactions);
         },
     });
 
-    const proceedWithBundler = useCallback(
-        async (swapRoute: SwapRoute, depositParams: DepositLiquidityParamsStruct, setStatus: any) => {
-            if (typeof window === 'undefined' || !window.ethereum) {
-                throw new Error('No Ethereum provider found');
+    const proceedWithBundler = async (
+        swapRoute: SwapRoute,
+        depositParams: DepositLiquidityParamsStruct,
+        coinbaseBtcDepositAmount: string,
+        setStatus: any,
+        setError,
+    ) => {
+        if (typeof window === 'undefined' || !window.ethereum) {
+            throw new Error('No Ethereum provider found');
+        }
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        // const userAddress = (await signer.getAddress()) as Address;
+        // console.log('bundler: ', { userAddress });
+        console.log('Bun DepositLiquidityParams:', { debug: { ...depositParams } });
+
+        // --- Build Permit2 Batch Data from Route Data ---
+        console.log('Bun: ', {
+            coinbaseBtcDepositAmount,
+            'selectedInputAsset.decimals': selectedInputAsset.decimals,
+        });
+
+        const totalInputAmount = parseUnits(coinbaseBtcDepositAmount, selectedInputAsset?.decimals);
+        console.log('Bun totalInputAmount', { totalInputAmount });
+        const { permit, signature } = await buildPermit(swapRoute, totalInputAmount, setStatus);
+        console.log('Bun Single Permit Data:', permit);
+
+        // --- Call the Bundler Contract ---
+        console.log('Bun Connecting to...', { DEVNET_BASE_BUNDLER_ADDRESS });
+        // const bundlerContract = Bundler__factory.connect(DEVNET_BASE_BUNDLER_ADDRESS, signer);
+
+        try {
+            // 1. Check if Permit2 is approved as spender
+            const isApproved = await checkIfPermit2IsApproved(permit.permitted.token, signer);
+            console.log('Bun isApproved:', { isApproved });
+            if (!isApproved) {
+                console.log('Bundler: Permit2 is not approved as spender, approving now');
+                setStatus(DepositStatus.ApprovalPending);
+                await approvePermit2AsSpender(permit.permitted.token, ethers.constants.MaxUint256, signer, setStatus);
             }
 
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            // const userAddress = (await signer.getAddress()) as Address;
-            // console.log('bundler: ', { userAddress });
-            console.log('Bun DepositLiquidityParams:', { debug: { ...depositParams } });
-
-            // --- Build Permit2 Batch Data from Route Data ---
-            console.log('Bun: ', {
-                coinbaseBtcDepositAmount,
-                'selectedInputAsset.decimals': selectedInputAsset.decimals,
+            const arrayParams = [
+                totalInputAmount.toBigInt(),
+                swapRoute.methodParameters.calldata as `0x${string}`,
+                {
+                    depositOwnerAddress: userAddress as `0x${string}`,
+                    specifiedPayoutAddress: SAMEES_DEMO_CB_BTC_ADDRESS,
+                    depositAmount: (depositParams.depositAmount as BigNumber).toBigInt(),
+                    expectedSats: (depositParams.expectedSats as BigNumber).toBigInt(),
+                    btcPayoutScriptPubKey: convertToBitcoinLockingScript(payoutBTCAddress) as `0x${string}`,
+                    depositSalt: depositParams.depositSalt as `0x${string}`,
+                    confirmationBlocks: depositParams.confirmationBlocks as number,
+                    safeBlockLeaf: {
+                        height: depositParams.safeBlockLeaf.height as number,
+                        blockHash: depositParams.safeBlockLeaf.blockHash as `0x${string}`,
+                        cumulativeChainwork: (depositParams.safeBlockLeaf.cumulativeChainwork as BigNumber).toBigInt(),
+                    },
+                    safeBlockSiblings: depositParams.safeBlockSiblings as `0x${string}`[],
+                    safeBlockPeaks: depositParams.safeBlockPeaks as `0x${string}`[],
+                },
+                userAddress,
+                {
+                    permitted: {
+                        token: permit.permitted.token as `0x${string}`,
+                        amount: (permit.permitted.amount as BigNumber).toBigInt(),
+                    },
+                    nonce: BigInt(permit.nonce as number),
+                    deadline: BigInt(permit.deadline as number),
+                },
+                signature as `0x${string}`,
+            ] as const;
+            console.log('Bun estimating gas');
+            console.log('Bun++ sending executeSwapAndDeposit REAL test: ', { ...arrayParams });
+            setStatus(DepositStatus.WaitingForWalletConfirmation);
+            const txHash = await executeSwapAndDeposit(arrayParams);
+            setStatus(DepositStatus.DepositPending);
+            console.log('Bun++ Waiting for transaction receipt', { txHash });
+            const receipt = await waitForTransactionReceipt(rainbowConfig, { hash: txHash });
+            setStatus(DepositStatus.Confirmed);
+            console.log('Bun++ Transaction receipt:', receipt);
+        } catch (err) {
+            console.error('Bun ERROR++', { err });
+            const decodedError = decodeError(err, BundlerABI.abi);
+            const errorMessage = getContractErrorMessage(err);
+            setError(errorMessage);
+            setStatus(DepositStatus.Error);
+            console.error('Bun+ DECODED ERROR', {
+                decodedError,
+                errorMessage,
+                type: ErrorType[decodedError.type],
+                typeExplained: `ErrorType[decodedError.type]++: ${ErrorType[decodedError.type]}`,
             });
-            const totalInputAmount = parseUnits(coinbaseBtcDepositAmount, selectedInputAsset.decimals);
-            console.log('Bun totalInputAmount', { totalInputAmount });
-            const { permit, signature } = await buildPermit(swapRoute, totalInputAmount);
-            console.log('Bun Single Permit Data:', permit);
-
-            // --- Call the Bundler Contract ---
-            console.log('Bun Connecting to...', { DEVNET_BASE_BUNDLER_ADDRESS });
-            // const bundlerContract = Bundler__factory.connect(DEVNET_BASE_BUNDLER_ADDRESS, signer);
-
-            try {
-                // 1. Check if Permit2 is approved as spender
-                const isApproved = await checkIfPermit2IsApproved(permit.permitted.token, signer);
-                if (!isApproved) {
-                    console.log('Bundler: Permit2 is not approved as spender, approving now');
-                    setStatus(DepositStatus.ApprovalPending);
-                    await approvePermit2AsSpender(permit.permitted.token, ethers.constants.MaxUint256, signer);
-                }
-
-                // const singleArray: SingleExecuteSwapAndDeposit = [
-                //     totalInputAmount,
-                //     swapRoute.methodParameters.calldata,
-                //     depositParams,
-                //     userAddress,
-                //     permit,
-                //     signature,
-                // ];
-                // REAL TEST
-                console.log('Bun estimating gas');
-                console.log('Bun sending executeSwapAndDeposit REAL test: ', {
-                    amoutIn: totalInputAmount.toBigInt(),
-                    calldata: swapRoute.methodParameters.calldata as `0x${string}`,
-                    depositParams: {
-                        depositOwnerAddress: userAddress as `0x${string}`,
-                        specifiedPayoutAddress: SAMEES_DEMO_CB_BTC_ADDRESS,
-                        depositAmount: (depositParams.depositAmount as BigNumber).toBigInt(),
-                        expectedSats: (depositParams.expectedSats as BigNumber).toBigInt(),
-                        btcPayoutScriptPubKey: convertToBitcoinLockingScript(payoutBTCAddress) as `0x${string}`,
-                        depositSalt: depositParams.depositSalt as `0x${string}`,
-                        confirmationBlocks: depositParams.confirmationBlocks as number,
-                        safeBlockLeaf: {
-                            height: depositParams.safeBlockLeaf.height as number,
-                            blockHash: depositParams.safeBlockLeaf.blockHash as `0x${string}`,
-                            cumulativeChainwork: (
-                                depositParams.safeBlockLeaf.cumulativeChainwork as BigNumber
-                            ).toBigInt(),
-                        },
-                        safeBlockSiblings: depositParams.safeBlockSiblings as `0x${string}`[],
-                        safeBlockPeaks: depositParams.safeBlockPeaks as `0x${string}`[],
-                    },
-                    owner: userAddress,
-                    permit: {
-                        permitted: {
-                            token: permit.permitted.token as `0x${string}`,
-                            amount: (permit.permitted.amount as BigNumber).toBigInt(),
-                        },
-                        nonce: permit.nonce,
-                        deadline: permit.deadline,
-                    },
-                    signature: signature as `0x${string}`,
-
-                    // totalInputAmount,
-                    // totalInputAmountInt: totalInputAmount.toBigInt(),
-                    // calldata: swapRoute.methodParameters.calldata,
-                    // depositParams,
-                    // depositParamsExpectsSats: (depositParams.expectedSats as BigNumber).toBigInt(),
-                    // depositParamsDepositAmount: (depositParams.depositAmount as BigNumber).toBigInt(),
-                    // userAddress,
-
-                    // permit,
-                    // permitPermittedAmount: (permit.permitted.amount as BigNumber).toBigInt(),
-                    // permitDeadline: (permit.deadline as BigNumber).toBigInt(),
-                    // signature,
-                });
-                // const estimatedGas = await bundlerContract.estimateGas.executeSwapAndDeposit(
-                //     totalInputAmount,
-                //     swapRoute.methodParameters.calldata,
-                //     depositParams,
-                //     userAddress,
-                //     permit,
-                //     signature,
-                // );
-                // console.log('Bun estimated gas:', { estimatedGas });
-
-                executeSwapAndDeposit([
-                    totalInputAmount.toBigInt(),
-                    swapRoute.methodParameters.calldata as `0x${string}`,
-                    {
-                        depositOwnerAddress: userAddress as `0x${string}`,
-                        specifiedPayoutAddress: SAMEES_DEMO_CB_BTC_ADDRESS,
-                        depositAmount: (depositParams.depositAmount as BigNumber).toBigInt(),
-                        expectedSats: (depositParams.expectedSats as BigNumber).toBigInt(),
-                        btcPayoutScriptPubKey: convertToBitcoinLockingScript(payoutBTCAddress) as `0x${string}`,
-                        depositSalt: depositParams.depositSalt as `0x${string}`,
-                        confirmationBlocks: depositParams.confirmationBlocks as number,
-                        safeBlockLeaf: {
-                            height: depositParams.safeBlockLeaf.height as number,
-                            blockHash: depositParams.safeBlockLeaf.blockHash as `0x${string}`,
-                            cumulativeChainwork: (
-                                depositParams.safeBlockLeaf.cumulativeChainwork as BigNumber
-                            ).toBigInt(),
-                        },
-                        safeBlockSiblings: depositParams.safeBlockSiblings as `0x${string}`[],
-                        safeBlockPeaks: depositParams.safeBlockPeaks as `0x${string}`[],
-                    },
-                    userAddress,
-                    {
-                        permitted: {
-                            token: permit.permitted.token as `0x${string}`,
-                            amount: (permit.permitted.amount as BigNumber).toBigInt(),
-                        },
-                        nonce: BigInt(permit.nonce as number),
-                        deadline: BigInt(permit.deadline as number),
-                    },
-                    signature as `0x${string}`,
-                ]);
-                // const tx = await bundlerContract.executeSwapAndDeposit(
-                //     totalInputAmount,
-                //     swapRoute.methodParameters.calldata,
-                //     depositParams,
-                //     userAddress,
-                //     permit,
-                //     signature,
-                // );
-                // console.log('Bun transaction:', { tx });
-                // const receipt = await tx.wait();
-                // console.log('Bun transaction receipt:', { receipt });
-                return;
-                // const tx0 = await bundlerContract.executeSwapAndDeposit(
-                //     totalInputAmount,
-                //     swapRoute.methodParameters.calldata,
-                //     depositParams,
-                //     userAddress,
-                //     permit,
-                //     signature,
-                // );
-                // console.log('Bundler transaction:', { tx0 });
-                // const receipt0 = await tx0.wait();
-                // console.log('Bundler transaction receipt:', { receipt0 });
-
-                // // Send simple permit test (STEP 1)
-                // console.log('Bun sending PermitTransfer test: ', { userAddress, totalInputAmount, permit, signature });
-                // const tx1 = await bundlerContract._permitTransfer(userAddress, totalInputAmount, permit, signature);
-                // console.log('Bundler transaction 1:', { tx1 });
-                // // const receipt = await tx1.wait();
-                // console.log('Bundler transaction receipt:', { receipt });
-
-                // // // Send simple permit and swaps test (STEP 2)
-                // console.log('Bun sending executeSwap test: ', { userAddress, totalInputAmount, permit, signature });
-                // const tx2 = await bundlerContract.executeSwap(
-                //     swapRoute.methodParameters.calldata,
-                //     DEVNET_BASE_BUNDLER_ADDRESS,
-                //     totalInputAmount,
-                //     permit.permitted.token,
-                // );
-                // console.log('Bundler transaction 2:', { tx2 });
-                // const receipt2 = await tx2.wait();
-                // console.log('Bundler transaction 2 receipt:', { receipt2 });
-
-                // Send simple permit and swap test (STEP 1 + 2)
-                // console.log("Bun sending PermitTransferAndSwap test: ", { userAddress, totalInputAmount, permit, signature, calldata: swapRoute.methodParameters.calldata });
-                // const tx3 = await bundlerContract.permitTransferAndSwapTest(userAddress, totalInputAmount, permit, signature, swapRoute.methodParameters.calldata);
-                // console.log("Bundler transaction 1:", { tx3 });
-                // const receipt3 = await tx3.wait();
-                // console.log("Bundler transaction receipt:", { receipt3 });
-            } catch (err) {
-                console.error('Bun ERROR', { err });
-                const decodedError = decodeError(err, BundlerABI.abi);
-                console.error('Bun DECODED ERROR', {
-                    decodedError,
-                    errorMessage: decodedError.error,
-                    type: ErrorType[decodedError.type],
-                });
-            }
-        },
-        [coinbaseBtcDepositAmount, executeSwapAndDeposit, selectedInputAsset.decimals, userAddress],
-    );
+        }
+    };
 
     return { proceedWithBundler, buildPermit, ...rest };
 };

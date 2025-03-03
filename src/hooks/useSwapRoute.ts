@@ -12,17 +12,37 @@ export type SwapRouteResponse = {
     formattedOutputAmount: string;
 };
 
-export const useSwapQuery = (selectedInputAsset: ValidAsset, coinbaseBtcDepositAmount: string, chainId: number) => {
+export const useSwapQuery = (
+    selectedInputAsset: Partial<ValidAsset>,
+    coinbaseBtcDepositAmount: string,
+    chainId: number,
+) => {
+    const inputAssetKey = {
+        chainId: selectedInputAsset.chainId,
+        decimals: selectedInputAsset.decimals,
+        symbol: selectedInputAsset.symbol,
+        name: selectedInputAsset.name,
+        address: selectedInputAsset.address,
+    };
+
     return useQuery<SwapRouteResponse, Error>({
-        queryKey: ['swapRoute', selectedInputAsset, coinbaseBtcDepositAmount, chainId],
+        queryKey: [
+            'swapRoute',
+            JSON.stringify({
+                inputAssetKey,
+                coinbaseBtcDepositAmount,
+                chainId,
+            }),
+        ],
         queryFn: fetchSwapRoute,
         enabled: !!(selectedInputAsset && coinbaseBtcDepositAmount !== '' && chainId),
     });
 };
 
 const fetchSwapRoute = async ({ queryKey }): Promise<SwapRouteResponse> => {
-    const [, selectedInputAsset, coinbaseBtcDepositAmount, chainId] = queryKey;
-    console.log('Bun fetchSwapRoute', { selectedInputAsset, coinbaseBtcDepositAmount, chainId, queryKey });
+    const [, key] = queryKey;
+    console.log('Bun++ fetchSwapRoute', { key });
+    const { inputAssetKey: selectedInputAsset, coinbaseBtcDepositAmount, chainId } = JSON.parse(key);
 
     if (!selectedInputAsset || coinbaseBtcDepositAmount === '' || !chainId) {
         throw new Error('Missing required parameters for swap route');
@@ -33,13 +53,4 @@ const fetchSwapRoute = async ({ queryKey }): Promise<SwapRouteResponse> => {
         headers: { 'Content-Type': 'application/json' },
         json: { inputToken: selectedInputAsset, inputAmount: coinbaseBtcDepositAmount, chainId },
     }).json();
-    // const response = await fetch(`/api/swap-route`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ inputToken: selectedInputAsset, inputAmount: coinbaseBtcDepositAmount, chainId }),
-    // });
-
-    // if (!response.ok) throw new Error(`API error: ${response.statusText}`);
-
-    // return response.json();
 };

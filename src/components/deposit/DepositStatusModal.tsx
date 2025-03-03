@@ -56,8 +56,16 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
         router.push(route);
     };
 
+    useEffect(() => {
+        console.log('STATUS++: ', { status });
+    }, [status]);
+
     const getStatusMessage = () => {
         switch (status) {
+            case DepositStatus.SignSpendingCap:
+                return 'Waiting for message signature...';
+            case DepositStatus.ApprovePermit2:
+                return 'Approving permit2 to transfer token...';
             case DepositStatus.WaitingForWalletConfirmation:
                 return 'Waiting for wallet confirmation...';
             case DepositStatus.WaitingForDepositTokenApproval:
@@ -71,6 +79,7 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
             case DepositStatus.Confirmed:
                 return 'Deposit success!';
             case DepositStatus.Error:
+                console.log({ error });
                 if (error && error.toLowerCase().includes('user rejected transaction')) {
                     return 'User rejected transaction';
                 }

@@ -19,7 +19,6 @@ import { ContractDataProvider } from '../components/providers/ContractDataProvid
 import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { DEVNET_BASE_RPC_URL } from '@/utils/constants';
 
 export const anvilChain = {
@@ -42,7 +41,7 @@ export const anvilChain = {
     testnet: true,
 };
 
-const config = getDefaultConfig({
+export const rainbowConfig = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
     //@ts-ignore
@@ -143,7 +142,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     // }, []);
 
     return (
-        <WagmiProvider config={config}>
+        <WagmiProvider config={rainbowConfig}>
             <QueryClientProvider client={queryClient}>
                 <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
                     <ChakraProvider theme={theme}>
@@ -246,7 +245,6 @@ function MyApp({ Component, pageProps }: AppProps) {
                                     </ToastBar>
                                 )}
                             </Toaster>
-                            <ReactQueryDevtools initialIsOpen={false} />
                         </ContractDataProvider>
                     </ChakraProvider>
                 </RainbowKitProvider>
