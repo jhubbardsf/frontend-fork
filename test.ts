@@ -14,49 +14,52 @@ const baseUrls = [
     'https://base.blockpi.network/v1/rpc/public',
 ];
 
-// Ensure these environment variables are set in your .env file:
-// RPC_URL, PRIVATE_KEY, TOKEN_A_ADDRESS, TOKEN_B_ADDRESS, QUOTER_ADDRESS
-const RPC_URL =
-    process.env.RPC_URL || 'https://base.gateway.tenderly.co/2CozPE8XkkiFQIO8uj4Ug1' || 'http://localhost:50101';
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-if (!RPC_URL || !PRIVATE_KEY) {
-    throw new Error('RPC_URL and PRIVATE_KEY must be set in the environment.');
+// const RPC_URL = 'https://0xrpc.io/base';
+const RPC_URL = 'https://base.gateway.tenderly.co/3WpaBaxXFFKAoUnTIfKUyj';
+
+if (!RPC_URL) {
+    throw new Error('RPC_URL must be set in the environment.');
 }
 
 const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 
 const CUSTOM_AGGREGATOR = '0xd69B8A9e6D610ab0e377aACFC44cD5631d89a50a';
 
-// Input/Output token addresses
-// const TOKEN_A_ADDRESS = process.env.TOKEN_A_ADDRESS || '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // e.g. USDC
 const TOKEN_A_ADDRESS = '0x940181a94a35a4569e4529a3cdfb74e38fd98631'; // Aerodrome
-const TOKEN_B_ADDRESS = process.env.TOKEN_B_ADDRESS || '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf'; // e.g. cbBTC
+const TOKEN_B_ADDRESS = process.env.TOKEN_B_ADDRESS || '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
 
-// Intermediary token addresses
 const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const WETH_ADDRESS = '0x4200000000000000000000000000000000000006';
 const WBTC_ADDRESS = '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c';
 const USDBC_ADDRESS = '0x3DdF264AC95D19e81f8c25f4c300C4e59e424d43';
 
-// Quoter contract address (Uniswap QuoterV2)
+const nameMap: { [address: string]: string } = {
+    ['0x940181a94a35a4569e4529a3cdfb74e38fd98631']: 'Aerodrome',
+    ['0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913']: 'USDC',
+    ['0x4200000000000000000000000000000000000006']: 'WETH',
+    ['0x0555E30da8f98308EdB960aa94C0Db47230d2B9c']: 'WBTC',
+    ['0x3DdF264AC95D19e81f8c25f4c300C4e59e424d43']: 'USDBC',
+};
+
 const QUOTER_ADDRESS = process.env.QUOTER_ADDRESS || '0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a';
 
-// Fee tiers to test for each hop
-//               .01%, .05%,  .3%,     1%
 const feeTiers = [100, 500, 3_000, 10_000];
 
-// ABI for the Uniswap V3 Quoter V2 accepting a struct and returning four values.
 const QUOTER_ABI = [
     'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96) params) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
 ];
-const quoterContract = new ethers.Contract(QUOTER_ADDRESS, QUOTER_ABI, signer);
+const quoterContract = new ethers.Contract(QUOTER_ADDRESS, QUOTER_ABI, provider);
 
-// Minimal ERC20 ABI to get decimals.
 const ERC20_ABI = ['function decimals() view returns (uint8)'];
 const decimalsCache: { [address: string]: number } = {};
 
-// Helper: Get token decimals (with caching)
+// Cache for hop quotes. The key is built from tokenIn, tokenOut, amountIn, and feeTier.
+const hopCache: Map<string, Promise<ethers.BigNumber>> = new Map();
+
+let totalAttempts = 0;
+let totalFailures = 0;
+let totalSuccesses = 0;
+
 async function getTokenDecimals(tokenAddress: string): Promise<number> {
     if (decimalsCache[tokenAddress]) return decimalsCache[tokenAddress];
     const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
@@ -65,41 +68,57 @@ async function getTokenDecimals(tokenAddress: string): Promise<number> {
     return decimals;
 }
 
-// Single-hop quote using callStatic.
+let cachesUsed = 0;
 async function quoteHop(
     tokenIn: string,
     tokenOut: string,
     amountIn: ethers.BigNumber,
     feeTier: number,
 ): Promise<ethers.BigNumber> {
-    const sqrtPriceLimitX96 = 0; // no price limit
+    const sqrtPriceLimitX96 = 0;
     const params = { tokenIn, tokenOut, amountIn, fee: feeTier, sqrtPriceLimitX96 };
-    const [amountOut] = await quoterContract.callStatic.quoteExactInputSingle(params);
-    return amountOut;
+    // Build a unique cache key for the hop.
+    const key = `${tokenIn}-${tokenOut}-${amountIn.toString()}-${feeTier}`;
+    if (hopCache.has(key)) {
+        cachesUsed++;
+        return hopCache.get(key)!;
+    }
+
+    // Wrap the contract call in a promise and store it in the cache.
+    const promise = quoterContract.callStatic
+        .quoteExactInputSingle(params)
+        .then(([amountOut]: [ethers.BigNumber, unknown, unknown, unknown]) => amountOut)
+        .catch((err: any) => {
+            // Remove the cache entry if the call fails.
+            hopCache.delete(key);
+            throw err;
+        });
+    hopCache.set(key, promise);
+    return promise;
 }
 
-// Simulate a multi-hop route with a specific fee combination.
-// The feeCombination array length must equal (route.length - 1).
 async function quoteRouteWithFees(
     route: string[],
     feeCombination: number[],
     initialAmount: ethers.BigNumber,
 ): Promise<ethers.BigNumber | null> {
+    totalAttempts++;
     let amountIn = initialAmount;
+
     try {
         for (let i = 0; i < route.length - 1; i++) {
             amountIn = await quoteHop(route[i], route[i + 1], amountIn, feeCombination[i]);
         }
         console.log(`Route [${route.join(' -> ')}] with fees [${feeCombination.join(', ')}] succeeded ${amountIn}.`);
+        totalSuccesses++;
         return amountIn;
     } catch (error) {
-        // Log errors per route/fee combo; you might choose to suppress these in production.
         console.error(`Route [${route.join(' -> ')}] with fees [${feeCombination.join(', ')}] failed.`);
+        totalFailures++;
         return null;
     }
 }
 
-// Generate all fee tier combinations for a given number of hops.
 function generateFeeCombinations(numHops: number, feeTiers: number[]): number[][] {
     if (numHops === 0) return [[]];
     const results: number[][] = [];
@@ -125,12 +144,12 @@ interface RouteResult {
 }
 
 async function runTests() {
-    // Human-readable input amount for TOKEN_A
+    // Get input amount in human-readable form.
     const amountInHuman = '100.0';
     const tokenADecimals = await getTokenDecimals(TOKEN_A_ADDRESS);
     const initialAmount = ethers.utils.parseUnits(amountInHuman, tokenADecimals);
 
-    // Define intermediary options with a "none" option.
+    // Define intermediary options.
     type Intermediary = { name: string; address: string | null };
     const intermediaries: Intermediary[] = [
         { name: 'none', address: null },
@@ -146,13 +165,11 @@ async function runTests() {
         return lower !== TOKEN_A_ADDRESS.toLowerCase() && lower !== TOKEN_B_ADDRESS.toLowerCase();
     });
 
-    // Generate routes.
-    // For two slots: direct route if both "none", one-hop if one slot is set, and two hops if both are set.
+    // Generate unique routes.
     const routesSet = new Set<string>();
     const routes: string[][] = [];
     for (const im1 of filteredIntermediaries) {
         for (const im2 of filteredIntermediaries) {
-            // If both intermediaries are non-null and identical, skip to avoid duplicate swaps (e.g., WETH -> WETH).
             if (
                 im1.address !== null &&
                 im2.address !== null &&
@@ -160,19 +177,14 @@ async function runTests() {
             ) {
                 continue;
             }
-
             let route: string[];
             if (im1.address === null && im2.address === null) {
-                // Direct swap.
                 route = [TOKEN_A_ADDRESS, TOKEN_B_ADDRESS];
             } else if (im1.address !== null && im2.address === null) {
-                // One intermediary (im1)
                 route = [TOKEN_A_ADDRESS, im1.address, TOKEN_B_ADDRESS];
             } else if (im1.address === null && im2.address !== null) {
-                // One intermediary (im2)
                 route = [TOKEN_A_ADDRESS, im2.address, TOKEN_B_ADDRESS];
             } else {
-                // Two intermediaries.
                 route = [TOKEN_A_ADDRESS, im1.address!, im2.address!, TOKEN_B_ADDRESS];
             }
             const key = route.join('->');
@@ -185,33 +197,45 @@ async function runTests() {
 
     console.log(`Total unique routes: ${routes.length}`);
 
-    const results: RouteResult[] = [];
-
-    // For each route, try all fee tier combinations for its hops.
-    for (const route of routes) {
+    // Run fee combination checks for all routes in parallel.
+    const routeResultsPromises = routes.map(async (route) => {
         const numHops = route.length - 1;
         const feeCombos = generateFeeCombinations(numHops, feeTiers);
-        console.log(`Route: ${route.join(' -> ')}, Fee Combos: ${feeCombos}`);
-        let bestAmountOut: ethers.BigNumber | null = null;
-        let bestFees: number[] = [];
+        console.log(`Route: ${route.join(' -> ')}, Fee Combos: ${JSON.stringify(feeCombos)}`);
 
-        for (const feeCombo of feeCombos) {
-            const amountOut = await quoteRouteWithFees(route, feeCombo, initialAmount);
-            console.log(`Amount Out: ${amountOut}`);
-            if (amountOut && (!bestAmountOut || amountOut.gt(bestAmountOut))) {
-                bestAmountOut = amountOut;
-                bestFees = feeCombo;
+        // Run all fee combo checks concurrently.
+        const feeResults = await Promise.all(
+            feeCombos.map(async (feeCombo) => {
+                const amountOut = await quoteRouteWithFees(route, feeCombo, initialAmount);
+                console.log(`Fee Combo: ${feeCombo}, Amount Out: ${amountOut}`);
+                return { feeCombo, amountOut };
+            }),
+        );
+
+        // Filter out unsuccessful fee combinations.
+        const validResults = feeResults.filter(
+            (result): result is { feeCombo: number[]; amountOut: ethers.BigNumber } =>
+                result.amountOut !== null && result.amountOut !== undefined,
+        );
+
+        if (validResults.length === 0) return null;
+
+        // Determine the best fee combination by comparing output amounts.
+        let best = validResults[0];
+        for (let i = 1; i < validResults.length; i++) {
+            if (validResults[i].amountOut.gt(best.amountOut)) {
+                best = validResults[i];
             }
         }
-        if (bestAmountOut) {
-            results.push({ route, feeCombination: bestFees, amountOut: bestAmountOut });
-        }
-    }
+        return { route, feeCombination: best.feeCombo, amountOut: best.amountOut };
+    });
 
-    // Sort all routes by the final TOKEN_B amount (largest first).
+    const routeResultsUnfiltered = await Promise.all(routeResultsPromises);
+    const results: RouteResult[] = routeResultsUnfiltered.filter((r): r is RouteResult => r !== null);
+
+    // Sort routes by highest output amount.
     results.sort((a, b) => (a.amountOut.eq(b.amountOut) ? 0 : a.amountOut.gt(b.amountOut) ? -1 : 1));
 
-    // Get TOKEN_B decimals for proper formatting.
     const tokenBDecimals = await getTokenDecimals(TOKEN_B_ADDRESS);
 
     console.log('Top 5 routes by output amount:');
@@ -223,6 +247,10 @@ async function runTests() {
             `  Amount Out: ${ethers.utils.formatUnits(r.amountOut, tokenBDecimals)} (raw: ${r.amountOut.toString()})`,
         );
     }
+    console.log(`Total successes: ${totalSuccesses}`);
+    console.log(`Total failures: ${totalFailures}`);
+    console.log(`Total attempts: ${totalAttempts}`);
+    console.log(`Cache hits: ${cachesUsed}`);
 }
 
 runTests().catch(console.error);
