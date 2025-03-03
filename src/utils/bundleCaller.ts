@@ -30,6 +30,7 @@ import { extendTheme } from '@chakra-ui/react';
 import { useAccount } from 'wagmi';
 import { useCallback } from 'react';
 import { useWatchPendingTransactions } from 'wagmi';
+import { DepositStatus } from '@/hooks/contract/useDepositLiquidity';
 
 /**
  * Fetches the next available nonce for a given owner from the Permit2 contract.
@@ -153,12 +154,12 @@ export const useBundlerCaller = () => {
     useLogState('Bundle Caller: ', { selectedInputAsset, coinbaseBtcDepositAmount, btcOutputAmount, payoutBTCAddress });
     useWatchPendingTransactions({
         onTransactions(transactions) {
-            console.log('New transactions!', transactions);
+            console.log('Bun New transactions!', transactions);
         },
     });
 
     const proceedWithBundler = useCallback(
-        async (swapRoute: SwapRoute, depositParams: DepositLiquidityParamsStruct) => {
+        async (swapRoute: SwapRoute, depositParams: DepositLiquidityParamsStruct, setStatus: any) => {
             if (typeof window === 'undefined' || !window.ethereum) {
                 throw new Error('No Ethereum provider found');
             }
@@ -188,6 +189,7 @@ export const useBundlerCaller = () => {
                 const isApproved = await checkIfPermit2IsApproved(permit.permitted.token, signer);
                 if (!isApproved) {
                     console.log('Bundler: Permit2 is not approved as spender, approving now');
+                    setStatus(DepositStatus.ApprovalPending);
                     await approvePermit2AsSpender(permit.permitted.token, ethers.constants.MaxUint256, signer);
                 }
 

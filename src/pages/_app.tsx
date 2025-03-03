@@ -47,7 +47,7 @@ const config = getDefaultConfig({
     projectId: 'YOUR_PROJECT_ID',
     //@ts-ignore
     chains: [anvilChain, base],
-    ssr: true, // If your dApp uses server side rendering (SSR)
+    ssr: true, // If your dApp uses server side rendering (SSR),
 });
 
 const myCustomTheme = {

@@ -1,6 +1,7 @@
 import type { ValidAsset } from '@/types';
 import { useQuery, type QueryFunctionContext } from '@tanstack/react-query';
 import type { SwapRoute } from '@uniswap/smart-order-router';
+import { useDebounce } from '@uidotdev/usehooks';
 import ky from 'ky';
 
 export type SwapRouteParams = [selectedInputAsset: ValidAsset, coinbaseBtcDepositAmount: string, chainId: number];

@@ -61,6 +61,7 @@ import GooSpinner from '../other/GooSpiner';
 import { useQuery } from '@tanstack/react-query';
 import { useSwapQuery } from '@/hooks/useSwapRoute';
 import { useLogState } from '@/hooks/useLogState';
+import { useDebounce } from '@uidotdev/usehooks';
 
 export const DepositUI = () => {
     const { isMobile } = useWindowSize();
@@ -117,6 +118,7 @@ export const DepositUI = () => {
     const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
     const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
+    const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
 
     const validAssetPriceUSD = validAssets[selectedInputAsset.name]?.priceUSD;
     // Route finding
@@ -125,7 +127,7 @@ export const DepositUI = () => {
         data: swapRouteData,
         isRefetching,
         error,
-    } = useSwapQuery(selectedInputAsset, coinbaseBtcDepositAmount, chainId);
+    } = useSwapQuery(selectedInputAsset, debouncedCoinbaseBtcDepositAmount, chainId);
     useLogState('Bun swap routes', { isFetching, swapRouteData, isRefetching, error });
 
     const handleCoinbaseBtcInputChange = (e, amount = null) => {
@@ -173,7 +175,7 @@ export const DepositUI = () => {
     // ---------- BTC PAYOUT ADDRESS ---------- //
     const handleBTCPayoutAddressChange = (e) => {
         const BTCPayoutAddress = e.target.value;
-        setPayoutBTCAddress('bc1qpy7q5sjv448kkaln44r7726pa9xyzsskk84tw7');
+        setPayoutBTCAddress('bc1q4q6hkp0y6qfzlg79qzrcd40awsnypkyudcfrs3');
     };
 
     // update token price and available liquidity
@@ -207,8 +209,7 @@ export const DepositUI = () => {
             setUserBalanceExceeded(false);
 
             const maxDecimals = asset?.decimals;
-            const coinbaseBtcValue = amount;
-            console.log('JSH+ coinbaseBtcValue', coinbaseBtcValue);
+            console.log('JSH+ coinbaseBtcValue', amount);
             console.log('Change 1 ', { maxDecimals });
             const validateCoinbaseBtcInputChange = (value: string) => {
                 return true;
@@ -218,8 +219,8 @@ export const DepositUI = () => {
                 console.log('Test results: ', { valid: regex.test(value), decimals: maxDecimals });
                 return regex.test(value);
             };
-            console.log('Change 1.2 ; ', { coinbaseBtcValue });
-            if (validateCoinbaseBtcInputChange(coinbaseBtcValue)) {
+            console.log('Change 1.2 ; ', { coinbaseBtcValue: amount });
+            if (validateCoinbaseBtcInputChange(amount)) {
                 console.log('Change 1.3');
                 setIsAboveMaxSwapLimitCoinbaseBtcDeposit(false);
                 setIsBelowMinCoinbaseBtcDeposit(false);
@@ -230,11 +231,10 @@ export const DepositUI = () => {
                     // TODO: Skip next check for testing
 
                     if (
-                        parseFloat(coinbaseBtcValue) >
-                        parseFloat(formatUnits(MAX_SWAP_AMOUNT_SATS, selectedInputAsset.decimals))
+                        parseFloat(amount) > parseFloat(formatUnits(MAX_SWAP_AMOUNT_SATS, selectedInputAsset.decimals))
                     ) {
                         setIsAboveMaxSwapLimitCoinbaseBtcDeposit(true);
-                        setCoinbaseBtcDepositAmount(coinbaseBtcValue);
+                        setCoinbaseBtcDepositAmount(amount);
                         setBtcOutputAmount('');
                         setBtcInputSwapAmount('');
                         console.log('JSH+ ERR1');
@@ -244,29 +244,29 @@ export const DepositUI = () => {
                     console.log('Change 3');
                     // check if input is below min required amount
                     if (
-                        parseFloat(coinbaseBtcValue) > 0 &&
-                        parseFloat(coinbaseBtcValue) < parseFloat(satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS)))
+                        parseFloat(amount) > 0 &&
+                        parseFloat(amount) < parseFloat(satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS)))
                     ) {
                         setIsBelowMinCoinbaseBtcDeposit(true);
-                        setCoinbaseBtcDepositAmount(coinbaseBtcValue);
+                        setCoinbaseBtcDepositAmount(amount);
                         setBtcOutputAmount('');
                         setBtcInputSwapAmount('');
                         console.log('JSH+ Change 3 ERR');
                         return;
                     }
                 }
-                console.log('JSH+ Change (Trigger??): coinbaseBtcValue:', coinbaseBtcValue);
+                console.log('JSH+ Change (Trigger??): coinbaseBtcValue:', amount);
                 // setCoinbaseBtcDepositAmount(coinbaseBtcValue);
                 // Use the actual exchange rate instead of hardcoded 0.999
                 const outputAmount = swapRouteData
                     ? parseFloat(swapRouteData.formattedOutputAmount)
-                    : parseFloat(coinbaseBtcValue) / coinbaseBtcExchangeRatePerBTC;
+                    : parseFloat(amount) / coinbaseBtcExchangeRatePerBTC;
                 setBtcOutputAmount(outputAmount > 0 ? outputAmount.toFixed(8) : '');
                 setBtcInputSwapAmount(outputAmount > 0 ? outputAmount.toFixed(8) : '');
                 console.log('Change 5');
                 // check if exceeds user balance
                 if (isConnected) {
-                    checkLiquidityExceeded(coinbaseBtcValue);
+                    checkLiquidityExceeded(amount);
                 }
             }
         },
