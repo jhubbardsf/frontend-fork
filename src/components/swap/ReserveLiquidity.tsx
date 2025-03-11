@@ -32,7 +32,7 @@ import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper
 import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
 import { CreateRiftSwapArgs, GetProxyWalletArgs, GetProxyWalletResponse, GetRiftSwapFeesArgs, GetRiftSwapStatusArgs, ProxyWalletStatus, RiftSwapFees } from '../../proxy-wallet/types';
 
-export const ReserveLiquidity = ({}) => {
+export const ReserveLiquidity = ({ }) => {
     const { isMobile } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';

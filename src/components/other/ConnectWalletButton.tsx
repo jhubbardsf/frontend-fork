@@ -10,7 +10,7 @@ import { BigNumber, ethers } from 'ethers';
 import { FONT_FAMILIES } from '../../utils/font';
 import { BITCOIN_DECIMALS } from '../../utils/constants';
 
-export const ConnectWalletButton = ({}) => {
+export const ConnectWalletButton = ({ }) => {
     const [usdtBalance, setUsdtBalance] = useState('0');
     const { address, isConnected } = useAccount();
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
