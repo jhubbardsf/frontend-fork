@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         };
         console.log('API 4');
         const route = await router.route(currencyAmountIn, outputUniToken, TradeType.EXACT_INPUT, swapConfig, {
-            blockNumber: 27091805,
+            blockNumber: 27091905,
         });
         if (!route || !route.trade) {
             return res.status(500).json({ error: 'No route found' });

@@ -21,6 +21,7 @@ import {
     Spinner,
     useDisclosure,
     HStack,
+    SlideFade,
 } from '@chakra-ui/react';
 import { ArrowBackIcon, SearchIcon } from '@chakra-ui/icons';
 import { useStore } from '@/store';
@@ -28,7 +29,7 @@ import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
 import { getImageUrl, getOriginalImageUrl } from '../../utils/imageUrl';
 import type { TokenMeta, ValidAsset } from '@/types';
 import TokenCard from './TokenCard';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import autoAnimate from '@formkit/auto-animate';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 
@@ -64,6 +65,15 @@ const dummyNetworks = [
     { name: 'Base', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/base.svg' },
 ];
 
+// Define animation variants for the list items
+const listItemVariants = {
+    initial: { opacity: 0, y: +20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+};
+
+// Transition settings for a smooth animation
+
 const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, onTokenSelected }) => {
     const [searchTerm, setSearchTerm] = useState('');
     // Get tokens and selected chain id from your global store.
@@ -75,22 +85,42 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
     const inputRef = useRef<HTMLInputElement>(null);
     // const parent = useRef(null);
     const [parent, enableAnimations] = useAutoAnimate({ duration: 5 });
+    const [isMounted, setIsMounted] = useState(false);
+    const [tokensForChain, setTokensForChain] = useState<TokenMeta[]>(
+        uniswapTokens.filter((t) => t.chainId === effectiveChainID),
+    );
+    const filteredList = uniswapTokens.filter((t) => t.chainId === effectiveChainID);
+    const handleSearchTermChange = (e) => {
+        const searchTerm = e.target.value;
+        // Sort them so that the tokensthat start with the search term come first.
+        setTokensForChain((tokens) => {
+            return filteredList.filter((t) => {
+                return t.symbol.toLowerCase().startsWith(searchTerm.toLowerCase());
+            });
+        });
+        setSearchTerm(searchTerm);
+    };
+    // tokens.sort((a, b) => {
+    //     const symbolA = a.symbol.toLowerCase();
+    //     const symbolB = b.symbol.toLowerCase();
+    //     const lowerSearch = searchTerm.toLowerCase();
 
-    // Filter tokens for the effective chain.
-    const tokensForChain = uniswapTokens.filter((t) => t.chainId === effectiveChainID);
+    //     if (symbolA.startsWith(lowerSearch) && !symbolB.startsWith(lowerSearch)) {
+    //         return -1; // a comes before b
+    //     }
+    //     if (!symbolA.startsWith(lowerSearch) && symbolB.startsWith(lowerSearch)) {
+    //         return 1; // b comes before a
+    //     }
 
+    //     // If neither starts with the search term, or both start with it, sort alphabetically
+    //     return symbolA.localeCompare(symbolB);
+    // }),
+    //     );
+    //     // console.log({ filteredTokens });
+    // };
     // Find default token by symbol.
     // const defaultToken = tokensForChain.find((t) => t.symbol === 'cbBTC') ||
     // null;
-
-    const filteredTokens = tokensForChain.filter((token: TokenMeta) => {
-        const term = searchTerm.toLowerCase();
-        return (
-            token.symbol.toLowerCase().includes(term) ||
-            token.name.toLowerCase().includes(term) ||
-            token.address.toLowerCase().includes(term)
-        );
-    });
 
     const fetchTokenPrice = async (token: TokenMeta, cb: () => void) => {
         const url = `https://li.quest/v1/token?chain=8453&token=${token.symbol}`;
@@ -119,7 +149,7 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
     const handleKeyDown = (e) => {
         console.log({ e });
         if (e.key === 'Enter') {
-            handleTokenClick(filteredTokens[0]);
+            handleTokenClick(tokensForChain[0]);
         }
     };
 
@@ -200,7 +230,7 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
                                 autoFocus={true}
                                 placeholder='Search by token name or address'
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={handleSearchTermChange}
                                 variant='filled'
                                 bg='#2C2F36'
                                 border='1px solid #353945'
@@ -214,20 +244,30 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
                     </Box>
                     {/* Token List */}
                     <Box flex='1' overflowY='auto' bg='#1F2128' px={2} pt={2} pb={2} maxH='400px'>
-                        <List spacing={0} style={{ gap: '0' }} ref={parent}>
-                            {filteredTokens.map((token) => (
-                                <ListItem
-                                    key={token.address}
-                                    p={1}
-                                    cursor='pointer'
-                                    borderRadius='md'
-                                    _hover={{ bg: '#2C2F36' }}
-                                    display='flex'
-                                    alignItems='center'
-                                    onClick={() => handleTokenClick(token)}>
-                                    <TokenCard token={token} selectToken={() => {}} />
-                                </ListItem>
-                            ))}
+                        <List spacing={0} style={{ gap: '0' }}>
+                            <AnimatePresence>
+                                {tokensForChain &&
+                                    tokensForChain.map((token) => (
+                                        <ListItem
+                                            layout
+                                            key={`${token.symbol}-${token.address}`}
+                                            p={1}
+                                            cursor='pointer'
+                                            borderRadius='md'
+                                            _hover={{ bg: '#2C2F36' }}
+                                            display='flex'
+                                            alignItems='center'
+                                            as={motion.li}
+                                            variants={listItemVariants}
+                                            initial='initial'
+                                            animate='animate'
+                                            exit='exit'
+                                            transition='3 easeInOut' // {{ duration: 0.5, ease: 'easeInOut' }}
+                                            onClick={() => handleTokenClick(token)}>
+                                            <TokenCard token={token} selectToken={() => {}} />
+                                        </ListItem>
+                                    ))}
+                            </AnimatePresence>
                         </List>
                     </Box>
                 </ModalBody>

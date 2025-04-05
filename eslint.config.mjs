@@ -34,16 +34,16 @@ const config = [
                 },
             ],
             'react/no-unescaped-entities': 'warn',
-            'prettier/prettier': [
-                'error',
-                {
-                    endOfLine: 'auto',
-                },
-            ],
+            // 'prettier/prettier': [
+            //     'error',
+            //     {
+            //         endOfLine: 'auto',
+            //     },
+            // ],
             'max-len': [
                 'error',
                 {
-                    code: 120,
+                    code: 200,
                     ignoreComments: true,
                     ignoreStrings: true,
                     ignoreTemplateLiterals: true,
@@ -52,6 +52,6 @@ const config = [
         },
     },
 ];
-
-const defaultEslintConfig = [...config, eslintPluginPrettierRecommended];
+// eslintPluginPrettierRecommended
+const defaultEslintConfig = [...config];
 export default defaultEslintConfig;

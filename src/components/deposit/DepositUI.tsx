@@ -1,53 +1,30 @@
-import {
-    Tabs,
-    TabList,
-    Tooltip,
-    TabPanels,
-    Tab,
-    Button,
-    Flex,
-    Text,
-    useColorModeValue,
-    Box,
-    Spacer,
-    Input,
-    Skeleton,
-} from '@chakra-ui/react';
+import { Tooltip, Flex, Text, Box, Spacer, Input, Skeleton } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
-import { useRouter } from 'next/router';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { colors } from '../../utils/colors';
 import { useStore } from '../../store';
-import { BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
-import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
+import { InfoSVG } from '../other/SVGs';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import {
     addNetwork,
-    btcToSats,
     convertToBitcoinLockingScript,
-    ethToWei,
-    formatAmountToString,
     satsToBtc,
     validateBitcoinPayoutAddress,
-    weiToEth,
 } from '../../utils/dappHelper';
 import {
     BITCOIN_DECIMALS,
     DEVNET_BASE_BUNDLER_ADDRESS,
     MAX_SWAP_AMOUNT_SATS,
-    MAX_SWAP_LP_OUTPUTS,
     MIN_SWAP_AMOUNT_SATS,
     opaqueBackgroundColor,
     SAMEES_DEMO_CB_BTC_ADDRESS,
 } from '../../utils/constants';
-import { AssetTag } from '../other/AssetTag';
 import { custom, useAccount, useChainId } from 'wagmi';
-import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
 import { DepositAmounts } from './DepositAmounts';
-import { btcLimitOrders, usdcLimitOrders, OptimalSwapsResult } from '../../utils/LimitOrderPriceFunctions';
 import { FONT_FAMILIES } from '../../utils/font';
 import BitcoinAddressValidation from '../other/BitcoinAddressValidation';
 import { createWalletClient } from 'viem';
@@ -58,32 +35,24 @@ import DepositStatusModal from './DepositStatusModal';
 import UniswapSwapWidget from '../uniswap/UniswapSwapWidget';
 import TokenButton from '../other/TokenButton';
 import GooSpinner from '../other/GooSpiner';
-import { useQuery } from '@tanstack/react-query';
 import { useSwapQuery } from '@/hooks/useSwapRoute';
-import { useLogState } from '@/hooks/useLogState';
 import { useDebounce } from '@uidotdev/usehooks';
 
 export const DepositUI = () => {
+    const validAssets = useStore((state) => state.validAssets);
     const { isMobile } = useWindowSize();
-    // const router = useRouter();
-    // const fontSize = isMobile ? '20px' : '20px';
     const coinbaseBtcDepositAmount = useStore((state) => state.coinbaseBtcDepositAmount);
     const setCoinbaseBtcDepositAmount = useStore((state) => state.setCoinbaseBtcDepositAmount);
-    const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
+    const btcPriceUSD = validAssets['BTC'].priceUSD;
     const userEthAddress = useStore((state) => state.userEthAddress);
     const [userBalanceExceeded, setUserBalanceExceeded] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const coinbaseBtcPriceUSD = useStore.getState().validAssets['CoinbaseBTC']?.priceUSD;
+    const coinbaseBtcPriceUSD = validAssets['CoinbaseBTC']?.priceUSD;
     const [_availableLiquidity, setAvailableLiquidity] = useState(BigNumber.from(0));
     const [coinbaseBtcExchangeRatePerBTC, setCoinbaseBtcExchangeRatePerBTC] = useState(0);
-    // const depositMode = useStore((state) => state.depositMode);
-    // const setDepositMode = useStore((state) => state.setDepositMode);
-    const validAssets = useStore((state) => state.validAssets);
-    const { address, isConnected } = useAccount();
+    const { isConnected } = useAccount();
     const { openConnectModal } = useConnectModal();
     const depositFlowState = useStore((state) => state.depositFlowState);
-    // const setDepositFlowState = useStore((state) => state.setDepositFlowState);
-    // const setSwapFlowState = useStore((state) => state.setSwapFlowState);
     const setCurrencyModalTitle = useStore((state) => state.setCurrencyModalTitle);
     const actualBorderColor = '#323232';
     const borderColor = `2px solid ${actualBorderColor}`;
@@ -101,8 +70,8 @@ export const DepositUI = () => {
     const payoutBTCAddress = useStore((state) => state.payoutBTCAddress);
     const setPayoutBTCAddress = useStore((state) => state.setPayoutBTCAddress);
     const chainId = useChainId();
-    const [isWaitingForCorrectNetwork, setIsWaitingForCorrectNetwork] = useState(false);
     const [dots, setDots] = useState('');
+
     const {
         depositLiquidity,
         status: depositLiquidityStatus,
@@ -115,30 +84,19 @@ export const DepositUI = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUniswapSwapWidgetOpen, setIsUniswapSwapWidgetOpen] = useState(false);
     const uniswapTokens = useStore((state) => state.uniswapTokens);
-    const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
-    const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
     const inputRef = useRef(null);
     const validAssetPriceUSD = validAssets[selectedInputAsset.name]?.priceUSD;
-    // inputToken.chainId,
-    //         inputToken.address,
-    //         inputToken.decimals,
-    //         inputToken.symbol,
-    //         inputToken.name,
+
     // Route finding
     const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
-    const {
-        isFetching,
-        data: swapRouteData,
-        isRefetching,
-        error,
-        ...rest
-    } = useSwapQuery(selectedInputAsset, debouncedCoinbaseBtcDepositAmount, chainId);
-
-    useLogState('Bun swap routes', { isFetching, swapRouteData, isRefetching, error, swapRouterRest: rest });
+    const { isFetching, data: swapRouteData } = useSwapQuery(
+        selectedInputAsset,
+        debouncedCoinbaseBtcDepositAmount,
+        chainId,
+    );
 
     const handleCoinbaseBtcInputChange = (e, amount = null) => {
-        console.log('JSH+ handleCoinbaseBtcInputChange2', { e, amount });
         setCoinbaseBtcDepositAmount(e.target.value);
     };
 
@@ -180,13 +138,6 @@ export const DepositUI = () => {
             initiateDeposit();
         }
     };
-
-    // ---------- BTC PAYOUT ADDRESS ---------- //
-    const handleBTCPayoutAddressChange = (e) => {
-        const BTCPayoutAddress = e.target.value;
-        setPayoutBTCAddress('bc1q4q6hkp0y6qfzlg79qzrcd40awsnypkyudcfrs3');
-    };
-
     // update token price and available liquidity
     useEffect(() => {
         if (selectedInputAsset && validAssets[selectedInputAsset.name]) {
@@ -211,15 +162,13 @@ export const DepositUI = () => {
     // --------------- cbBTC INPUT ---------------
     const processCoinbaseBtcInputChange = useCallback(
         (amount) => {
-            const asset = useStore.getState().validAssets[selectedInputAsset.name];
-            console.log('JSH+ Bun handleCoinbaseBtcInputChange', { amount });
+            const asset = validAssets[selectedInputAsset.name];
             setIsAboveMaxSwapLimitBtcOutput(false);
             setIsBelowMinBtcOutput(false);
             setUserBalanceExceeded(false);
 
             const maxDecimals = asset?.decimals;
-            console.log('JSH+ coinbaseBtcValue', amount);
-            console.log('Change 1 ', { maxDecimals });
+            console.log({ maxDecimals, amount });
             const validateCoinbaseBtcInputChange = (value: string) => {
                 return true;
                 console.log({ value });
@@ -228,15 +177,11 @@ export const DepositUI = () => {
                 console.log('Test results: ', { valid: regex.test(value), decimals: maxDecimals });
                 return regex.test(value);
             };
-            console.log('Change 1.2 ; ', { coinbaseBtcValue: amount });
             if (validateCoinbaseBtcInputChange(amount)) {
-                console.log('Change 1.3');
                 setIsAboveMaxSwapLimitCoinbaseBtcDeposit(false);
                 setIsBelowMinCoinbaseBtcDeposit(false);
-                console.log('Change 2');
                 // check if input is above max swap limit
                 if (!asset.fromTokenList) {
-                    console.log('Inside');
                     // TODO: Skip next check for testing
 
                     if (
@@ -289,6 +234,7 @@ export const DepositUI = () => {
             setBtcOutputAmount,
             setCoinbaseBtcDepositAmount,
             swapRouteData,
+            validAssets,
         ],
     );
 
@@ -359,12 +305,6 @@ export const DepositUI = () => {
         const handleConnection = async () => {
             if (isConnected && isAwaitingConnection) {
                 setIsAwaitingConnection(false);
-
-                console.log(
-                    'validAssets[selectedInputAsset.name].connectedUserBalanceFormatted:',
-                    validAssets[selectedInputAsset.name].connectedUserBalanceFormatted,
-                );
-
                 // fetch the latest user balance after refreshing
                 await refreshConnectedUserBalance();
                 const latestUserCoinbaseBtcBalance = validAssets[selectedInputAsset.name].connectedUserBalanceFormatted;
@@ -447,7 +387,6 @@ export const DepositUI = () => {
                     return;
                 }
             }
-
             return;
         }
 
@@ -460,25 +399,14 @@ export const DepositUI = () => {
             resetDepositState();
             setIsModalOpen(true);
 
-            // JSH Instead of using coinbaseBtcDepositAmount, look the
-            // swapRouteData for the routeput
-            const swapRoute = swapRouteData?.swapRoute;
-            console.log('Bun+++', { swapRoute });
-
             // [1] convert deposit amount to smallest token unit (sats), prepare
             // deposit params
-            const selectedValidAsset = useStore.getState().validAssets[selectedInputAsset.name];
-            console.log('Deposit SELECTED ASSET', selectedValidAsset);
             const depositTokenDecimals = BITCOIN_DECIMALS; // Will always be depositing cbBTC
-            console.log('Deposit depositTokenDecmials', depositTokenDecimals);
-            console.log({ coinbaseBtcDepositAmount, depositTokenDecmials: depositTokenDecimals });
             // Note, 0.00003 is 3000 or 0.00003000 (8 Decimals, Sats)
-            // const depositAmountInSmallestTokenUnit = parseUnits(coinbaseBtcDepositAmount, depositTokenDecimals);
             const depositAmountInSmallestTokenUnitTest = parseUnits(
                 swapRouteData?.formattedOutputAmount || coinbaseBtcDepositAmount || '0',
                 depositTokenDecimals,
             );
-            // console.log('Deposit depositAmountInSmallestTokenUnit', depositAmountInSmallestTokenUnit.toString());
             console.log(
                 'Deposit depositAmountInSmallestTokenUnitTest',
                 depositAmountInSmallestTokenUnitTest.toString(),
@@ -509,28 +437,32 @@ export const DepositUI = () => {
             } catch (error) {
                 console.error('[alpine] error', error);
                 setIsModalOpen(true);
-                depositLiquidity({
-                    signer,
-                    riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
-                    riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
-                    tokenAddress: selectedInputAsset.tokenAddress,
-                    params: {
-                        // We're passing empty/dummy values here because we know it will fail
-                        // The hook will catch the error and update the status
-                        depositOwnerAddress: userEthAddress,
-                        specifiedPayoutAddress: '0x0',
-                        depositAmount: BigNumber.from(0),
-                        expectedSats: BigNumber.from(0),
-                        btcPayoutScriptPubKey: '0x0',
-                        depositSalt: '0x0',
-                        confirmationBlocks: 0,
-                        safeBlockLeaf: null,
-                        safeBlockSiblings: [],
-                        safeBlockPeaks: [],
+                depositLiquidity(
+                    {
+                        signer,
+                        riftExchangeAbi: selectedInputAsset.riftExchangeAbi,
+                        riftExchangeContractAddress: selectedInputAsset.riftExchangeContractAddress,
+                        tokenAddress: selectedInputAsset.tokenAddress,
+                        params: {
+                            // We're passing empty/dummy values here because we know it will fail
+                            // The hook will catch the error and update the status
+                            depositOwnerAddress: userEthAddress,
+                            specifiedPayoutAddress: '0x0',
+                            depositAmount: BigNumber.from(0),
+                            expectedSats: BigNumber.from(0),
+                            btcPayoutScriptPubKey: '0x0',
+                            depositSalt: '0x0',
+                            confirmationBlocks: 0,
+                            safeBlockLeaf: null,
+                            safeBlockSiblings: [],
+                            safeBlockPeaks: [],
+                        },
+                        // Pass the error directly to force an error state
+                        forceError: `Failed to get tip proof: ${error.message || 'Unknown error'}`,
                     },
-                    // Pass the error directly to force an error state
-                    forceError: `Failed to get tip proof: ${error.message || 'Unknown error'}`,
-                });
+                    null,
+                    null,
+                );
                 return;
             }
 
@@ -967,7 +899,7 @@ export const DepositUI = () => {
                                     <Flex direction={'row'} py='6px' px='5px'>
                                         <Input
                                             value={payoutBTCAddress}
-                                            onChange={handleBTCPayoutAddressChange}
+                                            onChange={(e) => setPayoutBTCAddress(e.target.value)}
                                             onKeyDown={handleKeyDown}
                                             fontFamily={'Aux'}
                                             border='none'
