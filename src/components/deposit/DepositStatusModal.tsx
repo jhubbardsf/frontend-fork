@@ -1,5 +1,19 @@
 import React, { useEffect } from 'react';
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Flex, Box, Spacer, Button, Icon, Spinner } from '@chakra-ui/react';
+import {
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    Text,
+    Flex,
+    Box,
+    Spacer,
+    Button,
+    Icon,
+    Spinner,
+} from '@chakra-ui/react';
 import { DepositStatus } from '../../hooks/contract/useDepositLiquidity';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
@@ -21,7 +35,13 @@ interface DepositStatusModalProps {
     txHash: string | null;
 }
 
-const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false, onClose, status = DepositStatus.WaitingForWalletConfirmation, error = null, txHash = null }) => {
+const DepositStatusModal: React.FC<DepositStatusModalProps> = ({
+    isOpen = false,
+    onClose,
+    status = DepositStatus.WaitingForWalletConfirmation,
+    error = null,
+    txHash = null,
+}) => {
     const isCompleted = status === DepositStatus.Confirmed;
     const isError = status === DepositStatus.Error;
     const isLoading = !isCompleted && !isError;
@@ -99,7 +119,13 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                         },
                     },
                 }}>
-                <ModalHeader mt='10px' fontSize='24px' userSelect={'none'} fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight='bold' textAlign='center'>
+                <ModalHeader
+                    mt='10px'
+                    fontSize='24px'
+                    userSelect={'none'}
+                    fontFamily={FONT_FAMILIES.NOSTROMO}
+                    fontWeight='bold'
+                    textAlign='center'>
                     Deposit Status
                 </ModalHeader>
                 {(isCompleted || isError) && <ModalCloseButton />}
@@ -112,7 +138,11 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             w={
                                 status != DepositStatus.Confirmed &&
                                 status != DepositStatus.Error &&
-                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending ? '100%' : '60%')
+                                (status === DepositStatus.WaitingForWalletConfirmation ||
+                                status === DepositStatus.ApprovalPending ||
+                                status === DepositStatus.DepositPending
+                                    ? '100%'
+                                    : '60%')
                             }
                             mt='25px'
                             mb='0px'
@@ -121,7 +151,9 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             textAlign='center'>
                             {status != DepositStatus.Confirmed &&
                                 status != DepositStatus.Error &&
-                                (status === DepositStatus.WaitingForWalletConfirmation || status === DepositStatus.ApprovalPending || status === DepositStatus.DepositPending
+                                (status === DepositStatus.WaitingForWalletConfirmation ||
+                                status === DepositStatus.ApprovalPending ||
+                                status === DepositStatus.DepositPending
                                     ? 'Awaiting blockchain confirmation...'
                                     : 'Please confirm the transaction in your wallet')}
                         </Text>
@@ -146,7 +178,18 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                 textAlign='center'>
                                 {getStatusMessage()}
                                 {status === DepositStatus.Confirmed && (
-                                    <Text mt='18px' mb='-5px' color={colors.textGray} fontWeight={'normal'} justifySelf={'center'} fontSize='13px' w='80%' fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    // Note, <Text>'s are wrapped by <p>, and
+                                    // two <p>'s can't be nested so this gives
+                                    // console errors.
+                                    <Text
+                                        mt='18px'
+                                        mb='-5px'
+                                        color={colors.textGray}
+                                        fontWeight={'normal'}
+                                        justifySelf={'center'}
+                                        fontSize='13px'
+                                        w='80%'
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         Bitcoin will be sent to your wallet shortly!
                                     </Text>
                                 )}
@@ -169,7 +212,12 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     <Flex mt='-4px ' mr='8px'>
                                         <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
                                     </Flex>
-                                    <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
+                                    <Text
+                                        fontSize='14px'
+                                        color={colors.offerWhite}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                                        cursor={'pointer'}
+                                        fontWeight={'normal'}>
                                         View on Etherscan
                                     </Text>
                                 </Button>
@@ -197,7 +245,10 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                                     {isLoadingRedirect ? (
                                         <Spinner size='sm' color={colors.offWhite} />
                                     ) : (
-                                        <Text fontSize='14px' fontFamily={FONT_FAMILIES.NOSTROMO} color={colors.offWhite}>
+                                        <Text
+                                            fontSize='14px'
+                                            fontFamily={FONT_FAMILIES.NOSTROMO}
+                                            color={colors.offWhite}>
                                             Swap Activity
                                         </Text>
                                     )}
@@ -208,7 +259,8 @@ const DepositStatusModal: React.FC<DepositStatusModalProps> = ({ isOpen = false,
                             <>
                                 <Box mt={4} p={2} bg='#2E1C0C' border='1px solid #78491F' borderRadius='md'>
                                     <Text overflowWrap={'anywhere'} fontSize='12px' color='#FF6B6B'>
-                                        {typeof error === 'string' && error.toLowerCase().includes('user rejected transaction')
+                                        {typeof error === 'string' &&
+                                        error.toLowerCase().includes('user rejected transaction')
                                             ? 'User rejected the transaction, please try again.'
                                             : getContractErrorMessage(error)}
                                     </Text>

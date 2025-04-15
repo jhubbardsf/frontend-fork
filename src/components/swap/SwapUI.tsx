@@ -1,4 +1,19 @@
-import { Tabs, TabList, Tooltip, TabPanels, Tab, Button, Flex, Text, useColorModeValue, Box, Spacer, Input, Spinner, Skeleton } from '@chakra-ui/react';
+import {
+    Tabs,
+    TabList,
+    Tooltip,
+    TabPanels,
+    Tab,
+    Button,
+    Flex,
+    Text,
+    useColorModeValue,
+    Box,
+    Spacer,
+    Input,
+    Spinner,
+    Skeleton,
+} from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -8,7 +23,15 @@ import { useStore } from '../../store';
 import { ARBITRUM_LOGO, BTCSVG, ETHSVG, InfoSVG } from '../other/SVGs';
 import { BigNumber } from 'ethers';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
-import { btcToSats, bufferTo18Decimals, ethToWei, formatAmountToString, formatBtcExchangeRate, unBufferFrom18Decimals, weiToEth } from '../../utils/dappHelper';
+import {
+    btcToSats,
+    bufferTo18Decimals,
+    ethToWei,
+    formatAmountToString,
+    formatBtcExchangeRate,
+    unBufferFrom18Decimals,
+    weiToEth,
+} from '../../utils/dappHelper';
 import { ProxyWalletLiquidityProvider, ReservationState, ReserveLiquidityParams } from '../../types';
 import {
     bitcoin_bg_color,
@@ -23,7 +46,7 @@ import {
 } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '../../hooks/useReownConnect';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { parse } from 'path';
@@ -37,8 +60,9 @@ export const SwapUI = () => {
     const btcInputSwapAmount = useStore((state) => state.btcInputSwapAmount);
     const setBtcInputSwapAmount = useStore((state) => state.setBtcInputSwapAmount);
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
-    const btcPriceUSD = useStore.getState().validAssets['BTC'].priceUSD;
-    const coinbasebtcPriceUSD = useStore.getState().validAssets['CoinbaseBTC'].priceUSD;
+    const findAssetByName = useStore.getState().findAssetByName;
+    const btcPriceUSD = findAssetByName('BTC')?.priceUSD || 0;
+    const coinbasebtcPriceUSD = findAssetByName('CoinbaseBTC')?.priceUSD || 0;
     const lowestFeeReservationParams = useStore((state) => state.lowestFeeReservationParams);
     const setLowestFeeReservationParams = useStore((state) => state.setLowestFeeReservationParams);
     const userEthAddress = useStore((state) => state.userEthAddress);
@@ -211,7 +235,13 @@ export const SwapUI = () => {
                     <Flex px='10px' bg='#2E1C0C' w='100%' h='117px' border='2px solid #78491F' borderRadius={'10px'}>
                         <Flex direction={'column'} py='10px' px='5px'>
                             <Text
-                                color={loading ? colors.offerWhite : !btcInputSwapAmount ? colors.offWhite : colors.textGray}
+                                color={
+                                    loading
+                                        ? colors.offerWhite
+                                        : !btcInputSwapAmount
+                                          ? colors.offWhite
+                                          : colors.textGray
+                                }
                                 fontSize={'14px'}
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
@@ -219,7 +249,16 @@ export const SwapUI = () => {
                                 {loading ? `Loading contract data${dots}` : 'You Send'}
                             </Text>
                             {loading && !isMobile ? (
-                                <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#795436'} endColor={'#6C4525'} />
+                                <Skeleton
+                                    height='62px'
+                                    pt='40px'
+                                    mt='5px'
+                                    mb='0.5px'
+                                    w='200px'
+                                    borderRadius='5px'
+                                    startColor={'#795436'}
+                                    endColor={'#6C4525'}
+                                />
                             ) : (
                                 <Input
                                     value={btcInputSwapAmount}
@@ -231,7 +270,14 @@ export const SwapUI = () => {
                                     ml='-5px'
                                     p='0px'
                                     letterSpacing={'-6px'}
-                                    color={overpayingBtcInput || isBelowMinBtcInput || isAboveMaxSwapLimitBtcInput || isNoLiquidityAvailableBtcInput ? colors.red : colors.offWhite}
+                                    color={
+                                        overpayingBtcInput ||
+                                        isBelowMinBtcInput ||
+                                        isAboveMaxSwapLimitBtcInput ||
+                                        isNoLiquidityAvailableBtcInput
+                                            ? colors.red
+                                            : colors.offWhite
+                                    }
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
@@ -244,11 +290,14 @@ export const SwapUI = () => {
                                 {!loading && (
                                     <Text
                                         color={
-                                            overpayingBtcInput || isBelowMinBtcInput || isAboveMaxSwapLimitBtcInput || isNoLiquidityAvailableBtcInput
+                                            overpayingBtcInput ||
+                                            isBelowMinBtcInput ||
+                                            isAboveMaxSwapLimitBtcInput ||
+                                            isNoLiquidityAvailableBtcInput
                                                 ? colors.redHover
                                                 : !btcInputSwapAmount
-                                                ? colors.offWhite
-                                                : colors.textGray
+                                                  ? colors.offWhite
+                                                  : colors.textGray
                                         }
                                         fontSize={'14px'}
                                         mt='6px'
@@ -259,19 +308,22 @@ export const SwapUI = () => {
                                         {isNoLiquidityAvailableBtcInput
                                             ? `No USDT liquidity available - `
                                             : overpayingBtcInput
-                                            ? `Exceeds available liquidity - `
-                                            : isBelowMinBtcInput
-                                            ? `Below minimum required - `
-                                            : isAboveMaxSwapLimitBtcInput
-                                            ? `Exceeds maximum swap output - `
-                                            : btcPriceUSD
-                                            ? btcInputSwapAmount
-                                                ? (btcPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString('en-US', {
-                                                      style: 'currency',
-                                                      currency: 'USD',
-                                                  })
-                                                : '$0.00'
-                                            : '$0.00'}
+                                              ? `Exceeds available liquidity - `
+                                              : isBelowMinBtcInput
+                                                ? `Below minimum required - `
+                                                : isAboveMaxSwapLimitBtcInput
+                                                  ? `Exceeds maximum swap output - `
+                                                  : btcPriceUSD
+                                                    ? btcInputSwapAmount
+                                                        ? (btcPriceUSD * parseFloat(btcInputSwapAmount)).toLocaleString(
+                                                              'en-US',
+                                                              {
+                                                                  style: 'currency',
+                                                                  currency: 'USD',
+                                                              },
+                                                          )
+                                                        : '$0.00'
+                                                    : '$0.00'}
                                     </Text>
                                 )}
                                 {/* USDT FEE ESTIMATE */}
@@ -342,12 +394,18 @@ export const SwapUI = () => {
                                         zIndex={'10'}
                                         color={selectedInputAsset.border_color_light}
                                         cursor='pointer'
-                                        onClick={() => handleUsdtOutputChange(null, formatUnits(availableLiquidity, selectedInputAsset.decimals).toString())}
+                                        onClick={() =>
+                                            handleUsdtOutputChange(
+                                                null,
+                                                formatUnits(availableLiquidity, selectedInputAsset.decimals).toString(),
+                                            )
+                                        }
                                         _hover={{ textDecoration: 'underline' }}
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
-                                        {`${parseFloat(maxBtcInputExceeded).toFixed(8)} BTC Max`} {/* Max available BTC */}
+                                        {`${parseFloat(maxBtcInputExceeded).toFixed(8)} BTC Max`}{' '}
+                                        {/* Max available BTC */}
                                     </Text>
                                 )}
                                 {isBelowMinBtcInput && (
@@ -364,14 +422,19 @@ export const SwapUI = () => {
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
-                                        {`${parseFloat(minBtcInputAmount).toFixed(8)} BTC Min`} {/* Min 1 USDT output worth of sats input */}
+                                        {`${parseFloat(minBtcInputAmount).toFixed(8)} BTC Min`}{' '}
+                                        {/* Min 1 USDT output worth of sats input */}
                                     </Text>
                                 )}
                             </Flex>
                         </Flex>
                         <Spacer />
                         <Flex mr='6px'>
-                            <WebAssetTag asset='BTC' cursor='pointer' onDropDown={() => setCurrencyModalTitle('send')} />
+                            <WebAssetTag
+                                asset='BTC'
+                                cursor='pointer'
+                                onDropDown={() => setCurrencyModalTitle('send')}
+                            />
                         </Flex>
                     </Flex>
 
@@ -403,10 +466,24 @@ export const SwapUI = () => {
                     </Flex>
 
                     {/* USDT Output */}
-                    <Flex mt='5px' px='10px' bg={selectedInputAsset.dark_bg_color} w='100%' h='117px' border='2px solid' borderColor={selectedInputAsset.bg_color} borderRadius={'10px'}>
+                    <Flex
+                        mt='5px'
+                        px='10px'
+                        bg={selectedInputAsset.dark_bg_color}
+                        w='100%'
+                        h='117px'
+                        border='2px solid'
+                        borderColor={selectedInputAsset.bg_color}
+                        borderRadius={'10px'}>
                         <Flex direction={'column'} py='10px' px='5px'>
                             <Text
-                                color={loading ? colors.offerWhite : !coinbaseBtcOutputAmount ? colors.offWhite : colors.textGray}
+                                color={
+                                    loading
+                                        ? colors.offerWhite
+                                        : !coinbaseBtcOutputAmount
+                                          ? colors.offWhite
+                                          : colors.textGray
+                                }
                                 fontSize={'14px'}
                                 letterSpacing={'-1px'}
                                 fontWeight={'normal'}
@@ -415,7 +492,16 @@ export const SwapUI = () => {
                                 {loading ? `Loading contract data${dots}` : 'You Receive'}
                             </Text>
                             {loading && !isMobile ? (
-                                <Skeleton height='62px' pt='40px' mt='5px' mb='0.5px' w='200px' borderRadius='5px' startColor={'#255283'} endColor={'#255283'} />
+                                <Skeleton
+                                    height='62px'
+                                    pt='40px'
+                                    mt='5px'
+                                    mb='0.5px'
+                                    w='200px'
+                                    borderRadius='5px'
+                                    startColor={'#255283'}
+                                    endColor={'#255283'}
+                                />
                             ) : (
                                 <Input
                                     value={coinbaseBtcOutputAmount}
@@ -427,7 +513,14 @@ export const SwapUI = () => {
                                     ml='-5px'
                                     p='0px'
                                     letterSpacing={'-6px'}
-                                    color={isLiquidityExceeded || isBelowMinUsdtOutput || isAboveMaxSwapLimitUsdtOutput || isNoLiquidityAvailable ? colors.red : colors.offWhite}
+                                    color={
+                                        isLiquidityExceeded ||
+                                        isBelowMinUsdtOutput ||
+                                        isAboveMaxSwapLimitUsdtOutput ||
+                                        isNoLiquidityAvailable
+                                            ? colors.red
+                                            : colors.offWhite
+                                    }
                                     _active={{ border: 'none', boxShadow: 'none' }}
                                     _focus={{ border: 'none', boxShadow: 'none' }}
                                     _selected={{ border: 'none', boxShadow: 'none' }}
@@ -440,35 +533,49 @@ export const SwapUI = () => {
                                 {!loading && (
                                     <Text
                                         color={
-                                            isLiquidityExceeded || isBelowMinUsdtOutput || isNoLiquidityAvailable || isAboveMaxSwapLimitUsdtOutput || isNoLiquidityAvailable
+                                            isLiquidityExceeded ||
+                                            isBelowMinUsdtOutput ||
+                                            isNoLiquidityAvailable ||
+                                            isAboveMaxSwapLimitUsdtOutput ||
+                                            isNoLiquidityAvailable
                                                 ? colors.redHover
                                                 : !coinbaseBtcOutputAmount
-                                                ? colors.offWhite
-                                                : colors.textGray
+                                                  ? colors.offWhite
+                                                  : colors.textGray
                                         }
                                         fontSize={'14px'}
                                         mt='6px'
                                         ml='1px'
-                                        mr={isLiquidityExceeded || isBelowMinUsdtOutput || isNoLiquidityAvailable || isNoLiquidityAvailable || isAboveMaxSwapLimitUsdtOutput ? '8px' : '0px'}
+                                        mr={
+                                            isLiquidityExceeded ||
+                                            isBelowMinUsdtOutput ||
+                                            isNoLiquidityAvailable ||
+                                            isNoLiquidityAvailable ||
+                                            isAboveMaxSwapLimitUsdtOutput
+                                                ? '8px'
+                                                : '0px'
+                                        }
                                         letterSpacing={'-1px'}
                                         fontWeight={'normal'}
                                         fontFamily={'Aux'}>
                                         {isNoLiquidityAvailable
                                             ? `No USDT liquidity available -`
                                             : isLiquidityExceeded
-                                            ? `Exceeds available liquidity -`
-                                            : isBelowMinUsdtOutput
-                                            ? `Minimum ${MIN_SWAP_AMOUNT_SATS} SATS required -`
-                                            : isAboveMaxSwapLimitUsdtOutput
-                                            ? `Exceeds maximum swap limit -`
-                                            : usdtPriceUSD
-                                            ? coinbaseBtcOutputAmount
-                                                ? (usdtPriceUSD * parseFloat(coinbaseBtcOutputAmount)).toLocaleString('en-US', {
-                                                      style: 'currency',
-                                                      currency: 'USD',
-                                                  })
-                                                : '$0.00'
-                                            : '$0.00'}
+                                              ? `Exceeds available liquidity -`
+                                              : isBelowMinUsdtOutput
+                                                ? `Minimum ${MIN_SWAP_AMOUNT_SATS} SATS required -`
+                                                : isAboveMaxSwapLimitUsdtOutput
+                                                  ? `Exceeds maximum swap limit -`
+                                                  : usdtPriceUSD
+                                                    ? coinbaseBtcOutputAmount
+                                                        ? (
+                                                              usdtPriceUSD * parseFloat(coinbaseBtcOutputAmount)
+                                                          ).toLocaleString('en-US', {
+                                                              style: 'currency',
+                                                              currency: 'USD',
+                                                          })
+                                                        : '$0.00'
+                                                    : '$0.00'}
                                     </Text>
                                 )}
 
@@ -480,7 +587,12 @@ export const SwapUI = () => {
                                         zIndex={'10'}
                                         color={selectedInputAsset.border_color_light}
                                         cursor='pointer'
-                                        onClick={() => handleUsdtOutputChange(null, formatUnits(availableLiquidity, selectedInputAsset.decimals).toString())}
+                                        onClick={() =>
+                                            handleUsdtOutputChange(
+                                                null,
+                                                formatUnits(availableLiquidity, selectedInputAsset.decimals).toString(),
+                                            )
+                                        }
                                         _hover={{ textDecoration: 'underline' }}
                                         letterSpacing={'-1.5px'}
                                         fontWeight={'normal'}
@@ -552,7 +664,6 @@ export const SwapUI = () => {
                                 asset='USDC'
                                 cursor='pointer'
                                 onDropDown={() => {
-                                    console.log('CALLING');
                                     setCurrencyModalTitle('recieve');
                                 }}
                             />
@@ -561,14 +672,21 @@ export const SwapUI = () => {
                 </Flex>
                 {/* Rate/Liquidity Details */}
                 <Flex mt='12px'>
-                    <Text color={colors.textGray} fontSize={'14px'} ml='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                    <Text
+                        color={colors.textGray}
+                        fontSize={'14px'}
+                        ml='3px'
+                        letterSpacing={'-1.5px'}
+                        fontWeight={'normal'}
+                        fontFamily={'Aux'}>
                         1 BTC ≈{' '}
                         {usdtExchangeRatePerBTC
                             ? usdtExchangeRatePerBTC.toLocaleString('en-US', {
                                   maximumFractionDigits: 4,
                               })
                             : 'N/A'}{' '}
-                        {selectedInputAsset.display_name} {/* TODO: implemnt above where its based on the selected asset */}
+                        {selectedInputAsset.display_name}{' '}
+                        {/* TODO: implemnt above where its based on the selected asset */}
                         <Box
                             as='span'
                             color={colors.textGray}
@@ -583,7 +701,13 @@ export const SwapUI = () => {
                             }}></Box>
                     </Text>
                     <Spacer />
-                    <Flex color={colors.textGray} fontSize={'13px'} mr='3px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                    <Flex
+                        color={colors.textGray}
+                        fontSize={'13px'}
+                        mr='3px'
+                        letterSpacing={'-1.5px'}
+                        fontWeight={'normal'}
+                        fontFamily={'Aux'}>
                         <Tooltip
                             fontFamily={'Aux'}
                             letterSpacing={'-0.5px'}
@@ -593,7 +717,14 @@ export const SwapUI = () => {
                             label='Exchange rate includes the hypernode, protocol, and reservation fees. There are no additional or hidden fees.'
                             aria-label='A tooltip'>
                             <Flex pr='3px' mt='-2px' cursor={'pointer'} userSelect={'none'}>
-                                <Text color={colors.textGray} fontSize={'14px'} mr='8px' mt='1px' letterSpacing={'-1.5px'} fontWeight={'normal'} fontFamily={'Aux'}>
+                                <Text
+                                    color={colors.textGray}
+                                    fontSize={'14px'}
+                                    mr='8px'
+                                    mt='1px'
+                                    letterSpacing={'-1.5px'}
+                                    fontWeight={'normal'}
+                                    fontFamily={'Aux'}>
                                     Includes Fees
                                 </Text>
                                 <Flex mt='0.5px'>
@@ -605,7 +736,11 @@ export const SwapUI = () => {
                 </Flex>
                 {/* Exchange Button */}
                 <Flex
-                    bg={coinbaseBtcOutputAmount && btcInputSwapAmount ? colors.purpleBackground : colors.purpleBackgroundDisabled}
+                    bg={
+                        coinbaseBtcOutputAmount && btcInputSwapAmount
+                            ? colors.purpleBackground
+                            : colors.purpleBackgroundDisabled
+                    }
                     _hover={{ bg: colors.purpleHover }}
                     w='100%'
                     mt='15px'
@@ -615,10 +750,14 @@ export const SwapUI = () => {
                         areNewDepositsPaused
                             ? null
                             : isMobile
-                            ? () => toastInfo({ title: 'Hop on your laptop', description: 'This app is too cool for small screens, mobile coming soon!' })
-                            : coinbaseBtcOutputAmount && btcInputSwapAmount
-                            ? () => setSwapFlowState('1-reserve-liquidity')
-                            : null
+                              ? () =>
+                                    toastInfo({
+                                        title: 'Hop on your laptop',
+                                        description: 'This app is too cool for small screens, mobile coming soon!',
+                                    })
+                              : coinbaseBtcOutputAmount && btcInputSwapAmount
+                                ? () => setSwapFlowState('1-reserve-liquidity')
+                                : null
                     }
                     fontSize={'16px'}
                     align={'center'}
@@ -627,7 +766,13 @@ export const SwapUI = () => {
                     borderRadius={'10px'}
                     justify={'center'}
                     border={coinbaseBtcOutputAmount && btcInputSwapAmount ? '3px solid #445BCB' : '3px solid #3242a8'}>
-                    <Text color={coinbaseBtcOutputAmount && btcInputSwapAmount && !areNewDepositsPaused ? colors.offWhite : colors.darkerGray} fontFamily='Nostromo'>
+                    <Text
+                        color={
+                            coinbaseBtcOutputAmount && btcInputSwapAmount && !areNewDepositsPaused
+                                ? colors.offWhite
+                                : colors.darkerGray
+                        }
+                        fontFamily='Nostromo'>
                         {areNewDepositsPaused ? 'NEW SWAPS ARE DISABLED FOR TESTING' : 'Exchange'}
                     </Text>
                 </Flex>

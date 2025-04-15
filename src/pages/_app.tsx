@@ -3,51 +3,20 @@ import theme from '../theme';
 import Head from 'next/head';
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store';
-import { AppProps } from 'next/app';
+import type { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
-import testData from '../testData.json';
-import assets from '../assets.json';
+import testData from '../json/testData.json';
+import assets from '../json/assets.json';
 import { MdClose } from 'react-icons/md';
 import { colors } from '../utils/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
-import '@rainbow-me/rainbowkit/styles.css';
 import { WagmiProvider } from 'wagmi';
-import { mainnet, holesky, arbitrumSepolia, arbitrum, base } from 'wagmi/chains';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { getDefaultConfig, RainbowKitProvider, darkTheme, Theme } from '@rainbow-me/rainbowkit';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ContractDataProvider } from '../components/providers/ContractDataProvider';
 import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
-
-// Define the custom Anvil chain
-const anvilChain = {
-    id: 1337,
-    name: 'Anvil Testnet',
-    network: 'anvil',
-    nativeCurrency: {
-        name: 'Anvil Ether',
-        symbol: 'aETH',
-        decimals: 18,
-    },
-    rpcUrls: {
-        default: {
-            http: ['http://localhost:50101'], // Replace with your Anvil testnet RPC URL
-        },
-    },
-    blockExplorers: {
-        default: { name: 'Anvil Explorer', url: 'http://localhost:50101' }, // Replace with your block explorer URL if available
-    },
-    testnet: true,
-};
-
-const config = getDefaultConfig({
-    appName: 'My RainbowKit App',
-    projectId: 'YOUR_PROJECT_ID',
-    //@ts-ignore
-    chains: [base],
-    ssr: true, // If your dApp uses server side rendering (SSR)
-});
+import { wagmiAdapter, queryClient, modal } from '../config/reown';
 
 const myCustomTheme = {
     blurs: {
@@ -67,8 +36,10 @@ const myCustomTheme = {
         connectButtonText: '#FFF',
         connectButtonTextError: '#FFF',
         connectionIndicator: '#30E000',
-        downloadBottomCardBackground: 'linear-gradient(126deg, rgba(0, 0, 0, 0) 9.49%, rgba(120, 120, 120, 0.2) 71.04%), #1A1B1F',
-        downloadTopCardBackground: 'linear-gradient(126deg, rgba(120, 120, 120, 0.2) 9.49%, rgba(0, 0, 0, 0) 71.04%), #1A1B1F',
+        downloadBottomCardBackground:
+            'linear-gradient(126deg, rgba(0, 0, 0, 0) 9.49%, rgba(120, 120, 120, 0.2) 71.04%), #1A1B1F',
+        downloadTopCardBackground:
+            'linear-gradient(126deg, rgba(120, 120, 120, 0.2) 9.49%, rgba(0, 0, 0, 0) 71.04%), #1A1B1F',
         error: '#FF494A',
         generalBorder: 'rgba(255, 255, 255, 0.08)',
         generalBorderDim: 'rgba(255, 255, 255, 0.04)',
@@ -106,7 +77,6 @@ const myCustomTheme = {
 };
 
 function MyApp({ Component, pageProps }: AppProps) {
-    const queryClient = new QueryClient();
     const proxyWalletInjected = useRef(false);
     const { isTablet, isMobile } = useWindowSize();
 
@@ -140,108 +110,110 @@ function MyApp({ Component, pageProps }: AppProps) {
     // }, []);
 
     return (
-        <WagmiProvider config={config}>
+        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>
-                <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
-                    <ChakraProvider theme={theme}>
-                        <ContractDataProvider>
-                            {/* <title>Rift Hyperbridge - </title> */}
-                            <Component {...pageProps} />
-                            <Toaster
-                                toastOptions={{
-                                    position: 'bottom-center',
+                <ChakraProvider theme={theme}>
+                    <ContractDataProvider>
+                        {/* <title>Rift Hyperbridge - </title> */}
+                        <Component {...pageProps} />
+                        <Toaster
+                            toastOptions={{
+                                position: 'bottom-center',
+                                style: {
+                                    borderRadius: '10px',
+                                    background: '#333',
+                                    color: '#fff',
+                                    minWidth: '300px',
+                                    maxWidth: '500px',
+                                    transition: '0.2s all ease-in-out',
+                                    minHeight: '50px',
+                                    zIndex: 2,
+                                },
+                                success: {
                                     style: {
-                                        borderRadius: '10px',
-                                        background: '#333',
-                                        color: '#fff',
-                                        minWidth: '300px',
-                                        maxWidth: '500px',
-                                        transition: '0.2s all ease-in-out',
-                                        minHeight: '50px',
-                                        zIndex: 2,
+                                        // backgroundColor: '#2ECC40',
+                                        // background: 'linear-gradient(155deg, rgba(23,139,11,1) 0%, rgba(33,150,34,1) 42%, rgba(46,204,64,1) 100%)',
+                                        background: colors.toast.success,
                                     },
-                                    success: {
-                                        style: {
-                                            // backgroundColor: '#2ECC40',
-                                            // background: 'linear-gradient(155deg, rgba(23,139,11,1) 0%, rgba(33,150,34,1) 42%, rgba(46,204,64,1) 100%)',
-                                            background: colors.toast.success,
-                                        },
-                                        iconTheme: {
-                                            primary: colors.offWhite,
-                                            secondary: colors.toast.success,
-                                        },
-                                        duration: 2000,
+                                    iconTheme: {
+                                        primary: colors.offWhite,
+                                        secondary: colors.toast.success,
                                     },
-                                    loading: {
-                                        style: {
-                                            // background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
-                                            background: colors.toast.info,
-                                        },
+                                    duration: 2000,
+                                },
+                                loading: {
+                                    style: {
+                                        // background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
+                                        background: colors.toast.info,
                                     },
-                                    error: {
-                                        style: {
-                                            // background: 'linear-gradient(155deg, rgba(140,29,30,1) 0%, rgba(163,23,24,1) 42%, rgba(219,0,2,1) 100%)',
-                                            background: colors.toast.error,
-                                        },
-                                        iconTheme: {
-                                            primary: colors.offWhite,
-                                            secondary: colors.toast.error,
-                                        },
-                                        duration: 4000,
+                                },
+                                error: {
+                                    style: {
+                                        // background: 'linear-gradient(155deg, rgba(140,29,30,1) 0%, rgba(163,23,24,1) 42%, rgba(219,0,2,1) 100%)',
+                                        background: colors.toast.error,
                                     },
-                                }}>
-                                {(t) => (
-                                    <ToastBar toast={t}>
-                                        {({ icon, message }) => {
-                                            const messages = (message as any).props.children.split(';;');
-                                            const title = messages[0];
-                                            const description = messages.length > 1 ? messages[1] : null;
-                                            return (
-                                                <>
-                                                    <Flex
-                                                        fontFamily={'Aux'}
-                                                        h='100%'
-                                                        // pt='5px'
-                                                    >
-                                                        {icon}
-                                                    </Flex>
-                                                    <Flex
-                                                        // bg='black'
-                                                        flex={1}
-                                                        pl='10px'
-                                                        pr='10px'
-                                                        flexDir='column'>
-                                                        <Text fontFamily={'Aux'} fontSize='0.9rem' fontWeight='600'>
-                                                            {title}
+                                    iconTheme: {
+                                        primary: colors.offWhite,
+                                        secondary: colors.toast.error,
+                                    },
+                                    duration: 4000,
+                                },
+                            }}>
+                            {(t) => (
+                                <ToastBar toast={t}>
+                                    {({ icon, message }) => {
+                                        const messages = (message as any).props.children.split(';;');
+                                        const title = messages[0];
+                                        const description = messages.length > 1 ? messages[1] : null;
+                                        return (
+                                            <>
+                                                <Flex
+                                                    fontFamily={'Aux'}
+                                                    h='100%'
+                                                    // pt='5px'
+                                                >
+                                                    {icon}
+                                                </Flex>
+                                                <Flex
+                                                    // bg='black'
+                                                    flex={1}
+                                                    pl='10px'
+                                                    pr='10px'
+                                                    flexDir='column'>
+                                                    <Text fontFamily={'Aux'} fontSize='0.9rem' fontWeight='600'>
+                                                        {title}
+                                                    </Text>
+                                                    {description && description != 'undefined' && (
+                                                        <Text
+                                                            fontFamily={'Aux'}
+                                                            fontSize='0.8rem'
+                                                            fontWeight='300'
+                                                            color={colors.offWhite}>
+                                                            {description}
                                                         </Text>
-                                                        {description && description != 'undefined' && (
-                                                            <Text fontFamily={'Aux'} fontSize='0.8rem' fontWeight='300' color={colors.offWhite}>
-                                                                {description}
-                                                            </Text>
-                                                        )}
-                                                    </Flex>
-                                                    {t.type !== 'loading' && (
-                                                        <Flex
-                                                            p='3px'
-                                                            cursor='pointer'
-                                                            onClick={() => toast.dismiss(t.id)}
-                                                            color={colors.offWhite}
-                                                            transition='0.2s color ease-in-out'
-                                                            _hover={{
-                                                                color: colors.textGray,
-                                                            }}>
-                                                            <MdClose />
-                                                        </Flex>
                                                     )}
-                                                </>
-                                            );
-                                        }}
-                                    </ToastBar>
-                                )}
-                            </Toaster>
-                        </ContractDataProvider>
-                    </ChakraProvider>
-                </RainbowKitProvider>
+                                                </Flex>
+                                                {t.type !== 'loading' && (
+                                                    <Flex
+                                                        p='3px'
+                                                        cursor='pointer'
+                                                        onClick={() => toast.dismiss(t.id)}
+                                                        color={colors.offWhite}
+                                                        transition='0.2s color ease-in-out'
+                                                        _hover={{
+                                                            color: colors.textGray,
+                                                        }}>
+                                                        <MdClose />
+                                                    </Flex>
+                                                )}
+                                            </>
+                                        );
+                                    }}
+                                </ToastBar>
+                            )}
+                        </Toaster>
+                    </ContractDataProvider>
+                </ChakraProvider>
             </QueryClientProvider>
         </WagmiProvider>
     );

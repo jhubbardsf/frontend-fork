@@ -1,28 +1,23 @@
-import React, { createContext, useContext, ReactNode, useEffect, useRef, useState } from 'react';
-import { ethers } from 'ethers';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { BigNumber, ethers } from 'ethers';
 import { useStore } from '../../store';
 import { useAccount } from 'wagmi';
 import { formatUnits } from 'ethers/lib/utils';
 import { checkIfNewDepositsArePaused, getTokenBalance } from '../../utils/contractReadFunctions';
-import { ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
+import { DEVNET_BASE_CHAIN_ID, DEVNET_BASE_RPC_URL, ERC20ABI, IS_FRONTEND_PAUSED } from '../../utils/constants';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 import { getUSDPrices } from '../../utils/fetchUniswapPrices';
 import { getSwapsForAddress } from '../../utils/dataEngineClient';
 import { addNetwork } from '../../utils/dappHelper';
+import { TokenMeta, ValidAsset, UserSwap, NestedDepositData, ContractDataContextType } from '../../types';
+import { modal } from '../../config/reown';
 
-interface ContractDataContextType {
-    loading: boolean;
-    error: any;
-    userSwapsFromAddress: any[];
-    refreshConnectedUserBalance: () => Promise<void>;
-    refreshUserSwapsFromAddress: () => Promise<void>;
-}
-
+// Define an interface for the nested deposit object if DepositVault isn't available
 const ContractDataContext = createContext<ContractDataContextType | undefined>(undefined);
 
 export function ContractDataProvider({ children }: { children: ReactNode }) {
     const { address, isConnected } = useAccount();
-    const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const setEthersRpcProvider = useStore((state) => state.setEthersRpcProvider);
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
@@ -35,217 +30,174 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const setUserSwapsLoadingState = useStore((state) => state.setUserSwapsLoadingState);
 
-    // [0] set ethers provider when selectedInputAsset changes
-    useEffect(() => {
-        if ((selectedInputAsset?.contractRpcURL && window.ethereum) || !ethersRpcProvider) {
-            const provider = new ethers.providers.StaticJsonRpcProvider(selectedInputAsset.contractRpcURL, { chainId: selectedInputAsset.contractChainID, name: selectedInputAsset.name });
-            if (!provider) return;
-            setEthersRpcProvider(provider);
-        }
-    }, [selectedInputAsset?.contractRpcURL, address, isConnected]);
+    const contractRpcURL = (selectedInputAsset as ValidAsset)?.contractRpcURL || DEVNET_BASE_RPC_URL;
+    const contractChainID = (selectedInputAsset as ValidAsset)?.contractChainID || DEVNET_BASE_CHAIN_ID;
 
-    // [1] check if MetaMask is on the correct network and switch if needed
+    // [1] fetch selected asset user balance - Reads latest state directly
+    const fetchSelectedAssetUserBalance = async () => {
+        const currentAddress = modal.getAddress();
+        const currentAsset = useStore.getState().selectedInputAsset;
+        const currentProvider = new ethers.providers.Web3Provider(window.ethereum);
+        const currentIsConnected = modal.getIsConnectedState();
+
+        if (!currentAddress || !currentAsset || !currentProvider || !currentIsConnected) {
+            updateConnectedUserBalanceRaw(currentAsset?.name || 'unknown', BigNumber.from(0));
+            updateConnectedUserBalanceFormatted(currentAsset?.name || 'unknown', '0');
+            return;
+        }
+
+        try {
+            const balance = await getTokenBalance(currentProvider, currentAsset.tokenAddress, currentAddress, ERC20ABI);
+
+            updateConnectedUserBalanceRaw(currentAsset.name, balance);
+
+            const formattedBalance = formatUnits(balance, currentAsset.decimals);
+            updateConnectedUserBalanceFormatted(currentAsset.name, formattedBalance);
+        } catch (error) {
+            console.error(`FetchBalance: Error fetching ${currentAsset.name} balance:`, error);
+            updateConnectedUserBalanceRaw(currentAsset.name, BigNumber.from(0));
+            updateConnectedUserBalanceFormatted(currentAsset.name, '0');
+        }
+    };
+
+    // [3] check if MetaMask is on the correct network and switch if needed
     useEffect(() => {
         const checkAndSwitchNetwork = async () => {
-            if (!window.ethereum || !selectedInputAsset || !isConnected) return;
+            const ethereum = window.ethereum as any;
+            if (!ethereum?.request || !selectedInputAsset || !isConnected) {
+                return;
+            }
 
             try {
-                // Get current chain ID from MetaMask
-                const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+                const chainIdHex = await ethereum.request({ method: 'eth_chainId' });
+                if (!chainIdHex) return;
                 const currentChainId = parseInt(chainIdHex, 16);
 
-                // If already on the correct chain, no need to switch
-                if (currentChainId === selectedInputAsset.contractChainID) return;
+                if (currentChainId === contractChainID) {
+                    return;
+                }
 
-                console.log('Switching network to match selected asset');
-                console.log('Current chainId:', currentChainId);
-                console.log('Target chainId:', selectedInputAsset.contractChainID);
-
-                // Convert chainId to hex format for MetaMask
-                const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
+                const hexChainId = `0x${contractChainID.toString(16)}`;
 
                 try {
-                    // Attempt to switch to the target network
-                    await window.ethereum.request({
+                    await ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: hexChainId }],
                     });
-                    console.log('Switched to the existing network successfully');
-                } catch (error) {
-                    // Error code 4902 indicates the chain is not available
-                    console.error('Network switch error:', error);
-                    if (error.code === 4902) {
-                        console.log('Network not available in MetaMask. Attempting to add network.');
-
+                } catch (switchError: any) {
+                    console.error('SwitchNetwork: Error during switch', switchError);
+                    if (switchError.code === 4902) {
                         try {
-                            // Attempt to add the network if it's not found
+                            if (!selectedInputAsset.chainDetails) {
+                                console.error(
+                                    'SwitchNetwork: Cannot add network, chainDetails missing on selectedInputAsset',
+                                );
+                                return;
+                            }
                             await addNetwork(selectedInputAsset.chainDetails);
-                            console.log('Network added successfully');
-
-                            // After adding, attempt to switch to the new network
-                            await window.ethereum.request({
+                            await ethereum.request({
                                 method: 'wallet_switchEthereumChain',
                                 params: [{ chainId: hexChainId }],
                             });
-                            console.log('Switched to the newly added network successfully');
-                        } catch (addNetworkError) {
-                            console.error('Failed to add or switch to network:', addNetworkError);
+                        } catch (addError) {
+                            console.error('SwitchNetwork: Failed to add or switch after adding:', addError);
                         }
-                    } else {
-                        console.error('Error switching network:', error);
                     }
                 }
             } catch (error) {
-                console.error('Error checking or switching network:', error);
+                console.error('SwitchNetwork: Error checking network:', error);
             }
         };
 
-        checkAndSwitchNetwork();
-    }, [selectedInputAsset, isConnected]);
+        if (isConnected && contractChainID) {
+            checkAndSwitchNetwork();
+        }
+    }, [selectedInputAsset, isConnected, contractChainID]);
 
-    // [1] fetch selected asset user balance
-    const fetchSelectedAssetUserBalance = async () => {
-        // [0] check if address, selectedInputAsset, and ethersRpcProvider are defined
-        if (!address || !selectedInputAsset || !ethersRpcProvider) return;
-
-        // [1] fetch raw token balance
-        const balance = await getTokenBalance(ethersRpcProvider, selectedInputAsset.tokenAddress, address, ERC20ABI);
-        updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
-
-        // [2] format token balance based on asset decimals
-        const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
-        updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
-    };
-
-    // [2] refresh connected user balance function
-    const refreshConnectedUserBalance = async () => {
-        await fetchSelectedAssetUserBalance();
-    };
-
-    // [3] continuously fetch price data, user balance, and check for new deposits paused every 12 seconds
+    // [4] Continuously fetch non-wallet-dependent data (prices, pause status)
     useEffect(() => {
-        // [0] fetch price data
-        const fetchPriceData = async () => {
-            try {
-                let { btcPriceUSD, cbbtcPriceUSD } = await getUSDPrices();
-                updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
-                updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
-            } catch (e) {
-                console.error(e);
-                return;
-            }
-        };
-
-        // [1] check if new deposits are paused in the contract
         const checkIfNewDepositsArePausedFromContract = async () => {
-            if (!ethersRpcProvider || !selectedInputAsset) return;
+            if (!useStore.getState().ethersRpcProvider || !selectedInputAsset) return;
             // TODO - update this with new contract pause functionality if we have it
             // const areNewDepositsPausedBool = await checkIfNewDepositsArePaused(ethersRpcProvider, riftExchangeABI.abi, selectedInputAsset.riftExchangeContractAddress);
             setAreNewDepositsPaused(IS_FRONTEND_PAUSED);
         };
 
-        // [2] set user eth address and fetch user balance
-        if (address) {
-            setUserEthAddress(address);
-            if (selectedInputAsset && window.ethereum) {
-                fetchSelectedAssetUserBalance();
-            }
-        }
-
-        // [3] call fetch price data
-        fetchPriceData();
-
         // [4] call check if new deposits are paused in the contract
         checkIfNewDepositsArePausedFromContract();
 
-        // [5] set interval repeat useEffect every 12 seconds
         if (!intervalRef.current) {
             intervalRef.current = setInterval(() => {
-                fetchPriceData();
                 fetchSelectedAssetUserBalance();
                 checkIfNewDepositsArePausedFromContract();
             }, 12000);
         }
-    }, [
-        selectedInputAsset?.tokenAddress,
-        address,
-        isConnected,
-        setUserEthAddress,
-        updateConnectedUserBalanceRaw,
-        updateConnectedUserBalanceFormatted,
-        setAreNewDepositsPaused,
-        ethersRpcProvider,
-        selectedInputAsset,
-    ]);
 
-    // New useEffect to call fetchUserSwapsFromAddress every 10 seconds
-    useEffect(() => {
-        console.log('useEffect');
-        const swapsInterval = setInterval(() => {
-            console.log('CALLING fetchUserSwapsFromAddress');
-            fetchUserSwapsFromAddress();
-        }, 2000);
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedInputAsset, updatePriceUsd, setAreNewDepositsPaused]);
 
-        return () => clearInterval(swapsInterval); // Cleanup interval on component unmount
-    }, [address, selectedInputAsset]);
-
-    // [4] fetch deposit vaults
+    // Define the function to fetch user swaps
     const fetchUserSwapsFromAddress = async () => {
-        console.log('fetchUserSwapsFromAddress');
-        if (!address) {
-            console.log('no wallet connected, cannot lookup swap data by address');
+        const currentAddress = useStore.getState().userEthAddress;
+        if (!currentAddress || !selectedInputAsset?.dataEngineUrl) {
+            setUserSwapsFromAddress([]);
+            setUserSwapsLoadingState('error');
             return;
         }
-        if (!selectedInputAsset) {
-            console.log('no selected asset, cannot lookup swap data by address');
-            return;
+        try {
+            const { swaps: rawSwaps, status } = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
+                address: currentAddress,
+                page: 0,
+            });
+            setUserSwapsLoadingState(status);
+
+            const typedSwaps = rawSwaps.map((item): UserSwap => {
+                const d = item.deposit.deposit as NestedDepositData;
+                return {
+                    vaultIndex: d.vaultIndex,
+                    depositTimestamp: d.depositTimestamp,
+                    depositAmount: d.depositAmount,
+                    depositFee: d.depositFee,
+                    expectedSats: d.expectedSats,
+                    btcPayoutScriptPubKey: d.btcPayoutScriptPubKey,
+                    specifiedPayoutAddress: d.specifiedPayoutAddress,
+                    ownerAddress: d.ownerAddress,
+                    salt: d.salt ?? '',
+                    confirmationBlocks: d.confirmationBlocks,
+                    attestedBitcoinBlockHeight: d.attestedBitcoinBlockHeight,
+                    deposit_block_number: item.deposit.deposit_block_number,
+                    deposit_block_hash: item.deposit.deposit_block_hash,
+                    deposit_txid: item.deposit.deposit_txid,
+                    swap_proofs: item.swap_proofs,
+                };
+            });
+            setUserSwapsFromAddress(typedSwaps);
+        } catch (error) {
+            console.error('FetchSwaps: Error fetching swaps:', error);
+            setUserSwapsFromAddress([]);
+            setUserSwapsLoadingState('error');
         }
-
-        const { swaps: rawSwaps, status } = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
-            address: address,
-            page: 0,
-        });
-
-        setUserSwapsLoadingState(status);
-
-        console.log('rawSwaps', rawSwaps);
-
-        // Transform the raw data into your flattened Swap type
-        const typedSwaps = rawSwaps.map((item: any) => {
-            const d = item.deposit.deposit; // the nested deposit object
-
-            return {
-                // Flattened from deposit.deposit
-                vaultIndex: d.vaultIndex,
-                depositTimestamp: d.depositTimestamp,
-                depositAmount: d.depositAmount,
-                depositFee: d.depositFee,
-                expectedSats: d.expectedSats,
-                btcPayoutScriptPubKey: d.btcPayoutScriptPubKey,
-                specifiedPayoutAddress: d.specifiedPayoutAddress,
-                ownerAddress: d.ownerAddress,
-                salt: d.salt,
-                confirmationBlocks: d.confirmationBlocks,
-                attestedBitcoinBlockHeight: d.attestedBitcoinBlockHeight,
-
-                // Flattened from deposit
-                deposit_block_number: item.deposit.deposit_block_number,
-                deposit_block_hash: item.deposit.deposit_block_hash,
-                deposit_txid: item.deposit.deposit_txid,
-
-                // Existing field
-                swap_proofs: item.swap_proofs,
-            };
-        });
-
-        // Now we have typed swaps according to your Swap interface
-        console.log('typedSwaps', typedSwaps);
-
-        // Finally, set them in your component state (or wherever you're storing them)
-        setUserSwapsFromAddress(typedSwaps);
     };
 
-    // New function to refresh user swaps
+    // [5] Fetch user swaps (can run less frequently)
+    useEffect(() => {
+        fetchUserSwapsFromAddress();
+        const swapsInterval = setInterval(fetchUserSwapsFromAddress, 30000);
+
+        return () => clearInterval(swapsInterval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedInputAsset, setUserSwapsFromAddress, setUserSwapsLoadingState]);
+
+    const refreshConnectedUserBalance = async () => {
+        await fetchSelectedAssetUserBalance();
+    };
+
     const refreshUserSwapsFromAddress = async () => {
         await fetchUserSwapsFromAddress();
     };

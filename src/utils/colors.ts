@@ -1,5 +1,10 @@
 import { background, border } from '@chakra-ui/react';
 
+const btcColors = {
+    background: '#092461',
+    border: '#1C61FD',
+};
+
 export const colors = {
     RiftOrange: '#FF8F28',
     RiftBlue: '#394AFF',
@@ -94,8 +99,11 @@ export const colors = {
             border: '#646C8C',
         },
         coinbasebtc: {
-            background: '#092461',
-            border: '#1C61FD',
+            ...btcColors,
+        },
+        cbbtc: {
+            // Same as coinbasebtc
+            ...btcColors,
         },
     },
     gradient: {
