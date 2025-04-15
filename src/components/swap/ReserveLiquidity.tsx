@@ -17,7 +17,7 @@ import { useReserveLiquidity } from '../../hooks/contract/useReserveLiquidity';
 import ReservationStatusModal from './ReservationStatusModal';
 import { formatUnits } from 'ethers/lib/utils';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '../../hooks/useReownConnect';
 import { FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor } from '../../utils/constants';
 import { IoMdCheckmarkCircle } from 'react-icons/io';
 import { HiXCircle } from 'react-icons/hi';
@@ -32,7 +32,7 @@ import { bufferTo18Decimals, createReservationUrl } from '../../utils/dappHelper
 import { ProxyWalletLiquidityProvider, ReservationByPaymasterRequest, ReservationByPaymasterResponse } from '../../types';
 import { CreateRiftSwapArgs, GetProxyWalletArgs, GetProxyWalletResponse, GetRiftSwapFeesArgs, GetRiftSwapStatusArgs, ProxyWalletStatus, RiftSwapFees } from '../../proxy-wallet/types';
 
-export const ReserveLiquidity = ({ }) => {
+export const ReserveLiquidity = ({}) => {
     const { isMobile } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
@@ -313,7 +313,7 @@ export const ReserveLiquidity = ({ }) => {
                 borderWidth={3}
                 borderColor={colors.borderGray}>
                 <Text fontSize='14px' mb='18px' maxW={'900px'} fontWeight={'normal'} color={colors.textGray} fontFamily={FONT_FAMILIES.AUX_MONO} textAlign='center' mt='25px' flex='1'>
-                    Initiate the swap by reserving liquidity to lock the seller’s USDT. After the reservation is confirmed, you will have {FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS / 60 / 60}{' '}
+                    Initiate the swap by reserving liquidity to lock the seller's USDT. After the reservation is confirmed, you will have {FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS / 60 / 60}{' '}
                     hour to send BTC to complete the swap.
                 </Text>
 

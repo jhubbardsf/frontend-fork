@@ -23,7 +23,7 @@ import {
 } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '../../hooks/useReownConnect';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { parse } from 'path';

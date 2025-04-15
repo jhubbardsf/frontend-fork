@@ -1,5 +1,5 @@
 import { Flex, Text } from '@chakra-ui/react';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '../hooks/useReownConnect';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';

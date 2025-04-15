@@ -11,7 +11,7 @@ import { addNetwork, btcToSats, convertToBitcoinLockingScript, ethToWei, formatA
 import { BITCOIN_DECIMALS, MAX_SWAP_AMOUNT_SATS, MAX_SWAP_LP_OUTPUTS, MIN_SWAP_AMOUNT_SATS, opaqueBackgroundColor, SAMEES_DEMO_CB_BTC_ADDRESS } from '../../utils/constants';
 import { AssetTag } from '../other/AssetTag';
 import { custom, useAccount, useChainId } from 'wagmi';
-import { connectorsForWallets, useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '../../hooks/useReownConnect';
 import WebAssetTag from '../other/WebAssetTag';
 import { useContractData } from '../providers/ContractDataProvider';
 import { toastInfo } from '../../hooks/toast';
@@ -86,7 +86,8 @@ export const DepositUI = () => {
 
     // Helper function to check if all deposit conditions are met
     const canProceedWithDeposit = () => {
-        const canProceed = !areNewDepositsPaused &&
+        const canProceed =
+            !areNewDepositsPaused &&
             coinbaseBtcDepositAmount &&
             !isAboveMaxSwapLimitCoinbaseBtcDeposit &&
             !isBelowMinCoinbaseBtcDeposit &&
@@ -490,8 +491,8 @@ export const DepositUI = () => {
                                                         isAboveMaxSwapLimitCoinbaseBtcDeposit || isBelowMinCoinbaseBtcDeposit || userBalanceExceeded
                                                             ? colors.redHover
                                                             : !coinbaseBtcDepositAmount
-                                                                ? colors.offWhite
-                                                                : colors.textGray
+                                                            ? colors.offWhite
+                                                            : colors.textGray
                                                     }
                                                     fontSize={'14px'}
                                                     mt='6px'
@@ -503,17 +504,17 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitCoinbaseBtcDeposit
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinCoinbaseBtcDeposit
-                                                            ? `Minimum ${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC required - `
-                                                            : userBalanceExceeded
-                                                                ? `Exceeds your available balance - `
-                                                                : coinbaseBtcPriceUSD
-                                                                    ? coinbaseBtcDepositAmount
-                                                                        ? (coinbaseBtcPriceUSD * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
-                                                                            style: 'currency',
-                                                                            currency: 'USD',
-                                                                        })
-                                                                        : '$0.00'
-                                                                    : '$0.00'}
+                                                        ? `Minimum ${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC required - `
+                                                        : userBalanceExceeded
+                                                        ? `Exceeds your available balance - `
+                                                        : coinbaseBtcPriceUSD
+                                                        ? coinbaseBtcDepositAmount
+                                                            ? (coinbaseBtcPriceUSD * parseFloat(coinbaseBtcDepositAmount)).toLocaleString('en-US', {
+                                                                  style: 'currency',
+                                                                  currency: 'USD',
+                                                              })
+                                                            : '$0.00'
+                                                        : '$0.00'}
                                                 </Text>
                                             )}
                                             {/* Actionable Suggestion */}
@@ -531,8 +532,8 @@ export const DepositUI = () => {
                                                             isAboveMaxSwapLimitCoinbaseBtcDeposit
                                                                 ? satsToBtc(BigNumber.from(MAX_SWAP_AMOUNT_SATS))
                                                                 : isBelowMinCoinbaseBtcDeposit
-                                                                    ? `${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))}`
-                                                                    : userCoinbaseBtcBalance,
+                                                                ? `${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))}`
+                                                                : userCoinbaseBtcBalance,
                                                         )
                                                     }
                                                     _hover={{ textDecoration: 'underline' }}
@@ -542,8 +543,8 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitCoinbaseBtcDeposit
                                                         ? `${satsToBtc(BigNumber.from(MAX_SWAP_AMOUNT_SATS))} cbBTC Max`
                                                         : isBelowMinCoinbaseBtcDeposit
-                                                            ? `${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC Min`
-                                                            : `${parseFloat(userCoinbaseBtcBalance).toFixed(4)} cbBTC Max`}
+                                                        ? `${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC Min`
+                                                        : `${parseFloat(userCoinbaseBtcBalance).toFixed(4)} cbBTC Max`}
                                                 </Text>
                                             )}
                                         </Flex>
@@ -631,15 +632,15 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitBtcOutput
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinBtcOutput
-                                                            ? `Below minimum required - `
-                                                            : btcPriceUSD
-                                                                ? btcOutputAmount
-                                                                    ? (btcPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
-                                                                        style: 'currency',
-                                                                        currency: 'USD',
-                                                                    })
-                                                                    : '$0.00'
-                                                                : '$0.00'}
+                                                        ? `Below minimum required - `
+                                                        : btcPriceUSD
+                                                        ? btcOutputAmount
+                                                            ? (btcPriceUSD * parseFloat(btcOutputAmount)).toLocaleString('en-US', {
+                                                                  style: 'currency',
+                                                                  currency: 'USD',
+                                                              })
+                                                            : '$0.00'
+                                                        : '$0.00'}
                                                 </Text>
                                             )}
                                             {/* Actionable Suggestion */}
@@ -737,9 +738,9 @@ export const DepositUI = () => {
                                     1 cbBTC ≈{' '}
                                     {coinbaseBtcExchangeRatePerBTC
                                         ? (1 / coinbaseBtcExchangeRatePerBTC).toLocaleString('en-US', {
-                                            maximumFractionDigits: 5,
-                                            minimumFractionDigits: 0,
-                                        })
+                                              maximumFractionDigits: 5,
+                                              minimumFractionDigits: 0,
+                                          })
                                         : '0.999'}{' '}
                                     BTC
                                     {/* Display the actual exchange rate with max 5 decimal places, no trailing zeros */}
@@ -799,7 +800,7 @@ export const DepositUI = () => {
                                     if (isMobile) {
                                         toastInfo({
                                             title: 'Hop on your laptop',
-                                            description: 'This app is too cool for small screens, mobile coming soon!'
+                                            description: 'This app is too cool for small screens, mobile coming soon!',
                                         });
                                         return;
                                     }
@@ -824,7 +825,7 @@ export const DepositUI = () => {
                     )}
                 </Flex>
                 <DepositStatusModal isOpen={isModalOpen} onClose={handleModalClose} status={depositLiquidityStatus} error={depositLiquidityError} txHash={txHash} />
-            </Flex >
+            </Flex>
         </>
     );
 };
