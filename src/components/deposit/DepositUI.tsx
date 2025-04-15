@@ -671,15 +671,13 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitCoinbaseBtcDeposit
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinCoinbaseBtcDeposit
-                                                          ? `Minimum ${satsToBtc(
-                                                                BigNumber.from(MIN_SWAP_AMOUNT_SATS),
-                                                            )} cbBTC required - `
+                                                          ? `Minimum ${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC required - `
                                                           : userBalanceExceeded
                                                             ? `Exceeds your available balance - `
-                                                            : coinbaseBtcPriceUSD || validAssetPriceUSD
+                                                            : coinbaseBtcPriceUSD
                                                               ? coinbaseBtcDepositAmount
                                                                   ? (
-                                                                        (validAssetPriceUSD || coinbaseBtcPriceUSD) *
+                                                                        coinbaseBtcPriceUSD *
                                                                         parseFloat(coinbaseBtcDepositAmount)
                                                                     ).toLocaleString('en-US', {
                                                                         style: 'currency',
@@ -859,10 +857,10 @@ export const DepositUI = () => {
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinBtcOutput
                                                           ? `Below minimum required - `
-                                                          : coinbaseBtcPriceUSD
+                                                          : btcPriceUSD
                                                             ? btcOutputAmount
                                                                 ? (
-                                                                      coinbaseBtcPriceUSD * parseFloat(btcOutputAmount)
+                                                                      btcPriceUSD * parseFloat(btcOutputAmount)
                                                                   ).toLocaleString('en-US', {
                                                                       style: 'currency',
                                                                       currency: 'USD',
@@ -1106,11 +1104,6 @@ export const DepositUI = () => {
                     status={depositLiquidityStatus}
                     error={depositLiquidityError}
                     txHash={txHash}
-                />
-                <UniswapSwapWidget
-                    isOpen={isUniswapSwapWidgetOpen}
-                    onClose={() => setIsUniswapSwapWidgetOpen(false)}
-                    onTokenSelected={setSelectedInputAsset}
                 />
             </Flex>
         </>

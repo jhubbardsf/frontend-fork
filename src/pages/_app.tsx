@@ -12,10 +12,12 @@ import { colors } from '../utils/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
 import { WagmiProvider } from 'wagmi';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ContractDataProvider } from '../components/providers/ContractDataProvider';
 import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
+import { wagmiAdapter, queryClient, modal } from '../config/reown';
 import { wagmiAdapter, queryClient, modal } from '../config/reown';
 
 const myCustomTheme = {
@@ -111,6 +113,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>
                 <ChakraProvider theme={theme}>
                     <ContractDataProvider>
@@ -184,11 +187,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                                                         {title}
                                                     </Text>
                                                     {description && description != 'undefined' && (
-                                                        <Text
-                                                            fontFamily={'Aux'}
-                                                            fontSize='0.8rem'
-                                                            fontWeight='300'
-                                                            color={colors.offWhite}>
+                                                        <Text fontFamily={'Aux'} fontSize='0.8rem' fontWeight='300' color={colors.offWhite}>
                                                             {description}
                                                         </Text>
                                                     )}

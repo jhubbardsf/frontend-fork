@@ -1,17 +1,11 @@
-import React from 'react';
-import { Button, Flex } from '@chakra-ui/react';
+import { Button, Text, Flex } from '@chakra-ui/react';
 import { useAccount, useChainId, useChains } from 'wagmi';
 import { FONT_FAMILIES } from '../../utils/font';
 import { colors } from '../../utils/colors';
 import { modal } from '../../config/reown';
-import { NetworkIcon } from './NetworkIcon';
+import { BASE_LOGO, ARBITRUM_LOGO, ETH_Icon } from './SVGs';
 
-const getCustomChainName = (chainId: number): string => {
-    if (chainId === 1337) return 'Rift Devnet';
-    return `Chain ${chainId}`;
-};
-
-export const ConnectWalletButton: React.FC = () => {
+export const ConnectWalletButton = () => {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
     const chains = useChains();
@@ -20,28 +14,52 @@ export const ConnectWalletButton: React.FC = () => {
     const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
     // Handler for opening the Reown AppKit modal
-    const handleOpen = async (): Promise<void> => {
+    const handleOpen = async () => {
         await modal.open();
     };
 
     // Function to open the account modal
-    const openAccountModal = async (): Promise<void> => {
+    const openAccountModal = async () => {
         await modal.open({
             view: 'Account',
         });
     };
 
     // Function to open the chain modal
-    const openChainModal = async (): Promise<void> => {
+    const openChainModal = async () => {
         await modal.open({
             view: 'Networks',
         });
     };
 
+    // Get network name for custom chains not in wagmi's chain list
+    const getCustomChainName = (chainId: number) => {
+        if (chainId === 1337) return 'Rift Devnet';
+        return `Chain ${chainId}`;
+    };
+
     // Get the chain name from wagmi if available, otherwise use custom name
-    const getChainName = (): string => {
+    const getChainName = () => {
         const currentChain = chains.find((chain) => chain.id === chainId);
         return currentChain?.name || getCustomChainName(chainId);
+    };
+
+    // Get network icon based on chain ID
+    const getNetworkIcon = () => {
+        if (chainId === 1337) {
+            return (
+                <Text fontSize='sm' fontWeight='bold' mr='5px'>
+                    🔧
+                </Text>
+            );
+        } else if (chainId === 8453) {
+            return <BASE_LOGO width='20' height='20' />;
+        } else if (chainId === 42161) {
+            return <ARBITRUM_LOGO />;
+        } else if (chainId === 1) {
+            return <ETH_Icon width={'12'} height={'17'} viewBox='0 0 23 36' />;
+        }
+        return null;
     };
 
     return (
@@ -82,7 +100,7 @@ export const ConnectWalletButton: React.FC = () => {
                         border={`2.5px solid ${colors.purpleBorder}`}
                         style={{ display: 'flex', alignItems: 'center' }}>
                         <Flex alignItems='center' gap='8px'>
-                            <NetworkIcon />
+                            {getNetworkIcon()}
                             {getChainName()}
                         </Flex>
                     </Button>
@@ -92,10 +110,10 @@ export const ConnectWalletButton: React.FC = () => {
                         _hover={{ bg: colors.purpleHover }}
                         _active={{ bg: colors.purpleBackground }}
                         bg={colors.purpleBackground}
-                        borderRadius='11px'
-                        fontFamily='aux'
-                        fontSize='17px'
-                        fontWeight='bold'
+                        borderRadius={'11px'}
+                        fontFamily={'aux'}
+                        fontSize={'17px'}
+                        fontWeight={'bold'}
                         pt='2px'
                         px='18px'
                         color={colors.offWhite}
