@@ -729,7 +729,7 @@ export const DepositUI = () => {
                                         {/* <WebAssetTag cursor='pointer' asset='CoinbaseBTC' onDropDown={() => setCurrencyModalTitle('deposit')} /> */}
                                         <TokenButton
                                             cursor='pointer'
-                                            asset={uniswapTokens.find((t) => t.symbol === 'cbBTC')}
+                                            asset={selectedInputAsset}
                                             onDropDown={() => {
                                                 setIsUniswapSwapWidgetOpen(true);
                                             }}

@@ -39,10 +39,22 @@ const getEffectiveChainID = (selectedChainID: number): number => {
 };
 
 const dummyNetworks = [
-    { name: 'Abstract', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/abstract.svg' },
-    { name: 'Arbitrum', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/arbitrum.svg' },
-    { name: 'Aurora', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/aurora.png' },
-    { name: 'Avalanche', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/avalanche.svg' },
+    {
+        name: 'Abstract',
+        logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/abstract.svg',
+    },
+    {
+        name: 'Arbitrum',
+        logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/arbitrum.svg',
+    },
+    {
+        name: 'Aurora',
+        logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/aurora.png',
+    },
+    {
+        name: 'Avalanche',
+        logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/avalanche.svg',
+    },
     { name: 'BSC', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/bsc.svg' },
     { name: 'Base', logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/base.svg' },
 ];
@@ -64,7 +76,11 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
 
     const filteredTokens = tokensForChain.filter((token: TokenMeta) => {
         const term = searchTerm.toLowerCase();
-        return token.symbol.toLowerCase().includes(term) || token.name.toLowerCase().includes(term) || token.address.toLowerCase().includes(term);
+        return (
+            token.symbol.toLowerCase().includes(term) ||
+            token.name.toLowerCase().includes(term) ||
+            token.address.toLowerCase().includes(term)
+        );
     });
 
     /**
@@ -120,18 +136,42 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size='lg' isCentered>
             <ModalOverlay />
-            <ModalContent bg='#1F2128' borderRadius='12px' maxH='90vh' overflow='hidden' display='flex' flexDirection='column'>
+            <ModalContent
+                bg='#1F2128'
+                borderRadius='12px'
+                maxH='90vh'
+                overflow='hidden'
+                display='flex'
+                flexDirection='column'>
                 {/* Top Bar */}
                 <ModalHeader p='0'>
-                    <Flex align='center' justify='space-between' px={2} py={2} bg='#2C2F36' borderBottom='1px solid rgba(255,255,255,0.1)'>
-                        <IconButton aria-label='Back' icon={<ArrowBackIcon />} variant='ghost' color='white' _hover={{ bg: 'transparent', color: 'gray.300' }} onClick={onClose} />
+                    <Flex
+                        align='center'
+                        justify='space-between'
+                        px={2}
+                        py={2}
+                        bg='#2C2F36'
+                        borderBottom='1px solid rgba(255,255,255,0.1)'>
+                        <IconButton
+                            aria-label='Back'
+                            icon={<ArrowBackIcon />}
+                            variant='ghost'
+                            color='white'
+                            _hover={{ bg: 'transparent', color: 'gray.300' }}
+                            onClick={onClose}
+                        />
                         <Text fontSize='md' fontWeight='normal' color='white' textAlign='center' flex='1' ml='-40px'>
                             Exchange from
                         </Text>
                         <Box width='40px' />
                     </Flex>
                 </ModalHeader>
-                <ModalCloseButton top='12px' right='12px' color='white' _hover={{ bg: 'transparent', color: 'gray.300' }} />
+                <ModalCloseButton
+                    top='12px'
+                    right='12px'
+                    color='white'
+                    _hover={{ bg: 'transparent', color: 'gray.300' }}
+                />
                 {/* Body */}
                 <ModalBody px={0} py={0} flex='1'>
                     {/* Chain Icons Row */}
@@ -183,7 +223,14 @@ const UniswapSwapWidget: React.FC<UniswapSwapWidgetProps> = ({ isOpen, onClose, 
                                     display='flex'
                                     alignItems='center'
                                     onClick={() => handleTokenClick(token)}>
-                                    <Image src={token.logoURI} alt={`${token.symbol} token`} boxSize='32px' borderRadius='full' mr={3} bgColor={'white'} />
+                                    <Image
+                                        src={token.logoURI}
+                                        alt={`${token.symbol} token`}
+                                        boxSize='32px'
+                                        borderRadius='full'
+                                        mr={3}
+                                        bgColor={'white'}
+                                    />
                                     <Box>
                                         <Text fontSize='md' fontWeight='500' color='white'>
                                             {token.symbol}

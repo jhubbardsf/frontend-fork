@@ -2,7 +2,7 @@ import { Flex, Text, FlexProps } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import { FaChevronDown } from 'react-icons/fa';
-import type { AssetType, TokenMeta } from '@/types';
+import type { AssetType, TokenMeta, ValidAsset } from '@/types';
 import useWindowSize from '../../hooks/useWindowSize';
 import { ARBITRUM_LOGO, BASE_LOGO } from './SVGs';
 import Image from 'next/image';
@@ -12,7 +12,7 @@ import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
 import { getImageUrl } from '@/utils/imageUrl';
 
 interface TokenProps {
-    asset: TokenMeta;
+    asset: TokenMeta | ValidAsset;
     onDropDown?: () => void;
     w?: string | number;
     h?: string | number;
@@ -24,23 +24,36 @@ interface TokenProps {
     cursor?: string;
 }
 
-const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, borderWidth, px, pointer, greyedOut = false, cursor = 'default' }) => {
+const TokenButton: React.FC<TokenProps> = ({
+    asset,
+    onDropDown,
+    w,
+    h,
+    fontSize,
+    borderWidth,
+    px,
+    pointer,
+    greyedOut = false,
+    cursor = 'default',
+}) => {
     const { isMobile } = useWindowSize();
     const selectedChainId = useStore((state) => state.selectedChainID);
-    const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const adjustedH = h ?? isMobile ? '30px' : '36px';
+    const adjustedH = (h ?? isMobile) ? '30px' : '36px';
     const adjustedFontSize = fontSize ?? `calc(${adjustedH} / 2 + 0px)`;
     const arrowSize = fontSize ?? `calc(${adjustedH} / 4)`;
     const adjustedBorderRadius = `calc(${adjustedH} / 4)`;
-    console.log("Key: ", `${selectedInputAsset.address}-${selectedInputAsset.symbol}`)
-    const key = `${selectedInputAsset.tokenAddress}-${selectedInputAsset.symbol}`;
+
+    // Handle both types - TokenMeta has address, ValidAsset might have tokenAddress
+    const address = 'tokenAddress' in asset ? asset.tokenAddress : asset.address;
+    const key = `${address}-${asset.symbol}`;
+    console.log('Key: ', key);
+
     const tokenMapping = TokenImageMap[key];
     const bgColor = greyedOut || !tokenMapping ? '#383838' : tokenMapping?.bgColor;
     const borderColor = greyedOut || !tokenMapping ? '#838383' : tokenMapping?.borderColor;
     const pX = px ?? '20px';
 
     return (
-        // cursor={cursor}
         <Flex align='center'>
             {/* Button Icon */}
             <Flex
@@ -56,9 +69,13 @@ const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, 
                 align='center'
                 justify='center'
                 overflow={'hidden'}
-                // cursor={onDropDown || pointer ? 'pointer' : 'auto'}
                 onClick={onDropDown}>
-                <Image src={selectedInputAsset.logoURI || selectedInputAsset.icon_svg} alt={`${selectedInputAsset.name} icon`} width={38} height={38} />
+                <Image
+                    src={asset.logoURI || ('icon_svg' in asset ? asset.icon_svg : '')}
+                    alt={`${asset.name} icon`}
+                    width={38}
+                    height={38}
+                />
             </Flex>
             {/* Button Text */}
             <Flex
@@ -79,16 +96,26 @@ const TokenButton: React.FC<TokenProps> = ({ asset, onDropDown, w, h, fontSize, 
                         <BASE_LOGO width='22' height='22' />
                     </Flex>
                 )}
-                {selectedInputAsset.symbol === 'cbBTC' ? (
-                    <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
+                {asset.symbol === 'cbBTC' ? (
+                    <Text
+                        fontSize={adjustedFontSize}
+                        color={'white'}
+                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                        userSelect='none'>
                         <span style={{ fontSize: '12px', marginRight: '1px' }}>cb</span>BTC
                     </Text>
                 ) : (
-                    <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO} userSelect='none'>
-                        {selectedInputAsset.symbol}
+                    <Text
+                        fontSize={adjustedFontSize}
+                        color={'white'}
+                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                        userSelect='none'>
+                        {asset.symbol}
                     </Text>
                 )}
-                {onDropDown && <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />}
+                {onDropDown && (
+                    <FaChevronDown fontSize={arrowSize} color={colors.offWhite} style={{ marginRight: '-8px' }} />
+                )}
             </Flex>
         </Flex>
     );
