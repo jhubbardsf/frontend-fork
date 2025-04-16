@@ -187,7 +187,11 @@ function MyApp({ Component, pageProps }: AppProps) {
                                                         {title}
                                                     </Text>
                                                     {description && description != 'undefined' && (
-                                                        <Text fontFamily={'Aux'} fontSize='0.8rem' fontWeight='300' color={colors.offWhite}>
+                                                        <Text
+                                                            fontFamily={'Aux'}
+                                                            fontSize='0.8rem'
+                                                            fontWeight='300'
+                                                            color={colors.offWhite}>
                                                             {description}
                                                         </Text>
                                                     )}

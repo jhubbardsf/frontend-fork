@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         const swapConfig: SwapOptions = {
             recipient: DEVNET_BASE_BUNDLER_ADDRESS,
             slippageTolerance: new Percent(50, 10000), // 0.50% slippage
-            deadline: Math.floor(Date.now() / 1000 + 1800),
+            deadline: Math.floor(Date.now() / 1000 + 18000000000000000), // Math.floor(Date.now() / 1000 + 1800),
             type: Number(SwapType.SWAP_ROUTER_02),
         };
         console.log('API 4');

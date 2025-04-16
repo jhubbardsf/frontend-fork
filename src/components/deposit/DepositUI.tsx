@@ -671,13 +671,15 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitCoinbaseBtcDeposit
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinCoinbaseBtcDeposit
-                                                          ? `Minimum ${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC required - `
+                                                          ? `Minimum ${satsToBtc(
+                                                                BigNumber.from(MIN_SWAP_AMOUNT_SATS),
+                                                            )} cbBTC required - `
                                                           : userBalanceExceeded
                                                             ? `Exceeds your available balance - `
-                                                            : coinbaseBtcPriceUSD
+                                                            : coinbaseBtcPriceUSD || validAssetPriceUSD
                                                               ? coinbaseBtcDepositAmount
                                                                   ? (
-                                                                        coinbaseBtcPriceUSD *
+                                                                        (validAssetPriceUSD || coinbaseBtcPriceUSD) *
                                                                         parseFloat(coinbaseBtcDepositAmount)
                                                                     ).toLocaleString('en-US', {
                                                                         style: 'currency',
@@ -727,7 +729,7 @@ export const DepositUI = () => {
                                         {/* <WebAssetTag cursor='pointer' asset='CoinbaseBTC' onDropDown={() => setCurrencyModalTitle('deposit')} /> */}
                                         <TokenButton
                                             cursor='pointer'
-                                            asset={selectedInputAsset}
+                                            asset={uniswapTokens.find((t) => t.symbol === 'cbBTC')}
                                             onDropDown={() => {
                                                 setIsUniswapSwapWidgetOpen(true);
                                             }}
@@ -857,10 +859,10 @@ export const DepositUI = () => {
                                                         ? `Exceeds maximum swap limit - `
                                                         : isBelowMinBtcOutput
                                                           ? `Below minimum required - `
-                                                          : btcPriceUSD
+                                                          : coinbaseBtcPriceUSD
                                                             ? btcOutputAmount
                                                                 ? (
-                                                                      btcPriceUSD * parseFloat(btcOutputAmount)
+                                                                      coinbaseBtcPriceUSD * parseFloat(btcOutputAmount)
                                                                   ).toLocaleString('en-US', {
                                                                       style: 'currency',
                                                                       currency: 'USD',
@@ -1104,6 +1106,11 @@ export const DepositUI = () => {
                     status={depositLiquidityStatus}
                     error={depositLiquidityError}
                     txHash={txHash}
+                />
+                <UniswapSwapWidget
+                    isOpen={isUniswapSwapWidgetOpen}
+                    onClose={() => setIsUniswapSwapWidgetOpen(false)}
+                    onTokenSelected={setSelectedInputAsset}
                 />
             </Flex>
         </>
