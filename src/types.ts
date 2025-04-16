@@ -74,7 +74,7 @@ export type ValidAsset = {
     connectedUserBalanceRaw?: BigNumber;
     connectedUserBalanceFormatted?: string;
     fromTokenList?: boolean;
-} & Partial<TokenMeta>
+} & Partial<TokenMeta>;
 
 export type LiqudityProvider = {
     depositVaultIndexes: number[];
@@ -144,37 +144,37 @@ type ChainIDString = string;
  * Defines a Uniswap-compatible token list, e.g. from https://tokens.uniswap.org
  */
 export interface UniswapTokenList {
-    name: string
-    timestamp: string
+    name: string;
+    timestamp: string;
     version: {
-        major: number
-        minor: number
-        patch: number
-    }
-    tags: Record<string, unknown>
-    logoURI: string
-    keywords: string[]
-    tokens: TokenMeta[]
+        major: number;
+        minor: number;
+        patch: number;
+    };
+    tags: Record<string, unknown>;
+    logoURI: string;
+    keywords: string[];
+    tokens: TokenMeta[];
 }
 
 /**
  * Individual token entry in the Uniswap token list
  */
 export interface TokenMeta {
-    chainId: number
-    address: string
-    name: string
-    symbol: string
-    decimals: number
-    logoURI?: string
+    chainId: number;
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    logoURI?: string;
     extensions?: {
         bridgeInfo?: Record<
             ChainIDString,
             {
-                tokenAddress: string
+                tokenAddress: string;
             }
-        >
-    }
+        >;
+    };
 }
 export type SingleExecuteSwapAndDeposit = [
     amountIn: BigNumberish,
@@ -182,13 +182,35 @@ export type SingleExecuteSwapAndDeposit = [
     params: DepositLiquidityParamsStruct,
     owner: Address,
     permit: ISignatureTransfer.PermitTransferFromStruct,
-    signature: BytesLike
-]
+    signature: BytesLike,
+];
 export type BatchExecuteSwapAndDeposit = [
     batchPermit: ISignatureTransfer.PermitBatchTransferFromStruct,
     transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
     owner: Address,
     signature: BytesLike,
     swapCalldata: BytesLike,
-    params: DepositLiquidityParamsStruct
-]
+    params: DepositLiquidityParamsStruct,
+];
+
+export interface NestedDepositData {
+    vaultIndex: string;
+    depositTimestamp: number;
+    depositAmount: string;
+    depositFee: string;
+    expectedSats: number;
+    btcPayoutScriptPubKey: string;
+    specifiedPayoutAddress: string;
+    ownerAddress: string;
+    salt?: string;
+    confirmationBlocks: number;
+    attestedBitcoinBlockHeight: number;
+}
+
+export interface ContractDataContextType {
+    loading: boolean;
+    error: any;
+    userSwapsFromAddress: UserSwap[];
+    refreshConnectedUserBalance: () => Promise<void>;
+    refreshUserSwapsFromAddress: () => Promise<void>;
+}
