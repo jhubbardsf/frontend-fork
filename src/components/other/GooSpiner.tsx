@@ -1,7 +1,23 @@
 import { Flex } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
-const GooSpinner = ({ flexSize = 100, lRingSize = 50, stroke = 6, color = '#6B46C1' }) => {
+interface GooSpinnerProps {
+    flexSize?: number;
+    lRingSize?: number;
+    stroke?: number;
+    color?: string;
+    overlay?: boolean; // Controls background overlay
+    fullOverlay?: boolean; // Controls centering and filling behavior
+}
+
+const GooSpinner: React.FC<GooSpinnerProps> = ({
+    flexSize = 100,
+    lRingSize = 50,
+    stroke = 6,
+    color = '#6B46C1',
+    overlay = false,
+    fullOverlay = false, // Default false so existing behavior remains unchanged
+}) => {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -19,7 +35,15 @@ const GooSpinner = ({ flexSize = 100, lRingSize = 50, stroke = 6, color = '#6B46
     }
 
     return (
-        <Flex w={`${flexSize}px`} mt='-15px' h={`${flexSize}px`} justifyContent='center' alignItems='center'>
+        <Flex
+            position={fullOverlay ? 'absolute' : 'static'}
+            inset={fullOverlay ? '0' : 'auto'}
+            justifyContent='center'
+            alignItems='center'
+            w={fullOverlay ? '100%' : `${flexSize}px`}
+            h={fullOverlay ? '100%' : `${flexSize}px`}
+            bg={overlay ? 'rgba(0, 0, 0, 0.5)' : 'transparent'}
+            zIndex={fullOverlay ? '10' : 'auto'}>
             <l-ring size={lRingSize} stroke={stroke} bg-opacity='0' speed='2' color={color}></l-ring>
         </Flex>
     );

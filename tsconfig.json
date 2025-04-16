@@ -18,14 +18,22 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true
+    "incremental": true,
+    "sourceMap": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+    }
   },
   "include": [
     ".env.local",
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "src/utils/script.js"  ],
+    "**/*.tsx",
+    "src/utils/script.js",
+    "scripts/**/*.ts"
+  ],
   "exclude": [
     "node_modules"
   ]
