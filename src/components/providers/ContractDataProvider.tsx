@@ -44,7 +44,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     // [0] set ethers provider when selectedInputAsset changes
     useEffect(() => {
         if ((contractRpcURL && window.ethereum) || !ethersRpcProvider) {
-            const provider = new ethers.providers.StaticJsonRpcProvider(contractRpcURL, { chainId: contractChainID, name: selectedInputAsset.name });
+            const provider = new ethers.providers.StaticJsonRpcProvider(contractRpcURL, {
+                chainId: contractChainID,
+                name: selectedInputAsset.name,
+            });
             if (!provider) return;
             setEthersRpcProvider(provider);
         }
@@ -111,6 +114,11 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
     // [1] fetch selected asset user balance
     const fetchSelectedAssetUserBalance = async () => {
+        console.log('Refresh: inside fetchSelectedAssetUserBlanace', {
+            address,
+            selectedInputAsset,
+            ethersRpcProvider,
+        });
         // [0] check if address, selectedInputAsset, and ethersRpcProvider are defined
         if (!address || !selectedInputAsset || !ethersRpcProvider) return;
 
@@ -119,7 +127,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         updateConnectedUserBalanceRaw(selectedInputAsset.name, balance);
 
         // [2] format token balance based on asset decimals
-        const formattedBalance = formatUnits(balance, useStore.getState().validAssets[selectedInputAsset.name].decimals);
+        const formattedBalance = formatUnits(
+            balance,
+            useStore.getState().validAssets[selectedInputAsset.name].decimals,
+        );
         updateConnectedUserBalanceFormatted(selectedInputAsset.name, formattedBalance.toString());
     };
 
@@ -135,8 +146,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             try {
                 let { btcPriceUSD, cbbtcPriceUSD } = await getUSDPrices();
                 // TODO: This needs updating
-                if (btcPriceUSD !== '0') updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
-                if (cbbtcPriceUSD !== '0') updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
+                if (btcPriceUSD !== '0')
+                    updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
+                if (cbbtcPriceUSD !== '0')
+                    updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
             } catch (e) {
                 console.error(e);
                 return;

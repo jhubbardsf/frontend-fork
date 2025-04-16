@@ -6,13 +6,22 @@ import { useChainId } from 'wagmi';
 import { BITCOIN_DECIMALS } from '../../utils/constants';
 import Image from 'next/image';
 import { NetworkIcon } from './NetworkIcon';
+import { useContractData } from '../providers/ContractDataProvider';
+import { useEffect } from 'react';
 
 export const AssetBalanceDisplay = () => {
     const chainId = useChainId();
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
+    const { refreshConnectedUserBalance } = useContractData();
     const localBalance = useStore(
         (state) => state.validAssets[selectedInputAsset.name]?.connectedUserBalanceFormatted || '0',
     );
+
+    // Update balance when chainId changes
+    useEffect(() => {
+        console.log('Calling Refreshing User Balance');
+        refreshConnectedUserBalance();
+    }, [chainId, refreshConnectedUserBalance]);
 
     // Format balance for display
     const formatBalance = () => {
