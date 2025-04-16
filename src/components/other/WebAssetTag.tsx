@@ -2,7 +2,7 @@ import { Flex, Text, FlexProps, Image } from '@chakra-ui/react';
 import { colors } from '../../utils/colors';
 import { FONT_FAMILIES } from '../../utils/font';
 import { FaChevronDown } from 'react-icons/fa';
-import { AssetType } from '../../types';
+import type { AssetType } from '../../types';
 import useWindowSize from '../../hooks/useWindowSize';
 import { ARBITRUM_LOGO, BASE_LOGO } from './SVGs';
 
@@ -36,7 +36,9 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
     const pX = px ?? '20px';
 
     return (
-        <Flex align='center' cursor={cursor}>
+        // cursor={cursor}
+        <Flex align='center'>
+            {/* Button Icon */}
             <Flex
                 userSelect='none'
                 cursor={cursor}
@@ -50,9 +52,11 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 align='center'
                 justify='center'
                 // cursor={onDropDown || pointer ? 'pointer' : 'auto'}
-                onClick={onDropDown}>
+                onClick={onDropDown}
+                >
                 <Image src={`/images/assets/icons/${imgKey}.svg`} h={asset == 'WBTC' ? adjustedH : asset == 'USDC' ? `calc(${adjustedH} - 1px)` : `calc(${adjustedH} - 14px)`} userSelect='none' />
             </Flex>
+            {/* Button Text */}
             <Flex
                 userSelect='none'
                 bg={bgColor}
@@ -65,7 +69,8 @@ const WebAssetTag: React.FC<WebAssetTagProps> = ({ asset, onDropDown, w, h, font
                 pl={`calc(${adjustedH} / 2  + ${pX} / 2)`}
                 gap='8px'
                 cursor={cursor}
-                onClick={onDropDown}>
+                onClick={onDropDown}
+                >
                 {asset != 'BTC' && (
                     <Flex ml='0px' mr='-1px' mt='-1px'>
                         <BASE_LOGO width='22' height='22' />

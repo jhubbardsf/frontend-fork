@@ -3,10 +3,10 @@ import theme from '../theme';
 import Head from 'next/head';
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store';
-import { AppProps } from 'next/app';
+import type { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
-import testData from '../testData.json';
-import assets from '../assets.json';
+import testData from '../json/testData.json';
+import assets from '../json/assets.json';
 import { MdClose } from 'react-icons/md';
 import { colors } from '../utils/colors';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
@@ -36,8 +36,10 @@ const myCustomTheme = {
         connectButtonText: '#FFF',
         connectButtonTextError: '#FFF',
         connectionIndicator: '#30E000',
-        downloadBottomCardBackground: 'linear-gradient(126deg, rgba(0, 0, 0, 0) 9.49%, rgba(120, 120, 120, 0.2) 71.04%), #1A1B1F',
-        downloadTopCardBackground: 'linear-gradient(126deg, rgba(120, 120, 120, 0.2) 9.49%, rgba(0, 0, 0, 0) 71.04%), #1A1B1F',
+        downloadBottomCardBackground:
+            'linear-gradient(126deg, rgba(0, 0, 0, 0) 9.49%, rgba(120, 120, 120, 0.2) 71.04%), #1A1B1F',
+        downloadTopCardBackground:
+            'linear-gradient(126deg, rgba(120, 120, 120, 0.2) 9.49%, rgba(0, 0, 0, 0) 71.04%), #1A1B1F',
         error: '#FF494A',
         generalBorder: 'rgba(255, 255, 255, 0.08)',
         generalBorderDim: 'rgba(255, 255, 255, 0.04)',
@@ -182,7 +184,11 @@ function MyApp({ Component, pageProps }: AppProps) {
                                                         {title}
                                                     </Text>
                                                     {description && description != 'undefined' && (
-                                                        <Text fontFamily={'Aux'} fontSize='0.8rem' fontWeight='300' color={colors.offWhite}>
+                                                        <Text
+                                                            fontFamily={'Aux'}
+                                                            fontSize='0.8rem'
+                                                            fontWeight='300'
+                                                            color={colors.offWhite}>
                                                             {description}
                                                         </Text>
                                                     )}
