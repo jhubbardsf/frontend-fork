@@ -55,7 +55,7 @@ import { getTipProof } from '../../utils/dataEngineClient';
 import { BigNumber, ethers } from 'ethers';
 import { DepositStatus, useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
 import DepositStatusModal from './DepositStatusModal';
-import UniswapSwapWidget from '../uniswap/UniswapSwapWidget';
+import UniswapSwapWidget from '../swap/AssetSwapModal';
 import TokenButton from '../other/TokenButton';
 import GooSpinner from '../other/GooSpiner';
 import { useQuery } from '@tanstack/react-query';
