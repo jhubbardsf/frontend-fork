@@ -27,7 +27,8 @@ import {
 } from '@chakra-ui/react';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef, ChangeEvent, use } from 'react';
+import type { ChangeEvent} from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import styled from 'styled-components';
 import { colors } from '../../utils/colors';
 import { BTCSVG, Coinbase_BTC_Card, ETHSVG, InfoSVG } from '../other/SVGs';
