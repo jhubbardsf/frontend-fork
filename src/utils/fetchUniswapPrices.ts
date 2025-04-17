@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
-import { useStore } from '../store';
 import { MAINNET_ETH_RPC_URL } from './constants';
+import { getPriceFromAPI } from './fetchPrice';
 
 const wbtcAddress = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
 const chainLinkUsdcPriceOracleAddress = '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6';
@@ -88,10 +88,14 @@ export async function getPricesDataProvider(mainnetRpcIndex: number) {
 }
 
 export async function getUSDPrices(): Promise<{ btcPriceUSD: string; cbbtcPriceUSD: string }> {
-    // TODO: get these BTC and CoinbaseBTC USD prices from coinbase API from MM server
+    // TODO: get these BTC and CoinbaseBTC USD prices from coinbase API from MM
+    // server
+    // TODO: JSH - This function should be retired
     return {
-        btcPriceUSD: '96900',
-        cbbtcPriceUSD: '96885',
+        // btcPriceUSD: (await getPriceFromAPI('BTC')).toString(),
+        // cbbtcPriceUSD: (await getPriceFromAPI('cbBTC')).toString(),
+        btcPriceUSD: '0',
+        cbbtcPriceUSD: '0',
     };
     // for (let i = 0; i < MAINNET_ETH_RPC_URL.length; i++) {
     //     if (i > 0) {
