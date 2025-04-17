@@ -37,6 +37,24 @@ interface AssetSwapModalProps {
 const getEffectiveChainID = (selectedChainID: number): number =>
     selectedChainID === DEVNET_BASE_CHAIN_ID ? MAINNET_BASE_CHAIN_ID : selectedChainID;
 
+// Network color mapping for custom styling
+const networkColors = {
+    // Ethereum - light blue/grey
+    1: { bg: 'rgba(98, 126, 234, 0.15)', border: 'rgba(98, 126, 234, 0.7)' },
+    // Arbitrum - light blue
+    42161: { bg: 'rgba(40, 160, 240, 0.15)', border: 'rgba(40, 160, 240, 0.7)' },
+    // Optimism - dark red
+    10: { bg: 'rgba(255, 4, 32, 0.15)', border: 'rgba(255, 4, 32, 0.7)' },
+    // Avalanche - dark red
+    43114: { bg: 'rgba(232, 65, 66, 0.15)', border: 'rgba(232, 65, 66, 0.7)' },
+    // Base - dark blue
+    8453: { bg: 'rgba(0, 83, 224, 0.15)', border: 'rgba(0, 83, 224, 0.7)' },
+    // BSC - yellow/gold
+    56: { bg: 'rgba(240, 185, 11, 0.15)', border: 'rgba(240, 185, 11, 0.7)' },
+    // Polygon - purple
+    137: { bg: 'rgba(130, 71, 229, 0.15)', border: 'rgba(130, 71, 229, 0.7)' },
+};
+
 const networks = [
     {
         name: 'Ethereum',
@@ -116,9 +134,14 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     };
 
     const handleTokenClick = (token: TokenMeta) => {
+        console.log('JSH+ handleTokenClick', {
+            token,
+            address: token.address,
+            validAssets,
+            validAsset: validAssets[token.address],
+        });
+        onTokenSelected(validAssets[token.name]);
         fetchTokenPrice(token, onClose);
-        onClose();
-        onTokenSelected(validAssets[token.address]);
     };
 
     const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,40 +164,46 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
         }
     };
 
-    // Custom font for UI
-    useEffect(() => {
-        const link = document.createElement('link');
-        link.href = 'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap';
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
-        return () => document.head.removeChild(link);
-    }, []);
+    // // Custom font for UI
+    // useEffect(() => {
+    //     const link = document.createElement('link');
+    //     link.href = 'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap';
+    //     link.rel = 'stylesheet';
+    //     document.head.appendChild(link);
+
+    //     return () => {
+    //         if (link && document.head.contains(link)) {
+    //             document.head.removeChild(link);
+    //         }
+    //     };
+    // }, []);
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size='lg' isCentered>
+        <Modal isOpen={isOpen} onClose={onClose} size='md' isCentered>
             <ModalOverlay bg='rgba(0, 0, 0, 0.7)' backdropFilter='blur(5px)' />
             <ModalContent
                 bg='#0F0B1E'
-                borderRadius='24px'
-                h='80vh'
-                maxH='700px'
+                borderRadius='16px'
+                h='600px'
+                minH='500px'
+                // maxH='900px'
+                maxW='400px'
                 overflow='hidden'
                 display='flex'
                 flexDirection='column'
                 border='1px solid rgba(255, 255, 255, 0.1)'>
                 <ModalHeader p='0'>
-                    <Flex align='center' justify='space-between' px={6} py={4}>
-                        {/* borderBottom='1px solid rgba(255,255,255,0.05)' */}
+                    <Flex align='center' justify='space-between' px={4} py={3}>
                         <IconButton
                             aria-label='Back'
-                            icon={<ArrowBackIcon w={6} h={6} />}
+                            icon={<ArrowBackIcon w={5} h={5} />}
                             variant='ghost'
                             color='white'
                             _hover={{ bg: 'transparent', color: 'white' }}
                             onClick={onClose}
                         />
                         <Text
-                            fontSize='xl'
+                            fontSize='lg'
                             fontWeight='bold'
                             color='white'
                             textAlign='center'
@@ -184,42 +213,43 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                             fontFamily="'Chakra Petch', monospace">
                             Exchange from
                         </Text>
-                        <Box w={6} />
+                        <Box w={5} />
                     </Flex>
                 </ModalHeader>
-                {/* <ModalCloseButton top='16px' right='16px' color='white' _hover={{ bg: 'rgba(255,255,255,0.1)' }} /> */}
                 <ModalBody px={0} py={0} flex='1' display='flex' flexDirection='column' overflow='hidden'>
                     {/* Network Selection */}
-                    <Box px={6} pt={6} pb={4}>
-                        <Grid templateColumns='repeat(4, 1fr)' gap={4}>
+                    <Box px={4} pt={3} pb={2}>
+                        <Grid templateColumns='repeat(4, 1fr)' gap={2}>
                             {networks.slice(0, 8).map((net) => (
                                 <GridItem key={net.id}>
                                     <Center
                                         bg={
                                             selectedNetwork === net.id
-                                                ? 'rgba(255,255,255,0.1)'
-                                                : 'rgba(255,255,255,0.03)'
+                                                ? networkColors[net.id]?.bg || 'rgba(255,255,255,0.12)'
+                                                : 'rgba(255,255,255,0.05)'
                                         }
-                                        borderRadius='xl'
+                                        borderRadius='lg'
                                         cursor={net.isMore ? 'default' : 'pointer'}
                                         w='100%'
-                                        h='70px'
+                                        h='54px'
                                         position='relative'
                                         overflow='hidden'
                                         _hover={{ bg: net.isMore ? undefined : 'rgba(255,255,255,0.08)' }}
                                         boxShadow={
-                                            selectedNetwork === net.id ? '0 0 0 2px rgba(99,102,241,0.5)' : 'none'
+                                            selectedNetwork === net.id
+                                                ? `0 0 0 2px ${networkColors[net.id]?.border || 'rgba(99,102,241,0.5)'}`
+                                                : 'none'
                                         }
                                         onClick={() => !net.isMore && setSelectedNetwork(net.id)}>
                                         {net.isMore ? (
                                             <Text
-                                                fontSize='xl'
+                                                fontSize='md'
                                                 fontWeight='bold'
                                                 fontFamily="'Chakra Petch', monospace">
                                                 +{networks.length - 7}
                                             </Text>
                                         ) : (
-                                            <Image src={net.logo} alt={net.name} boxSize='40px' borderRadius='full' />
+                                            <Image src={net.logo} alt={net.name} boxSize='32px' borderRadius='full' />
                                         )}
                                     </Center>
                                 </GridItem>
@@ -228,8 +258,8 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                     </Box>
 
                     {/* Search Bar */}
-                    <Box px={6} pt={2} pb={6}>
-                        <InputGroup size='lg'>
+                    <Box px={4} pt={1} pb={3}>
+                        <InputGroup size='md'>
                             <Input
                                 onKeyDown={handleKeyDown}
                                 autoFocus
@@ -240,18 +270,19 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                                 bg='rgba(255,255,255,0.05)'
                                 border='none'
                                 borderRadius='full'
-                                py={6}
-                                px={6}
+                                py={4}
+                                px={4}
+                                height='42px'
                                 _hover={{ bg: 'rgba(255,255,255,0.08)' }}
                                 _focus={{ outline: 'none', bg: 'rgba(255,255,255,0.08)', boxShadow: 'none' }}
                                 color='white'
-                                fontSize='md'
+                                fontSize='sm'
                                 fontFamily="'Chakra Petch', monospace"
-                                letterSpacing='0.1em'
+                                letterSpacing='0.05em'
                                 textTransform='uppercase'
                             />
-                            <InputRightElement h='full' pr={6}>
-                                <SearchIcon color='white' boxSize={5} />
+                            <InputRightElement h='42px' pr={4}>
+                                <SearchIcon color='white' boxSize={4} />
                             </InputRightElement>
                         </InputGroup>
                     </Box>
@@ -259,21 +290,22 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                     {/* Token List */}
                     <Box
                         flex='1'
+                        minH='320px'
                         overflowY='auto'
-                        px={4}
-                        pb={4}
+                        px={3}
+                        pb={3}
                         css={{
-                            '&::-webkit-scrollbar': { width: '4px' },
-                            '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '4px' },
+                            '&::-webkit-scrollbar': { width: '3px' },
+                            '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '3px' },
                             '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.2)' },
                         }}>
                         <List spacing={0} ref={parent}>
                             {tokensForChain.map((token) => (
                                 <ListItem
-                                    key={`\${token.symbol}-\${token.address}`}
+                                    key={`${token.symbol}-${token.address}`}
                                     cursor='pointer'
                                     _hover={{ bg: 'rgba(255,255,255,0.03)' }}>
-                                    <TokenCard token={token} selectToken={handleTokenClick} />
+                                    <TokenCard token={token} onClick={handleTokenClick} />
                                 </ListItem>
                             ))}
                         </List>
