@@ -3,28 +3,41 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  EventFragment,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  ContractTransaction,
+  Overrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
-  TypedLogDescription,
+  FunctionFragment,
+  Result,
+  EventFragment,
+} from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
+import type {
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../common";
 
-export interface SP1VerifierGatewayInterface extends Interface {
+export interface SP1VerifierGatewayInterface extends utils.Interface {
+  functions: {
+    "addRoute(address)": FunctionFragment;
+    "freezeRoute(bytes4)": FunctionFragment;
+    "owner()": FunctionFragment;
+    "renounceOwnership()": FunctionFragment;
+    "routes(bytes4)": FunctionFragment;
+    "transferOwnership(address)": FunctionFragment;
+    "verifyProof(bytes32,bytes,bytes)": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "addRoute"
       | "freezeRoute"
       | "owner"
@@ -34,17 +47,7 @@ export interface SP1VerifierGatewayInterface extends Interface {
       | "verifyProof"
   ): FunctionFragment;
 
-  getEvent(
-    nameOrSignatureOrTopic:
-      | "OwnershipTransferred"
-      | "RouteAdded"
-      | "RouteFrozen"
-  ): EventFragment;
-
-  encodeFunctionData(
-    functionFragment: "addRoute",
-    values: [AddressLike]
-  ): string;
+  encodeFunctionData(functionFragment: "addRoute", values: [string]): string;
   encodeFunctionData(
     functionFragment: "freezeRoute",
     values: [BytesLike]
@@ -57,7 +60,7 @@ export interface SP1VerifierGatewayInterface extends Interface {
   encodeFunctionData(functionFragment: "routes", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
-    values: [AddressLike]
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "verifyProof",
@@ -83,204 +86,260 @@ export interface SP1VerifierGatewayInterface extends Interface {
     functionFragment: "verifyProof",
     data: BytesLike
   ): Result;
+
+  events: {
+    "OwnershipTransferred(address,address)": EventFragment;
+    "RouteAdded(bytes4,address)": EventFragment;
+    "RouteFrozen(bytes4,address)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RouteAdded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RouteFrozen"): EventFragment;
 }
 
-export namespace OwnershipTransferredEvent {
-  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
-  export type OutputTuple = [previousOwner: string, newOwner: string];
-  export interface OutputObject {
-    previousOwner: string;
-    newOwner: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface OwnershipTransferredEventObject {
+  previousOwner: string;
+  newOwner: string;
 }
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string],
+  OwnershipTransferredEventObject
+>;
 
-export namespace RouteAddedEvent {
-  export type InputTuple = [selector: BytesLike, verifier: AddressLike];
-  export type OutputTuple = [selector: string, verifier: string];
-  export interface OutputObject {
-    selector: string;
-    verifier: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
+export type OwnershipTransferredEventFilter =
+  TypedEventFilter<OwnershipTransferredEvent>;
 
-export namespace RouteFrozenEvent {
-  export type InputTuple = [selector: BytesLike, verifier: AddressLike];
-  export type OutputTuple = [selector: string, verifier: string];
-  export interface OutputObject {
-    selector: string;
-    verifier: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface RouteAddedEventObject {
+  selector: string;
+  verifier: string;
 }
+export type RouteAddedEvent = TypedEvent<
+  [string, string],
+  RouteAddedEventObject
+>;
+
+export type RouteAddedEventFilter = TypedEventFilter<RouteAddedEvent>;
+
+export interface RouteFrozenEventObject {
+  selector: string;
+  verifier: string;
+}
+export type RouteFrozenEvent = TypedEvent<
+  [string, string],
+  RouteFrozenEventObject
+>;
+
+export type RouteFrozenEventFilter = TypedEventFilter<RouteFrozenEvent>;
 
 export interface SP1VerifierGateway extends BaseContract {
-  connect(runner?: ContractRunner | null): SP1VerifierGateway;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: SP1VerifierGatewayInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    addRoute(
+      verifier: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    freezeRoute(
+      selector: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  addRoute: TypedContractMethod<[verifier: AddressLike], [void], "nonpayable">;
+    owner(overrides?: CallOverrides): Promise<[string]>;
 
-  freezeRoute: TypedContractMethod<[selector: BytesLike], [void], "nonpayable">;
+    renounceOwnership(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  owner: TypedContractMethod<[], [string], "view">;
+    routes(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string, boolean] & { verifier: string; frozen: boolean }>;
 
-  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  routes: TypedContractMethod<
-    [arg0: BytesLike],
-    [[string, boolean] & { verifier: string; frozen: boolean }],
-    "view"
-  >;
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+  };
 
-  transferOwnership: TypedContractMethod<
-    [newOwner: AddressLike],
-    [void],
-    "nonpayable"
-  >;
+  addRoute(
+    verifier: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
 
-  verifyProof: TypedContractMethod<
-    [programVKey: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
-    [void],
-    "view"
-  >;
+  freezeRoute(
+    selector: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  owner(overrides?: CallOverrides): Promise<string>;
 
-  getFunction(
-    nameOrSignature: "addRoute"
-  ): TypedContractMethod<[verifier: AddressLike], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "freezeRoute"
-  ): TypedContractMethod<[selector: BytesLike], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "owner"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "renounceOwnership"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "routes"
-  ): TypedContractMethod<
-    [arg0: BytesLike],
-    [[string, boolean] & { verifier: string; frozen: boolean }],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "transferOwnership"
-  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "verifyProof"
-  ): TypedContractMethod<
-    [programVKey: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
-    [void],
-    "view"
-  >;
+  renounceOwnership(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
 
-  getEvent(
-    key: "OwnershipTransferred"
-  ): TypedContractEvent<
-    OwnershipTransferredEvent.InputTuple,
-    OwnershipTransferredEvent.OutputTuple,
-    OwnershipTransferredEvent.OutputObject
-  >;
-  getEvent(
-    key: "RouteAdded"
-  ): TypedContractEvent<
-    RouteAddedEvent.InputTuple,
-    RouteAddedEvent.OutputTuple,
-    RouteAddedEvent.OutputObject
-  >;
-  getEvent(
-    key: "RouteFrozen"
-  ): TypedContractEvent<
-    RouteFrozenEvent.InputTuple,
-    RouteFrozenEvent.OutputTuple,
-    RouteFrozenEvent.OutputObject
-  >;
+  routes(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<[string, boolean] & { verifier: string; frozen: boolean }>;
+
+  transferOwnership(
+    newOwner: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  verifyProof(
+    programVKey: BytesLike,
+    publicValues: BytesLike,
+    proofBytes: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<void>;
+
+  callStatic: {
+    addRoute(verifier: string, overrides?: CallOverrides): Promise<void>;
+
+    freezeRoute(selector: BytesLike, overrides?: CallOverrides): Promise<void>;
+
+    owner(overrides?: CallOverrides): Promise<string>;
+
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    routes(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string, boolean] & { verifier: string; frozen: boolean }>;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {
-    "OwnershipTransferred(address,address)": TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
-    >;
-    OwnershipTransferred: TypedContractEvent<
-      OwnershipTransferredEvent.InputTuple,
-      OwnershipTransferredEvent.OutputTuple,
-      OwnershipTransferredEvent.OutputObject
-    >;
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): OwnershipTransferredEventFilter;
+    OwnershipTransferred(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): OwnershipTransferredEventFilter;
 
-    "RouteAdded(bytes4,address)": TypedContractEvent<
-      RouteAddedEvent.InputTuple,
-      RouteAddedEvent.OutputTuple,
-      RouteAddedEvent.OutputObject
-    >;
-    RouteAdded: TypedContractEvent<
-      RouteAddedEvent.InputTuple,
-      RouteAddedEvent.OutputTuple,
-      RouteAddedEvent.OutputObject
-    >;
+    "RouteAdded(bytes4,address)"(
+      selector?: null,
+      verifier?: null
+    ): RouteAddedEventFilter;
+    RouteAdded(selector?: null, verifier?: null): RouteAddedEventFilter;
 
-    "RouteFrozen(bytes4,address)": TypedContractEvent<
-      RouteFrozenEvent.InputTuple,
-      RouteFrozenEvent.OutputTuple,
-      RouteFrozenEvent.OutputObject
-    >;
-    RouteFrozen: TypedContractEvent<
-      RouteFrozenEvent.InputTuple,
-      RouteFrozenEvent.OutputTuple,
-      RouteFrozenEvent.OutputObject
-    >;
+    "RouteFrozen(bytes4,address)"(
+      selector?: null,
+      verifier?: null
+    ): RouteFrozenEventFilter;
+    RouteFrozen(selector?: null, verifier?: null): RouteFrozenEventFilter;
+  };
+
+  estimateGas: {
+    addRoute(
+      verifier: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    freezeRoute(
+      selector: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    owner(overrides?: CallOverrides): Promise<BigNumber>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    routes(arg0: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    addRoute(
+      verifier: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    freezeRoute(
+      selector: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    renounceOwnership(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    routes(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    transferOwnership(
+      newOwner: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
   };
 }

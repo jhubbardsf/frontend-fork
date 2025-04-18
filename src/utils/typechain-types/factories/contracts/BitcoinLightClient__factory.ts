@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Interface, type ContractRunner } from "ethers";
+import { Contract, Signer, utils } from "ethers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   BitcoinLightClient,
   BitcoinLightClientInterface,
@@ -127,12 +128,12 @@ const _abi = [
 export class BitcoinLightClient__factory {
   static readonly abi = _abi;
   static createInterface(): BitcoinLightClientInterface {
-    return new Interface(_abi) as BitcoinLightClientInterface;
+    return new utils.Interface(_abi) as BitcoinLightClientInterface;
   }
   static connect(
     address: string,
-    runner?: ContractRunner | null
+    signerOrProvider: Signer | Provider
   ): BitcoinLightClient {
-    return new Contract(address, _abi, runner) as unknown as BitcoinLightClient;
+    return new Contract(address, _abi, signerOrProvider) as BitcoinLightClient;
   }
 }
