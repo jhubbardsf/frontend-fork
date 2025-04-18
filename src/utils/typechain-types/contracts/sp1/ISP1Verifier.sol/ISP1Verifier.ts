@@ -3,24 +3,28 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../../common";
 
-export interface ISP1VerifierInterface extends Interface {
-  getFunction(nameOrSignature: "verifyProof"): FunctionFragment;
+export interface ISP1VerifierInterface extends utils.Interface {
+  functions: {
+    "verifyProof(bytes32,bytes,bytes)": FunctionFragment;
+  };
+
+  getFunction(nameOrSignatureOrTopic: "verifyProof"): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "verifyProof",
@@ -31,68 +35,78 @@ export interface ISP1VerifierInterface extends Interface {
     functionFragment: "verifyProof",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface ISP1Verifier extends BaseContract {
-  connect(runner?: ContractRunner | null): ISP1Verifier;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: ISP1VerifierInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+  };
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+  verifyProof(
+    programVKey: BytesLike,
+    publicValues: BytesLike,
+    proofBytes: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<void>;
 
-  verifyProof: TypedContractMethod<
-    [programVKey: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
-    [void],
-    "view"
-  >;
-
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
-
-  getFunction(
-    nameOrSignature: "verifyProof"
-  ): TypedContractMethod<
-    [programVKey: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
-    [void],
-    "view"
-  >;
+  callStatic: {
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

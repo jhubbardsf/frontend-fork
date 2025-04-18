@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Interface, type ContractRunner } from "ethers";
+import { Contract, Signer, utils } from "ethers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   ISP1VerifierGatewayEvents,
   ISP1VerifierGatewayEventsInterface,
@@ -52,16 +53,16 @@ const _abi = [
 export class ISP1VerifierGatewayEvents__factory {
   static readonly abi = _abi;
   static createInterface(): ISP1VerifierGatewayEventsInterface {
-    return new Interface(_abi) as ISP1VerifierGatewayEventsInterface;
+    return new utils.Interface(_abi) as ISP1VerifierGatewayEventsInterface;
   }
   static connect(
     address: string,
-    runner?: ContractRunner | null
+    signerOrProvider: Signer | Provider
   ): ISP1VerifierGatewayEvents {
     return new Contract(
       address,
       _abi,
-      runner
-    ) as unknown as ISP1VerifierGatewayEvents;
+      signerOrProvider
+    ) as ISP1VerifierGatewayEvents;
   }
 }

@@ -2,19 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 import {
+  Signer,
+  utils,
   Contract,
   ContractFactory,
-  ContractTransactionResponse,
-  Interface,
-} from "ethers";
-import type {
-  Signer,
   BytesLike,
-  AddressLike,
-  ContractDeployTransaction,
-  ContractRunner,
+  Overrides,
 } from "ethers";
-import type { NonPayableOverrides } from "../../common";
+import type { Provider, TransactionRequest } from "@ethersproject/providers";
 import type {
   RiftExchange,
   RiftExchangeInterface,
@@ -1589,15 +1584,34 @@ export class RiftExchange__factory extends ContractFactory {
     }
   }
 
+  override deploy(
+    _mmrRoot: BytesLike,
+    _depositToken: string,
+    _circuitVerificationKey: BytesLike,
+    _verifier: string,
+    _feeRouter: string,
+    _tipBlockLeaf: Types.BlockLeafStruct,
+    overrides?: Overrides & { from?: string }
+  ): Promise<RiftExchange> {
+    return super.deploy(
+      _mmrRoot,
+      _depositToken,
+      _circuitVerificationKey,
+      _verifier,
+      _feeRouter,
+      _tipBlockLeaf,
+      overrides || {}
+    ) as Promise<RiftExchange>;
+  }
   override getDeployTransaction(
     _mmrRoot: BytesLike,
-    _depositToken: AddressLike,
+    _depositToken: string,
     _circuitVerificationKey: BytesLike,
-    _verifier: AddressLike,
-    _feeRouter: AddressLike,
+    _verifier: string,
+    _feeRouter: string,
     _tipBlockLeaf: Types.BlockLeafStruct,
-    overrides?: NonPayableOverrides & { from?: string }
-  ): Promise<ContractDeployTransaction> {
+    overrides?: Overrides & { from?: string }
+  ): TransactionRequest {
     return super.getDeployTransaction(
       _mmrRoot,
       _depositToken,
@@ -1608,42 +1622,22 @@ export class RiftExchange__factory extends ContractFactory {
       overrides || {}
     );
   }
-  override deploy(
-    _mmrRoot: BytesLike,
-    _depositToken: AddressLike,
-    _circuitVerificationKey: BytesLike,
-    _verifier: AddressLike,
-    _feeRouter: AddressLike,
-    _tipBlockLeaf: Types.BlockLeafStruct,
-    overrides?: NonPayableOverrides & { from?: string }
-  ) {
-    return super.deploy(
-      _mmrRoot,
-      _depositToken,
-      _circuitVerificationKey,
-      _verifier,
-      _feeRouter,
-      _tipBlockLeaf,
-      overrides || {}
-    ) as Promise<
-      RiftExchange & {
-        deploymentTransaction(): ContractTransactionResponse;
-      }
-    >;
+  override attach(address: string): RiftExchange {
+    return super.attach(address) as RiftExchange;
   }
-  override connect(runner: ContractRunner | null): RiftExchange__factory {
-    return super.connect(runner) as RiftExchange__factory;
+  override connect(signer: Signer): RiftExchange__factory {
+    return super.connect(signer) as RiftExchange__factory;
   }
 
   static readonly bytecode = _bytecode;
   static readonly abi = _abi;
   static createInterface(): RiftExchangeInterface {
-    return new Interface(_abi) as RiftExchangeInterface;
+    return new utils.Interface(_abi) as RiftExchangeInterface;
   }
   static connect(
     address: string,
-    runner?: ContractRunner | null
+    signerOrProvider: Signer | Provider
   ): RiftExchange {
-    return new Contract(address, _abi, runner) as unknown as RiftExchange;
+    return new Contract(address, _abi, signerOrProvider) as RiftExchange;
   }
 }

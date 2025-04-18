@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Interface, type ContractRunner } from "ethers";
+import { Contract, Signer, utils } from "ethers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   IBundler,
   IBundlerInterface,
@@ -225,9 +226,12 @@ const _abi = [
 export class IBundler__factory {
   static readonly abi = _abi;
   static createInterface(): IBundlerInterface {
-    return new Interface(_abi) as IBundlerInterface;
+    return new utils.Interface(_abi) as IBundlerInterface;
   }
-  static connect(address: string, runner?: ContractRunner | null): IBundler {
-    return new Contract(address, _abi, runner) as unknown as IBundler;
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): IBundler {
+    return new Contract(address, _abi, signerOrProvider) as IBundler;
   }
 }

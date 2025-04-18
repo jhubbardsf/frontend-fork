@@ -7,7 +7,7 @@ import { useContractData } from '../../components/providers/ContractDataProvider
 import { useBundlerCaller } from '@/utils/bundleCaller';
 import { SwapRoute } from '@uniswap/smart-order-router';
 import { useWaitForTransactionReceipt } from 'wagmi';
-import { decodeError, ErrorType } from 'ethers-decode-error';
+import { decodeError, ErrorType } from '@jhubbardsf/ethers-decode-error';
 import { bundlerAbi } from '@/generatedWagmi';
 
 export enum DepositStatus {

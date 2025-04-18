@@ -3,22 +3,19 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Interface,
-  EventFragment,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  Signer,
+  utils,
 } from "ethers";
+import type { EventFragment } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
-  TypedLogDescription,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
+  OnEvent,
 } from "../../common";
 
 export declare namespace Types {
@@ -28,32 +25,32 @@ export declare namespace Types {
     swapBitcoinBlockHash: BytesLike;
     confirmationBlocks: BigNumberish;
     liquidityUnlockTimestamp: BigNumberish;
-    specifiedPayoutAddress: AddressLike;
+    specifiedPayoutAddress: string;
     totalSwapFee: BigNumberish;
     totalSwapOutput: BigNumberish;
     state: BigNumberish;
   };
 
   export type ProposedSwapStructOutput = [
-    swapIndex: bigint,
-    depositVaultCommitment: string,
-    swapBitcoinBlockHash: string,
-    confirmationBlocks: bigint,
-    liquidityUnlockTimestamp: bigint,
-    specifiedPayoutAddress: string,
-    totalSwapFee: bigint,
-    totalSwapOutput: bigint,
-    state: bigint
+    BigNumber,
+    string,
+    string,
+    number,
+    BigNumber,
+    string,
+    BigNumber,
+    BigNumber,
+    number
   ] & {
-    swapIndex: bigint;
+    swapIndex: BigNumber;
     depositVaultCommitment: string;
     swapBitcoinBlockHash: string;
-    confirmationBlocks: bigint;
-    liquidityUnlockTimestamp: bigint;
+    confirmationBlocks: number;
+    liquidityUnlockTimestamp: BigNumber;
     specifiedPayoutAddress: string;
-    totalSwapFee: bigint;
-    totalSwapOutput: bigint;
-    state: bigint;
+    totalSwapFee: BigNumber;
+    totalSwapOutput: BigNumber;
+    state: number;
   };
 
   export type DepositVaultStruct = {
@@ -63,350 +60,239 @@ export declare namespace Types {
     depositFee: BigNumberish;
     expectedSats: BigNumberish;
     btcPayoutScriptPubKey: BytesLike;
-    specifiedPayoutAddress: AddressLike;
-    ownerAddress: AddressLike;
+    specifiedPayoutAddress: string;
+    ownerAddress: string;
     salt: BytesLike;
     confirmationBlocks: BigNumberish;
     attestedBitcoinBlockHeight: BigNumberish;
   };
 
   export type DepositVaultStructOutput = [
-    vaultIndex: bigint,
-    depositTimestamp: bigint,
-    depositAmount: bigint,
-    depositFee: bigint,
-    expectedSats: bigint,
-    btcPayoutScriptPubKey: string,
-    specifiedPayoutAddress: string,
-    ownerAddress: string,
-    salt: string,
-    confirmationBlocks: bigint,
-    attestedBitcoinBlockHeight: bigint
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    string,
+    string,
+    string,
+    string,
+    number,
+    BigNumber
   ] & {
-    vaultIndex: bigint;
-    depositTimestamp: bigint;
-    depositAmount: bigint;
-    depositFee: bigint;
-    expectedSats: bigint;
+    vaultIndex: BigNumber;
+    depositTimestamp: BigNumber;
+    depositAmount: BigNumber;
+    depositFee: BigNumber;
+    expectedSats: BigNumber;
     btcPayoutScriptPubKey: string;
     specifiedPayoutAddress: string;
     ownerAddress: string;
     salt: string;
-    confirmationBlocks: bigint;
-    attestedBitcoinBlockHeight: bigint;
+    confirmationBlocks: number;
+    attestedBitcoinBlockHeight: BigNumber;
   };
 }
 
-export interface EventsInterface extends Interface {
-  getEvent(
-    nameOrSignatureOrTopic:
-      | "BitcoinLightClientUpdated"
-      | "BundlerExecution"
-      | "PermitTransferExecuted"
-      | "RiftDepositExecuted"
-      | "SwapExecuted"
-      | "SwapsUpdated"
-      | "VaultsUpdated"
-  ): EventFragment;
+export interface EventsInterface extends utils.Interface {
+  functions: {};
+
+  events: {
+    "BitcoinLightClientUpdated(bytes32,bytes32,bytes)": EventFragment;
+    "BundlerExecution(address,uint256)": EventFragment;
+    "PermitTransferExecuted(address,uint256)": EventFragment;
+    "RiftDepositExecuted(address,uint256)": EventFragment;
+    "SwapExecuted(uint256,uint256,uint256)": EventFragment;
+    "SwapsUpdated((uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8)[],uint8)": EventFragment;
+    "VaultsUpdated((uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64)[],uint8)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "BitcoinLightClientUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BundlerExecution"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "PermitTransferExecuted"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RiftDepositExecuted"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SwapExecuted"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SwapsUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "VaultsUpdated"): EventFragment;
 }
 
-export namespace BitcoinLightClientUpdatedEvent {
-  export type InputTuple = [
-    priorMmrRoot: BytesLike,
-    newMmrRoot: BytesLike,
-    compressedBlockLeaves: BytesLike
-  ];
-  export type OutputTuple = [
-    priorMmrRoot: string,
-    newMmrRoot: string,
-    compressedBlockLeaves: string
-  ];
-  export interface OutputObject {
-    priorMmrRoot: string;
-    newMmrRoot: string;
-    compressedBlockLeaves: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface BitcoinLightClientUpdatedEventObject {
+  priorMmrRoot: string;
+  newMmrRoot: string;
+  compressedBlockLeaves: string;
 }
+export type BitcoinLightClientUpdatedEvent = TypedEvent<
+  [string, string, string],
+  BitcoinLightClientUpdatedEventObject
+>;
 
-export namespace BundlerExecutionEvent {
-  export type InputTuple = [owner: AddressLike, cbBTCReceived: BigNumberish];
-  export type OutputTuple = [owner: string, cbBTCReceived: bigint];
-  export interface OutputObject {
-    owner: string;
-    cbBTCReceived: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
+export type BitcoinLightClientUpdatedEventFilter =
+  TypedEventFilter<BitcoinLightClientUpdatedEvent>;
 
-export namespace PermitTransferExecutedEvent {
-  export type InputTuple = [owner: AddressLike, numTransfers: BigNumberish];
-  export type OutputTuple = [owner: string, numTransfers: bigint];
-  export interface OutputObject {
-    owner: string;
-    numTransfers: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface BundlerExecutionEventObject {
+  owner: string;
+  cbBTCReceived: BigNumber;
 }
+export type BundlerExecutionEvent = TypedEvent<
+  [string, BigNumber],
+  BundlerExecutionEventObject
+>;
 
-export namespace RiftDepositExecutedEvent {
-  export type InputTuple = [
-    riftExchange: AddressLike,
-    depositAmount: BigNumberish
-  ];
-  export type OutputTuple = [riftExchange: string, depositAmount: bigint];
-  export interface OutputObject {
-    riftExchange: string;
-    depositAmount: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
+export type BundlerExecutionEventFilter =
+  TypedEventFilter<BundlerExecutionEvent>;
 
-export namespace SwapExecutedEvent {
-  export type InputTuple = [
-    initialCbBTCBalance: BigNumberish,
-    finalCbBTCBalance: BigNumberish,
-    cbBTCReceived: BigNumberish
-  ];
-  export type OutputTuple = [
-    initialCbBTCBalance: bigint,
-    finalCbBTCBalance: bigint,
-    cbBTCReceived: bigint
-  ];
-  export interface OutputObject {
-    initialCbBTCBalance: bigint;
-    finalCbBTCBalance: bigint;
-    cbBTCReceived: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface PermitTransferExecutedEventObject {
+  owner: string;
+  numTransfers: BigNumber;
 }
+export type PermitTransferExecutedEvent = TypedEvent<
+  [string, BigNumber],
+  PermitTransferExecutedEventObject
+>;
 
-export namespace SwapsUpdatedEvent {
-  export type InputTuple = [
-    swaps: Types.ProposedSwapStruct[],
-    context: BigNumberish
-  ];
-  export type OutputTuple = [
-    swaps: Types.ProposedSwapStructOutput[],
-    context: bigint
-  ];
-  export interface OutputObject {
-    swaps: Types.ProposedSwapStructOutput[];
-    context: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
+export type PermitTransferExecutedEventFilter =
+  TypedEventFilter<PermitTransferExecutedEvent>;
 
-export namespace VaultsUpdatedEvent {
-  export type InputTuple = [
-    vaults: Types.DepositVaultStruct[],
-    context: BigNumberish
-  ];
-  export type OutputTuple = [
-    vaults: Types.DepositVaultStructOutput[],
-    context: bigint
-  ];
-  export interface OutputObject {
-    vaults: Types.DepositVaultStructOutput[];
-    context: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface RiftDepositExecutedEventObject {
+  riftExchange: string;
+  depositAmount: BigNumber;
 }
+export type RiftDepositExecutedEvent = TypedEvent<
+  [string, BigNumber],
+  RiftDepositExecutedEventObject
+>;
+
+export type RiftDepositExecutedEventFilter =
+  TypedEventFilter<RiftDepositExecutedEvent>;
+
+export interface SwapExecutedEventObject {
+  initialCbBTCBalance: BigNumber;
+  finalCbBTCBalance: BigNumber;
+  cbBTCReceived: BigNumber;
+}
+export type SwapExecutedEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber],
+  SwapExecutedEventObject
+>;
+
+export type SwapExecutedEventFilter = TypedEventFilter<SwapExecutedEvent>;
+
+export interface SwapsUpdatedEventObject {
+  swaps: Types.ProposedSwapStructOutput[];
+  context: number;
+}
+export type SwapsUpdatedEvent = TypedEvent<
+  [Types.ProposedSwapStructOutput[], number],
+  SwapsUpdatedEventObject
+>;
+
+export type SwapsUpdatedEventFilter = TypedEventFilter<SwapsUpdatedEvent>;
+
+export interface VaultsUpdatedEventObject {
+  vaults: Types.DepositVaultStructOutput[];
+  context: number;
+}
+export type VaultsUpdatedEvent = TypedEvent<
+  [Types.DepositVaultStructOutput[], number],
+  VaultsUpdatedEventObject
+>;
+
+export type VaultsUpdatedEventFilter = TypedEventFilter<VaultsUpdatedEvent>;
 
 export interface Events extends BaseContract {
-  connect(runner?: ContractRunner | null): Events;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: EventsInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {};
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
-
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
-
-  getEvent(
-    key: "BitcoinLightClientUpdated"
-  ): TypedContractEvent<
-    BitcoinLightClientUpdatedEvent.InputTuple,
-    BitcoinLightClientUpdatedEvent.OutputTuple,
-    BitcoinLightClientUpdatedEvent.OutputObject
-  >;
-  getEvent(
-    key: "BundlerExecution"
-  ): TypedContractEvent<
-    BundlerExecutionEvent.InputTuple,
-    BundlerExecutionEvent.OutputTuple,
-    BundlerExecutionEvent.OutputObject
-  >;
-  getEvent(
-    key: "PermitTransferExecuted"
-  ): TypedContractEvent<
-    PermitTransferExecutedEvent.InputTuple,
-    PermitTransferExecutedEvent.OutputTuple,
-    PermitTransferExecutedEvent.OutputObject
-  >;
-  getEvent(
-    key: "RiftDepositExecuted"
-  ): TypedContractEvent<
-    RiftDepositExecutedEvent.InputTuple,
-    RiftDepositExecutedEvent.OutputTuple,
-    RiftDepositExecutedEvent.OutputObject
-  >;
-  getEvent(
-    key: "SwapExecuted"
-  ): TypedContractEvent<
-    SwapExecutedEvent.InputTuple,
-    SwapExecutedEvent.OutputTuple,
-    SwapExecutedEvent.OutputObject
-  >;
-  getEvent(
-    key: "SwapsUpdated"
-  ): TypedContractEvent<
-    SwapsUpdatedEvent.InputTuple,
-    SwapsUpdatedEvent.OutputTuple,
-    SwapsUpdatedEvent.OutputObject
-  >;
-  getEvent(
-    key: "VaultsUpdated"
-  ): TypedContractEvent<
-    VaultsUpdatedEvent.InputTuple,
-    VaultsUpdatedEvent.OutputTuple,
-    VaultsUpdatedEvent.OutputObject
-  >;
+  callStatic: {};
 
   filters: {
-    "BitcoinLightClientUpdated(bytes32,bytes32,bytes)": TypedContractEvent<
-      BitcoinLightClientUpdatedEvent.InputTuple,
-      BitcoinLightClientUpdatedEvent.OutputTuple,
-      BitcoinLightClientUpdatedEvent.OutputObject
-    >;
-    BitcoinLightClientUpdated: TypedContractEvent<
-      BitcoinLightClientUpdatedEvent.InputTuple,
-      BitcoinLightClientUpdatedEvent.OutputTuple,
-      BitcoinLightClientUpdatedEvent.OutputObject
-    >;
+    "BitcoinLightClientUpdated(bytes32,bytes32,bytes)"(
+      priorMmrRoot?: null,
+      newMmrRoot?: null,
+      compressedBlockLeaves?: null
+    ): BitcoinLightClientUpdatedEventFilter;
+    BitcoinLightClientUpdated(
+      priorMmrRoot?: null,
+      newMmrRoot?: null,
+      compressedBlockLeaves?: null
+    ): BitcoinLightClientUpdatedEventFilter;
 
-    "BundlerExecution(address,uint256)": TypedContractEvent<
-      BundlerExecutionEvent.InputTuple,
-      BundlerExecutionEvent.OutputTuple,
-      BundlerExecutionEvent.OutputObject
-    >;
-    BundlerExecution: TypedContractEvent<
-      BundlerExecutionEvent.InputTuple,
-      BundlerExecutionEvent.OutputTuple,
-      BundlerExecutionEvent.OutputObject
-    >;
+    "BundlerExecution(address,uint256)"(
+      owner?: string | null,
+      cbBTCReceived?: null
+    ): BundlerExecutionEventFilter;
+    BundlerExecution(
+      owner?: string | null,
+      cbBTCReceived?: null
+    ): BundlerExecutionEventFilter;
 
-    "PermitTransferExecuted(address,uint256)": TypedContractEvent<
-      PermitTransferExecutedEvent.InputTuple,
-      PermitTransferExecutedEvent.OutputTuple,
-      PermitTransferExecutedEvent.OutputObject
-    >;
-    PermitTransferExecuted: TypedContractEvent<
-      PermitTransferExecutedEvent.InputTuple,
-      PermitTransferExecutedEvent.OutputTuple,
-      PermitTransferExecutedEvent.OutputObject
-    >;
+    "PermitTransferExecuted(address,uint256)"(
+      owner?: string | null,
+      numTransfers?: null
+    ): PermitTransferExecutedEventFilter;
+    PermitTransferExecuted(
+      owner?: string | null,
+      numTransfers?: null
+    ): PermitTransferExecutedEventFilter;
 
-    "RiftDepositExecuted(address,uint256)": TypedContractEvent<
-      RiftDepositExecutedEvent.InputTuple,
-      RiftDepositExecutedEvent.OutputTuple,
-      RiftDepositExecutedEvent.OutputObject
-    >;
-    RiftDepositExecuted: TypedContractEvent<
-      RiftDepositExecutedEvent.InputTuple,
-      RiftDepositExecutedEvent.OutputTuple,
-      RiftDepositExecutedEvent.OutputObject
-    >;
+    "RiftDepositExecuted(address,uint256)"(
+      riftExchange?: string | null,
+      depositAmount?: null
+    ): RiftDepositExecutedEventFilter;
+    RiftDepositExecuted(
+      riftExchange?: string | null,
+      depositAmount?: null
+    ): RiftDepositExecutedEventFilter;
 
-    "SwapExecuted(uint256,uint256,uint256)": TypedContractEvent<
-      SwapExecutedEvent.InputTuple,
-      SwapExecutedEvent.OutputTuple,
-      SwapExecutedEvent.OutputObject
-    >;
-    SwapExecuted: TypedContractEvent<
-      SwapExecutedEvent.InputTuple,
-      SwapExecutedEvent.OutputTuple,
-      SwapExecutedEvent.OutputObject
-    >;
+    "SwapExecuted(uint256,uint256,uint256)"(
+      initialCbBTCBalance?: null,
+      finalCbBTCBalance?: null,
+      cbBTCReceived?: null
+    ): SwapExecutedEventFilter;
+    SwapExecuted(
+      initialCbBTCBalance?: null,
+      finalCbBTCBalance?: null,
+      cbBTCReceived?: null
+    ): SwapExecutedEventFilter;
 
-    "SwapsUpdated(tuple[],uint8)": TypedContractEvent<
-      SwapsUpdatedEvent.InputTuple,
-      SwapsUpdatedEvent.OutputTuple,
-      SwapsUpdatedEvent.OutputObject
-    >;
-    SwapsUpdated: TypedContractEvent<
-      SwapsUpdatedEvent.InputTuple,
-      SwapsUpdatedEvent.OutputTuple,
-      SwapsUpdatedEvent.OutputObject
-    >;
+    "SwapsUpdated((uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8)[],uint8)"(
+      swaps?: null,
+      context?: null
+    ): SwapsUpdatedEventFilter;
+    SwapsUpdated(swaps?: null, context?: null): SwapsUpdatedEventFilter;
 
-    "VaultsUpdated(tuple[],uint8)": TypedContractEvent<
-      VaultsUpdatedEvent.InputTuple,
-      VaultsUpdatedEvent.OutputTuple,
-      VaultsUpdatedEvent.OutputObject
-    >;
-    VaultsUpdated: TypedContractEvent<
-      VaultsUpdatedEvent.InputTuple,
-      VaultsUpdatedEvent.OutputTuple,
-      VaultsUpdatedEvent.OutputObject
-    >;
+    "VaultsUpdated((uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64)[],uint8)"(
+      vaults?: null,
+      context?: null
+    ): VaultsUpdatedEventFilter;
+    VaultsUpdated(vaults?: null, context?: null): VaultsUpdatedEventFilter;
   };
+
+  estimateGas: {};
+
+  populateTransaction: {};
 }

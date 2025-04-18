@@ -3,35 +3,35 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  EventFragment,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  ContractTransaction,
+  Overrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
-  TypedLogDescription,
+  FunctionFragment,
+  Result,
+  EventFragment,
+} from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
+import type {
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../common";
 
 export declare namespace ISignatureTransfer {
-  export type TokenPermissionsStruct = {
-    token: AddressLike;
-    amount: BigNumberish;
-  };
+  export type TokenPermissionsStruct = { token: string; amount: BigNumberish };
 
-  export type TokenPermissionsStructOutput = [token: string, amount: bigint] & {
+  export type TokenPermissionsStructOutput = [string, BigNumber] & {
     token: string;
-    amount: bigint;
+    amount: BigNumber;
   };
 
   export type PermitTransferFromStruct = {
@@ -41,24 +41,24 @@ export declare namespace ISignatureTransfer {
   };
 
   export type PermitTransferFromStructOutput = [
-    permitted: ISignatureTransfer.TokenPermissionsStructOutput,
-    nonce: bigint,
-    deadline: bigint
+    ISignatureTransfer.TokenPermissionsStructOutput,
+    BigNumber,
+    BigNumber
   ] & {
     permitted: ISignatureTransfer.TokenPermissionsStructOutput;
-    nonce: bigint;
-    deadline: bigint;
+    nonce: BigNumber;
+    deadline: BigNumber;
   };
 
   export type SignatureTransferDetailsStruct = {
-    to: AddressLike;
+    to: string;
     requestedAmount: BigNumberish;
   };
 
-  export type SignatureTransferDetailsStructOutput = [
-    to: string,
-    requestedAmount: bigint
-  ] & { to: string; requestedAmount: bigint };
+  export type SignatureTransferDetailsStructOutput = [string, BigNumber] & {
+    to: string;
+    requestedAmount: BigNumber;
+  };
 
   export type PermitBatchTransferFromStruct = {
     permitted: ISignatureTransfer.TokenPermissionsStruct[];
@@ -67,19 +67,29 @@ export declare namespace ISignatureTransfer {
   };
 
   export type PermitBatchTransferFromStructOutput = [
-    permitted: ISignatureTransfer.TokenPermissionsStructOutput[],
-    nonce: bigint,
-    deadline: bigint
+    ISignatureTransfer.TokenPermissionsStructOutput[],
+    BigNumber,
+    BigNumber
   ] & {
     permitted: ISignatureTransfer.TokenPermissionsStructOutput[];
-    nonce: bigint;
-    deadline: bigint;
+    nonce: BigNumber;
+    deadline: BigNumber;
   };
 }
 
-export interface SignatureTransferInterface extends Interface {
+export interface SignatureTransferInterface extends utils.Interface {
+  functions: {
+    "DOMAIN_SEPARATOR()": FunctionFragment;
+    "invalidateUnorderedNonces(uint256,uint256)": FunctionFragment;
+    "nonceBitmap(address,uint256)": FunctionFragment;
+    "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)": FunctionFragment;
+    "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)": FunctionFragment;
+    "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)": FunctionFragment;
+    "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "DOMAIN_SEPARATOR"
       | "invalidateUnorderedNonces"
       | "nonceBitmap"
@@ -88,8 +98,6 @@ export interface SignatureTransferInterface extends Interface {
       | "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"
       | "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"
   ): FunctionFragment;
-
-  getEvent(nameOrSignatureOrTopic: "UnorderedNonceInvalidation"): EventFragment;
 
   encodeFunctionData(
     functionFragment: "DOMAIN_SEPARATOR",
@@ -101,14 +109,14 @@ export interface SignatureTransferInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "nonceBitmap",
-    values: [AddressLike, BigNumberish]
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)",
     values: [
       ISignatureTransfer.PermitTransferFromStruct,
       ISignatureTransfer.SignatureTransferDetailsStruct,
-      AddressLike,
+      string,
       BytesLike
     ]
   ): string;
@@ -117,7 +125,7 @@ export interface SignatureTransferInterface extends Interface {
     values: [
       ISignatureTransfer.PermitBatchTransferFromStruct,
       ISignatureTransfer.SignatureTransferDetailsStruct[],
-      AddressLike,
+      string,
       BytesLike
     ]
   ): string;
@@ -126,7 +134,7 @@ export interface SignatureTransferInterface extends Interface {
     values: [
       ISignatureTransfer.PermitTransferFromStruct,
       ISignatureTransfer.SignatureTransferDetailsStruct,
-      AddressLike,
+      string,
       BytesLike,
       string,
       BytesLike
@@ -137,7 +145,7 @@ export interface SignatureTransferInterface extends Interface {
     values: [
       ISignatureTransfer.PermitBatchTransferFromStruct,
       ISignatureTransfer.SignatureTransferDetailsStruct[],
-      AddressLike,
+      string,
       BytesLike,
       string,
       BytesLike
@@ -172,223 +180,321 @@ export interface SignatureTransferInterface extends Interface {
     functionFragment: "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)",
     data: BytesLike
   ): Result;
+
+  events: {
+    "UnorderedNonceInvalidation(address,uint256,uint256)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "UnorderedNonceInvalidation"): EventFragment;
 }
 
-export namespace UnorderedNonceInvalidationEvent {
-  export type InputTuple = [
-    owner: AddressLike,
-    word: BigNumberish,
-    mask: BigNumberish
-  ];
-  export type OutputTuple = [owner: string, word: bigint, mask: bigint];
-  export interface OutputObject {
-    owner: string;
-    word: bigint;
-    mask: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface UnorderedNonceInvalidationEventObject {
+  owner: string;
+  word: BigNumber;
+  mask: BigNumber;
 }
+export type UnorderedNonceInvalidationEvent = TypedEvent<
+  [string, BigNumber, BigNumber],
+  UnorderedNonceInvalidationEventObject
+>;
+
+export type UnorderedNonceInvalidationEventFilter =
+  TypedEventFilter<UnorderedNonceInvalidationEvent>;
 
 export interface SignatureTransfer extends BaseContract {
-  connect(runner?: ContractRunner | null): SignatureTransfer;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: SignatureTransferInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    invalidateUnorderedNonces(
+      wordPos: BigNumberish,
+      mask: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  DOMAIN_SEPARATOR: TypedContractMethod<[], [string], "view">;
+    nonceBitmap(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
-  invalidateUnorderedNonces: TypedContractMethod<
-    [wordPos: BigNumberish, mask: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
-  nonceBitmap: TypedContractMethod<
-    [arg0: AddressLike, arg1: BigNumberish],
-    [bigint],
-    "view"
-  >;
-
-  "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)": TypedContractMethod<
-    [
+    "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)"(
       permit: ISignatureTransfer.PermitTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
-      owner: AddressLike,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      owner: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)": TypedContractMethod<
-    [
+    "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)"(
       permit: ISignatureTransfer.PermitBatchTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
-      owner: AddressLike,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      owner: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)": TypedContractMethod<
-    [
+    "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"(
       permit: ISignatureTransfer.PermitTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
-      owner: AddressLike,
+      owner: string,
       witness: BytesLike,
       witnessTypeString: string,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)": TypedContractMethod<
-    [
+    "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"(
       permit: ISignatureTransfer.PermitBatchTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
-      owner: AddressLike,
+      owner: string,
       witness: BytesLike,
       witnessTypeString: string,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+  };
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
-  getFunction(
-    nameOrSignature: "DOMAIN_SEPARATOR"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "invalidateUnorderedNonces"
-  ): TypedContractMethod<
-    [wordPos: BigNumberish, mask: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "nonceBitmap"
-  ): TypedContractMethod<
-    [arg0: AddressLike, arg1: BigNumberish],
-    [bigint],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)"
-  ): TypedContractMethod<
-    [
+  invalidateUnorderedNonces(
+    wordPos: BigNumberish,
+    mask: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  nonceBitmap(
+    arg0: string,
+    arg1: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)"(
+    permit: ISignatureTransfer.PermitTransferFromStruct,
+    transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
+    owner: string,
+    signature: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)"(
+    permit: ISignatureTransfer.PermitBatchTransferFromStruct,
+    transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+    owner: string,
+    signature: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"(
+    permit: ISignatureTransfer.PermitTransferFromStruct,
+    transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
+    owner: string,
+    witness: BytesLike,
+    witnessTypeString: string,
+    signature: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"(
+    permit: ISignatureTransfer.PermitBatchTransferFromStruct,
+    transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+    owner: string,
+    witness: BytesLike,
+    witnessTypeString: string,
+    signature: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  callStatic: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
+
+    invalidateUnorderedNonces(
+      wordPos: BigNumberish,
+      mask: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    nonceBitmap(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)"(
       permit: ISignatureTransfer.PermitTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
-      owner: AddressLike,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)"
-  ): TypedContractMethod<
-    [
+      owner: string,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)"(
       permit: ISignatureTransfer.PermitBatchTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
-      owner: AddressLike,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"
-  ): TypedContractMethod<
-    [
+      owner: string,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"(
       permit: ISignatureTransfer.PermitTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
-      owner: AddressLike,
+      owner: string,
       witness: BytesLike,
       witnessTypeString: string,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"
-  ): TypedContractMethod<
-    [
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"(
       permit: ISignatureTransfer.PermitBatchTransferFromStruct,
       transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
-      owner: AddressLike,
+      owner: string,
       witness: BytesLike,
       witnessTypeString: string,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-
-  getEvent(
-    key: "UnorderedNonceInvalidation"
-  ): TypedContractEvent<
-    UnorderedNonceInvalidationEvent.InputTuple,
-    UnorderedNonceInvalidationEvent.OutputTuple,
-    UnorderedNonceInvalidationEvent.OutputObject
-  >;
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {
-    "UnorderedNonceInvalidation(address,uint256,uint256)": TypedContractEvent<
-      UnorderedNonceInvalidationEvent.InputTuple,
-      UnorderedNonceInvalidationEvent.OutputTuple,
-      UnorderedNonceInvalidationEvent.OutputObject
-    >;
-    UnorderedNonceInvalidation: TypedContractEvent<
-      UnorderedNonceInvalidationEvent.InputTuple,
-      UnorderedNonceInvalidationEvent.OutputTuple,
-      UnorderedNonceInvalidationEvent.OutputObject
-    >;
+    "UnorderedNonceInvalidation(address,uint256,uint256)"(
+      owner?: string | null,
+      word?: null,
+      mask?: null
+    ): UnorderedNonceInvalidationEventFilter;
+    UnorderedNonceInvalidation(
+      owner?: string | null,
+      word?: null,
+      mask?: null
+    ): UnorderedNonceInvalidationEventFilter;
+  };
+
+  estimateGas: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
+
+    invalidateUnorderedNonces(
+      wordPos: BigNumberish,
+      mask: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    nonceBitmap(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)"(
+      permit: ISignatureTransfer.PermitTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
+      owner: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)"(
+      permit: ISignatureTransfer.PermitBatchTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+      owner: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"(
+      permit: ISignatureTransfer.PermitTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
+      owner: string,
+      witness: BytesLike,
+      witnessTypeString: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"(
+      permit: ISignatureTransfer.PermitBatchTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+      owner: string,
+      witness: BytesLike,
+      witnessTypeString: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    invalidateUnorderedNonces(
+      wordPos: BigNumberish,
+      mask: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    nonceBitmap(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "permitTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes)"(
+      permit: ISignatureTransfer.PermitTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
+      owner: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "permitTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes)"(
+      permit: ISignatureTransfer.PermitBatchTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+      owner: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "permitWitnessTransferFrom(((address,uint256),uint256,uint256),(address,uint256),address,bytes32,string,bytes)"(
+      permit: ISignatureTransfer.PermitTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct,
+      owner: string,
+      witness: BytesLike,
+      witnessTypeString: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "permitWitnessTransferFrom(((address,uint256)[],uint256,uint256),(address,uint256)[],address,bytes32,string,bytes)"(
+      permit: ISignatureTransfer.PermitBatchTransferFromStruct,
+      transferDetails: ISignatureTransfer.SignatureTransferDetailsStruct[],
+      owner: string,
+      witness: BytesLike,
+      witnessTypeString: string,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
   };
 }
