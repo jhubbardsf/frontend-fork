@@ -5,7 +5,7 @@ import { createStorage, cookieStorage } from 'wagmi';
 import { QueryClient } from '@tanstack/react-query';
 
 // Define a custom Anvil network for local development
-const anvilNetwork: AppKitNetwork = {
+export const anvilNetwork: AppKitNetwork = {
     id: 1337,
     name: 'Rift Devnet',
     nativeCurrency: {

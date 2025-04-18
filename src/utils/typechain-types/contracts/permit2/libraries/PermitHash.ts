@@ -3,25 +3,37 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../../common";
 
-export interface PermitHashInterface extends Interface {
+export interface PermitHashInterface extends utils.Interface {
+  functions: {
+    "_PERMIT_BATCH_TRANSFER_FROM_TYPEHASH()": FunctionFragment;
+    "_PERMIT_BATCH_TYPEHASH()": FunctionFragment;
+    "_PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB()": FunctionFragment;
+    "_PERMIT_DETAILS_TYPEHASH()": FunctionFragment;
+    "_PERMIT_SINGLE_TYPEHASH()": FunctionFragment;
+    "_PERMIT_TRANSFER_FROM_TYPEHASH()": FunctionFragment;
+    "_PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB()": FunctionFragment;
+    "_TOKEN_PERMISSIONS_TYPEHASH()": FunctionFragment;
+    "_TOKEN_PERMISSIONS_TYPESTRING()": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "_PERMIT_BATCH_TRANSFER_FROM_TYPEHASH"
       | "_PERMIT_BATCH_TYPEHASH"
       | "_PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB"
@@ -106,112 +118,181 @@ export interface PermitHashInterface extends Interface {
     functionFragment: "_TOKEN_PERMISSIONS_TYPESTRING",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface PermitHash extends BaseContract {
-  connect(runner?: ContractRunner | null): PermitHash;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: PermitHashInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    _PERMIT_BATCH_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    _PERMIT_BATCH_TYPEHASH(overrides?: CallOverrides): Promise<[string]>;
 
-  _PERMIT_BATCH_TRANSFER_FROM_TYPEHASH: TypedContractMethod<
-    [],
-    [string],
-    "view"
-  >;
+    _PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  _PERMIT_BATCH_TYPEHASH: TypedContractMethod<[], [string], "view">;
+    _PERMIT_DETAILS_TYPEHASH(overrides?: CallOverrides): Promise<[string]>;
 
-  _PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB: TypedContractMethod<
-    [],
-    [string],
-    "view"
-  >;
+    _PERMIT_SINGLE_TYPEHASH(overrides?: CallOverrides): Promise<[string]>;
 
-  _PERMIT_DETAILS_TYPEHASH: TypedContractMethod<[], [string], "view">;
+    _PERMIT_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  _PERMIT_SINGLE_TYPEHASH: TypedContractMethod<[], [string], "view">;
+    _PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  _PERMIT_TRANSFER_FROM_TYPEHASH: TypedContractMethod<[], [string], "view">;
+    _TOKEN_PERMISSIONS_TYPEHASH(overrides?: CallOverrides): Promise<[string]>;
 
-  _PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB: TypedContractMethod<
-    [],
-    [string],
-    "view"
-  >;
+    _TOKEN_PERMISSIONS_TYPESTRING(overrides?: CallOverrides): Promise<[string]>;
+  };
 
-  _TOKEN_PERMISSIONS_TYPEHASH: TypedContractMethod<[], [string], "view">;
+  _PERMIT_BATCH_TRANSFER_FROM_TYPEHASH(
+    overrides?: CallOverrides
+  ): Promise<string>;
 
-  _TOKEN_PERMISSIONS_TYPESTRING: TypedContractMethod<[], [string], "view">;
+  _PERMIT_BATCH_TYPEHASH(overrides?: CallOverrides): Promise<string>;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  _PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB(
+    overrides?: CallOverrides
+  ): Promise<string>;
 
-  getFunction(
-    nameOrSignature: "_PERMIT_BATCH_TRANSFER_FROM_TYPEHASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_PERMIT_BATCH_TYPEHASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_PERMIT_DETAILS_TYPEHASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_PERMIT_SINGLE_TYPEHASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_PERMIT_TRANSFER_FROM_TYPEHASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_TOKEN_PERMISSIONS_TYPEHASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "_TOKEN_PERMISSIONS_TYPESTRING"
-  ): TypedContractMethod<[], [string], "view">;
+  _PERMIT_DETAILS_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  _PERMIT_SINGLE_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  _PERMIT_TRANSFER_FROM_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  _PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB(
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  _TOKEN_PERMISSIONS_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+  _TOKEN_PERMISSIONS_TYPESTRING(overrides?: CallOverrides): Promise<string>;
+
+  callStatic: {
+    _PERMIT_BATCH_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    _PERMIT_BATCH_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    _PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    _PERMIT_DETAILS_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    _PERMIT_SINGLE_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    _PERMIT_TRANSFER_FROM_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    _PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    _TOKEN_PERMISSIONS_TYPEHASH(overrides?: CallOverrides): Promise<string>;
+
+    _TOKEN_PERMISSIONS_TYPESTRING(overrides?: CallOverrides): Promise<string>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    _PERMIT_BATCH_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    _PERMIT_BATCH_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    _PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    _PERMIT_DETAILS_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    _PERMIT_SINGLE_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    _PERMIT_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    _PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    _TOKEN_PERMISSIONS_TYPEHASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    _TOKEN_PERMISSIONS_TYPESTRING(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    _PERMIT_BATCH_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _PERMIT_BATCH_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _PERMIT_BATCH_WITNESS_TRANSFER_FROM_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _PERMIT_DETAILS_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _PERMIT_SINGLE_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _PERMIT_TRANSFER_FROM_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _PERMIT_TRANSFER_FROM_WITNESS_TYPEHASH_STUB(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _TOKEN_PERMISSIONS_TYPEHASH(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    _TOKEN_PERMISSIONS_TYPESTRING(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

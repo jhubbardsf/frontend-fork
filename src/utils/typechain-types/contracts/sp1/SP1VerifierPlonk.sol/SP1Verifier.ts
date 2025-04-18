@@ -3,26 +3,34 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../../common";
 
-export interface SP1VerifierInterface extends Interface {
+export interface SP1VerifierInterface extends utils.Interface {
+  functions: {
+    "VERIFIER_HASH()": FunctionFragment;
+    "VERSION()": FunctionFragment;
+    "Verify(bytes,uint256[])": FunctionFragment;
+    "hashPublicValues(bytes)": FunctionFragment;
+    "verifyProof(bytes32,bytes,bytes)": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "VERIFIER_HASH"
       | "VERSION"
       | "Verify"
@@ -62,100 +70,153 @@ export interface SP1VerifierInterface extends Interface {
     functionFragment: "verifyProof",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface SP1Verifier extends BaseContract {
-  connect(runner?: ContractRunner | null): SP1Verifier;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: SP1VerifierInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    VERIFIER_HASH(overrides?: CallOverrides): Promise<[string]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    VERSION(overrides?: CallOverrides): Promise<[string]>;
 
-  VERIFIER_HASH: TypedContractMethod<[], [string], "view">;
+    Verify(
+      proof: BytesLike,
+      public_inputs: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<[boolean] & { success: boolean }>;
 
-  VERSION: TypedContractMethod<[], [string], "view">;
+    hashPublicValues(
+      publicValues: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  Verify: TypedContractMethod<
-    [proof: BytesLike, public_inputs: BigNumberish[]],
-    [boolean],
-    "view"
-  >;
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+  };
 
-  hashPublicValues: TypedContractMethod<
-    [publicValues: BytesLike],
-    [string],
-    "view"
-  >;
+  VERIFIER_HASH(overrides?: CallOverrides): Promise<string>;
 
-  verifyProof: TypedContractMethod<
-    [programVKey: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
-    [void],
-    "view"
-  >;
+  VERSION(overrides?: CallOverrides): Promise<string>;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  Verify(
+    proof: BytesLike,
+    public_inputs: BigNumberish[],
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
-  getFunction(
-    nameOrSignature: "VERIFIER_HASH"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "VERSION"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "Verify"
-  ): TypedContractMethod<
-    [proof: BytesLike, public_inputs: BigNumberish[]],
-    [boolean],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "hashPublicValues"
-  ): TypedContractMethod<[publicValues: BytesLike], [string], "view">;
-  getFunction(
-    nameOrSignature: "verifyProof"
-  ): TypedContractMethod<
-    [programVKey: BytesLike, publicValues: BytesLike, proofBytes: BytesLike],
-    [void],
-    "view"
-  >;
+  hashPublicValues(
+    publicValues: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  verifyProof(
+    programVKey: BytesLike,
+    publicValues: BytesLike,
+    proofBytes: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<void>;
+
+  callStatic: {
+    VERIFIER_HASH(overrides?: CallOverrides): Promise<string>;
+
+    VERSION(overrides?: CallOverrides): Promise<string>;
+
+    Verify(
+      proof: BytesLike,
+      public_inputs: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    hashPublicValues(
+      publicValues: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    VERIFIER_HASH(overrides?: CallOverrides): Promise<BigNumber>;
+
+    VERSION(overrides?: CallOverrides): Promise<BigNumber>;
+
+    Verify(
+      proof: BytesLike,
+      public_inputs: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    hashPublicValues(
+      publicValues: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    VERIFIER_HASH(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    VERSION(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    Verify(
+      proof: BytesLike,
+      public_inputs: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    hashPublicValues(
+      publicValues: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    verifyProof(
+      programVKey: BytesLike,
+      publicValues: BytesLike,
+      proofBytes: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

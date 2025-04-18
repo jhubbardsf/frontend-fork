@@ -3,24 +3,28 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../../common";
 
-export interface IEIP712Interface extends Interface {
-  getFunction(nameOrSignature: "DOMAIN_SEPARATOR"): FunctionFragment;
+export interface IEIP712Interface extends utils.Interface {
+  functions: {
+    "DOMAIN_SEPARATOR()": FunctionFragment;
+  };
+
+  getFunction(nameOrSignatureOrTopic: "DOMAIN_SEPARATOR"): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "DOMAIN_SEPARATOR",
@@ -31,60 +35,53 @@ export interface IEIP712Interface extends Interface {
     functionFragment: "DOMAIN_SEPARATOR",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface IEIP712 extends BaseContract {
-  connect(runner?: ContractRunner | null): IEIP712;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: IEIP712Interface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
+  };
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+  DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
-  DOMAIN_SEPARATOR: TypedContractMethod<[], [string], "view">;
-
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
-
-  getFunction(
-    nameOrSignature: "DOMAIN_SEPARATOR"
-  ): TypedContractMethod<[], [string], "view">;
+  callStatic: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+  };
 }

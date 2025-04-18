@@ -3,22 +3,23 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  ContractTransaction,
+  PayableOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../common";
 
 export declare namespace Types {
@@ -28,15 +29,15 @@ export declare namespace Types {
     cumulativeChainwork: BigNumberish;
   };
 
-  export type BlockLeafStructOutput = [
-    blockHash: string,
-    height: bigint,
-    cumulativeChainwork: bigint
-  ] & { blockHash: string; height: bigint; cumulativeChainwork: bigint };
+  export type BlockLeafStructOutput = [string, number, BigNumber] & {
+    blockHash: string;
+    height: number;
+    cumulativeChainwork: BigNumber;
+  };
 
   export type DepositLiquidityParamsStruct = {
-    depositOwnerAddress: AddressLike;
-    specifiedPayoutAddress: AddressLike;
+    depositOwnerAddress: string;
+    specifiedPayoutAddress: string;
     depositAmount: BigNumberish;
     expectedSats: BigNumberish;
     btcPayoutScriptPubKey: BytesLike;
@@ -48,24 +49,24 @@ export declare namespace Types {
   };
 
   export type DepositLiquidityParamsStructOutput = [
-    depositOwnerAddress: string,
-    specifiedPayoutAddress: string,
-    depositAmount: bigint,
-    expectedSats: bigint,
-    btcPayoutScriptPubKey: string,
-    depositSalt: string,
-    confirmationBlocks: bigint,
-    safeBlockLeaf: Types.BlockLeafStructOutput,
-    safeBlockSiblings: string[],
-    safeBlockPeaks: string[]
+    string,
+    string,
+    BigNumber,
+    BigNumber,
+    string,
+    string,
+    number,
+    Types.BlockLeafStructOutput,
+    string[],
+    string[]
   ] & {
     depositOwnerAddress: string;
     specifiedPayoutAddress: string;
-    depositAmount: bigint;
-    expectedSats: bigint;
+    depositAmount: BigNumber;
+    expectedSats: BigNumber;
     btcPayoutScriptPubKey: string;
     depositSalt: string;
-    confirmationBlocks: bigint;
+    confirmationBlocks: number;
     safeBlockLeaf: Types.BlockLeafStructOutput;
     safeBlockSiblings: string[];
     safeBlockPeaks: string[];
@@ -77,26 +78,19 @@ export declare namespace Types {
     cbBTCReceived: BigNumberish;
   };
 
-  export type BundlerResultStructOutput = [
-    initialCbBTCBalance: bigint,
-    finalCbBTCBalance: bigint,
-    cbBTCReceived: bigint
-  ] & {
-    initialCbBTCBalance: bigint;
-    finalCbBTCBalance: bigint;
-    cbBTCReceived: bigint;
+  export type BundlerResultStructOutput = [BigNumber, BigNumber, BigNumber] & {
+    initialCbBTCBalance: BigNumber;
+    finalCbBTCBalance: BigNumber;
+    cbBTCReceived: BigNumber;
   };
 }
 
 export declare namespace ISignatureTransfer {
-  export type TokenPermissionsStruct = {
-    token: AddressLike;
-    amount: BigNumberish;
-  };
+  export type TokenPermissionsStruct = { token: string; amount: BigNumberish };
 
-  export type TokenPermissionsStructOutput = [token: string, amount: bigint] & {
+  export type TokenPermissionsStructOutput = [string, BigNumber] & {
     token: string;
-    amount: bigint;
+    amount: BigNumber;
   };
 
   export type PermitTransferFromStruct = {
@@ -106,19 +100,27 @@ export declare namespace ISignatureTransfer {
   };
 
   export type PermitTransferFromStructOutput = [
-    permitted: ISignatureTransfer.TokenPermissionsStructOutput,
-    nonce: bigint,
-    deadline: bigint
+    ISignatureTransfer.TokenPermissionsStructOutput,
+    BigNumber,
+    BigNumber
   ] & {
     permitted: ISignatureTransfer.TokenPermissionsStructOutput;
-    nonce: bigint;
-    deadline: bigint;
+    nonce: BigNumber;
+    deadline: BigNumber;
   };
 }
 
-export interface IBundlerInterface extends Interface {
+export interface IBundlerInterface extends utils.Interface {
+  functions: {
+    "cbBTC()": FunctionFragment;
+    "executeSwapAndDeposit(uint256,bytes,(address,address,uint256,uint64,bytes22,bytes32,uint8,(bytes32,uint32,uint256),bytes32[],bytes32[]),address,((address,uint256),uint256,uint256),bytes)": FunctionFragment;
+    "permit2()": FunctionFragment;
+    "riftExchange()": FunctionFragment;
+    "swapRouter()": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "cbBTC"
       | "executeSwapAndDeposit"
       | "permit2"
@@ -133,7 +135,7 @@ export interface IBundlerInterface extends Interface {
       BigNumberish,
       BytesLike,
       Types.DepositLiquidityParamsStruct,
-      AddressLike,
+      string,
       ISignatureTransfer.PermitTransferFromStruct,
       BytesLike
     ]
@@ -159,102 +161,133 @@ export interface IBundlerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "swapRouter", data: BytesLike): Result;
+
+  events: {};
 }
 
 export interface IBundler extends BaseContract {
-  connect(runner?: ContractRunner | null): IBundler;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: IBundlerInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    cbBTC(overrides?: CallOverrides): Promise<[string]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
-
-  cbBTC: TypedContractMethod<[], [string], "view">;
-
-  executeSwapAndDeposit: TypedContractMethod<
-    [
+    executeSwapAndDeposit(
       amountIn: BigNumberish,
       swapCalldata: BytesLike,
       params: Types.DepositLiquidityParamsStruct,
-      owner: AddressLike,
+      owner: string,
       permit: ISignatureTransfer.PermitTransferFromStruct,
-      signature: BytesLike
-    ],
-    [Types.BundlerResultStructOutput],
-    "payable"
-  >;
+      signature: BytesLike,
+      overrides?: PayableOverrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  permit2: TypedContractMethod<[], [string], "view">;
+    permit2(overrides?: CallOverrides): Promise<[string]>;
 
-  riftExchange: TypedContractMethod<[], [string], "view">;
+    riftExchange(overrides?: CallOverrides): Promise<[string]>;
 
-  swapRouter: TypedContractMethod<[], [string], "view">;
+    swapRouter(overrides?: CallOverrides): Promise<[string]>;
+  };
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  cbBTC(overrides?: CallOverrides): Promise<string>;
 
-  getFunction(
-    nameOrSignature: "cbBTC"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "executeSwapAndDeposit"
-  ): TypedContractMethod<
-    [
+  executeSwapAndDeposit(
+    amountIn: BigNumberish,
+    swapCalldata: BytesLike,
+    params: Types.DepositLiquidityParamsStruct,
+    owner: string,
+    permit: ISignatureTransfer.PermitTransferFromStruct,
+    signature: BytesLike,
+    overrides?: PayableOverrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  permit2(overrides?: CallOverrides): Promise<string>;
+
+  riftExchange(overrides?: CallOverrides): Promise<string>;
+
+  swapRouter(overrides?: CallOverrides): Promise<string>;
+
+  callStatic: {
+    cbBTC(overrides?: CallOverrides): Promise<string>;
+
+    executeSwapAndDeposit(
       amountIn: BigNumberish,
       swapCalldata: BytesLike,
       params: Types.DepositLiquidityParamsStruct,
-      owner: AddressLike,
+      owner: string,
       permit: ISignatureTransfer.PermitTransferFromStruct,
-      signature: BytesLike
-    ],
-    [Types.BundlerResultStructOutput],
-    "payable"
-  >;
-  getFunction(
-    nameOrSignature: "permit2"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "riftExchange"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "swapRouter"
-  ): TypedContractMethod<[], [string], "view">;
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<Types.BundlerResultStructOutput>;
+
+    permit2(overrides?: CallOverrides): Promise<string>;
+
+    riftExchange(overrides?: CallOverrides): Promise<string>;
+
+    swapRouter(overrides?: CallOverrides): Promise<string>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    cbBTC(overrides?: CallOverrides): Promise<BigNumber>;
+
+    executeSwapAndDeposit(
+      amountIn: BigNumberish,
+      swapCalldata: BytesLike,
+      params: Types.DepositLiquidityParamsStruct,
+      owner: string,
+      permit: ISignatureTransfer.PermitTransferFromStruct,
+      signature: BytesLike,
+      overrides?: PayableOverrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    permit2(overrides?: CallOverrides): Promise<BigNumber>;
+
+    riftExchange(overrides?: CallOverrides): Promise<BigNumber>;
+
+    swapRouter(overrides?: CallOverrides): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    cbBTC(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    executeSwapAndDeposit(
+      amountIn: BigNumberish,
+      swapCalldata: BytesLike,
+      params: Types.DepositLiquidityParamsStruct,
+      owner: string,
+      permit: ISignatureTransfer.PermitTransferFromStruct,
+      signature: BytesLike,
+      overrides?: PayableOverrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    permit2(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    riftExchange(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    swapRouter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+  };
 }
