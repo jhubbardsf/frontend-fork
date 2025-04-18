@@ -3,24 +3,27 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  EventFragment,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  ContractTransaction,
+  Overrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
-  TypedLogDescription,
+  FunctionFragment,
+  Result,
+  EventFragment,
+} from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
+import type {
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../common";
 
 export declare namespace Types {
@@ -30,11 +33,11 @@ export declare namespace Types {
     cumulativeChainwork: BigNumberish;
   };
 
-  export type BlockLeafStructOutput = [
-    blockHash: string,
-    height: bigint,
-    cumulativeChainwork: bigint
-  ] & { blockHash: string; height: bigint; cumulativeChainwork: bigint };
+  export type BlockLeafStructOutput = [string, number, BigNumber] & {
+    blockHash: string;
+    height: number;
+    cumulativeChainwork: BigNumber;
+  };
 
   export type ProposedSwapStruct = {
     swapIndex: BigNumberish;
@@ -42,32 +45,32 @@ export declare namespace Types {
     swapBitcoinBlockHash: BytesLike;
     confirmationBlocks: BigNumberish;
     liquidityUnlockTimestamp: BigNumberish;
-    specifiedPayoutAddress: AddressLike;
+    specifiedPayoutAddress: string;
     totalSwapFee: BigNumberish;
     totalSwapOutput: BigNumberish;
     state: BigNumberish;
   };
 
   export type ProposedSwapStructOutput = [
-    swapIndex: bigint,
-    depositVaultCommitment: string,
-    swapBitcoinBlockHash: string,
-    confirmationBlocks: bigint,
-    liquidityUnlockTimestamp: bigint,
-    specifiedPayoutAddress: string,
-    totalSwapFee: bigint,
-    totalSwapOutput: bigint,
-    state: bigint
+    BigNumber,
+    string,
+    string,
+    number,
+    BigNumber,
+    string,
+    BigNumber,
+    BigNumber,
+    number
   ] & {
-    swapIndex: bigint;
+    swapIndex: BigNumber;
     depositVaultCommitment: string;
     swapBitcoinBlockHash: string;
-    confirmationBlocks: bigint;
-    liquidityUnlockTimestamp: bigint;
+    confirmationBlocks: number;
+    liquidityUnlockTimestamp: BigNumber;
     specifiedPayoutAddress: string;
-    totalSwapFee: bigint;
-    totalSwapOutput: bigint;
-    state: bigint;
+    totalSwapFee: BigNumber;
+    totalSwapOutput: BigNumber;
+    state: number;
   };
 
   export type DepositVaultStruct = {
@@ -77,42 +80,42 @@ export declare namespace Types {
     depositFee: BigNumberish;
     expectedSats: BigNumberish;
     btcPayoutScriptPubKey: BytesLike;
-    specifiedPayoutAddress: AddressLike;
-    ownerAddress: AddressLike;
+    specifiedPayoutAddress: string;
+    ownerAddress: string;
     salt: BytesLike;
     confirmationBlocks: BigNumberish;
     attestedBitcoinBlockHeight: BigNumberish;
   };
 
   export type DepositVaultStructOutput = [
-    vaultIndex: bigint,
-    depositTimestamp: bigint,
-    depositAmount: bigint,
-    depositFee: bigint,
-    expectedSats: bigint,
-    btcPayoutScriptPubKey: string,
-    specifiedPayoutAddress: string,
-    ownerAddress: string,
-    salt: string,
-    confirmationBlocks: bigint,
-    attestedBitcoinBlockHeight: bigint
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    string,
+    string,
+    string,
+    string,
+    number,
+    BigNumber
   ] & {
-    vaultIndex: bigint;
-    depositTimestamp: bigint;
-    depositAmount: bigint;
-    depositFee: bigint;
-    expectedSats: bigint;
+    vaultIndex: BigNumber;
+    depositTimestamp: BigNumber;
+    depositAmount: BigNumber;
+    depositFee: BigNumber;
+    expectedSats: BigNumber;
     btcPayoutScriptPubKey: string;
     specifiedPayoutAddress: string;
     ownerAddress: string;
     salt: string;
-    confirmationBlocks: bigint;
-    attestedBitcoinBlockHeight: bigint;
+    confirmationBlocks: number;
+    attestedBitcoinBlockHeight: BigNumber;
   };
 
   export type DepositLiquidityParamsStruct = {
-    depositOwnerAddress: AddressLike;
-    specifiedPayoutAddress: AddressLike;
+    depositOwnerAddress: string;
+    specifiedPayoutAddress: string;
     depositAmount: BigNumberish;
     expectedSats: BigNumberish;
     btcPayoutScriptPubKey: BytesLike;
@@ -124,24 +127,24 @@ export declare namespace Types {
   };
 
   export type DepositLiquidityParamsStructOutput = [
-    depositOwnerAddress: string,
-    specifiedPayoutAddress: string,
-    depositAmount: bigint,
-    expectedSats: bigint,
-    btcPayoutScriptPubKey: string,
-    depositSalt: string,
-    confirmationBlocks: bigint,
-    safeBlockLeaf: Types.BlockLeafStructOutput,
-    safeBlockSiblings: string[],
-    safeBlockPeaks: string[]
+    string,
+    string,
+    BigNumber,
+    BigNumber,
+    string,
+    string,
+    number,
+    Types.BlockLeafStructOutput,
+    string[],
+    string[]
   ] & {
     depositOwnerAddress: string;
     specifiedPayoutAddress: string;
-    depositAmount: bigint;
-    expectedSats: bigint;
+    depositAmount: BigNumber;
+    expectedSats: BigNumber;
     btcPayoutScriptPubKey: string;
     depositSalt: string;
-    confirmationBlocks: bigint;
+    confirmationBlocks: number;
     safeBlockLeaf: Types.BlockLeafStructOutput;
     safeBlockSiblings: string[];
     safeBlockPeaks: string[];
@@ -153,8 +156,8 @@ export declare namespace Types {
   };
 
   export type DepositLiquidityWithOverwriteParamsStructOutput = [
-    depositParams: Types.DepositLiquidityParamsStructOutput,
-    overwriteVault: Types.DepositVaultStructOutput
+    Types.DepositLiquidityParamsStructOutput,
+    Types.DepositVaultStructOutput
   ] & {
     depositParams: Types.DepositLiquidityParamsStructOutput;
     overwriteVault: Types.DepositVaultStructOutput;
@@ -171,21 +174,21 @@ export declare namespace Types {
   };
 
   export type ReleaseLiquidityParamsStructOutput = [
-    swap: Types.ProposedSwapStructOutput,
-    swapBlockChainwork: bigint,
-    swapBlockHeight: bigint,
-    bitcoinSwapBlockSiblings: string[],
-    bitcoinSwapBlockPeaks: string[],
-    utilizedVault: Types.DepositVaultStructOutput,
-    tipBlockHeight: bigint
+    Types.ProposedSwapStructOutput,
+    BigNumber,
+    number,
+    string[],
+    string[],
+    Types.DepositVaultStructOutput,
+    number
   ] & {
     swap: Types.ProposedSwapStructOutput;
-    swapBlockChainwork: bigint;
-    swapBlockHeight: bigint;
+    swapBlockChainwork: BigNumber;
+    swapBlockHeight: number;
     bitcoinSwapBlockSiblings: string[];
     bitcoinSwapBlockPeaks: string[];
     utilizedVault: Types.DepositVaultStructOutput;
-    tipBlockHeight: bigint;
+    tipBlockHeight: number;
   };
 
   export type SubmitSwapProofParamsStruct = {
@@ -199,18 +202,18 @@ export declare namespace Types {
   };
 
   export type SubmitSwapProofParamsStructOutput = [
-    swapBitcoinTxid: string,
-    vault: Types.DepositVaultStructOutput,
-    storageStrategy: bigint,
-    localOverwriteIndex: bigint,
-    swapBitcoinBlockLeaf: Types.BlockLeafStructOutput,
-    swapBitcoinBlockSiblings: string[],
-    swapBitcoinBlockPeaks: string[]
+    string,
+    Types.DepositVaultStructOutput,
+    number,
+    number,
+    Types.BlockLeafStructOutput,
+    string[],
+    string[]
   ] & {
     swapBitcoinTxid: string;
     vault: Types.DepositVaultStructOutput;
-    storageStrategy: bigint;
-    localOverwriteIndex: bigint;
+    storageStrategy: number;
+    localOverwriteIndex: number;
     swapBitcoinBlockLeaf: Types.BlockLeafStructOutput;
     swapBitcoinBlockSiblings: string[];
     swapBitcoinBlockPeaks: string[];
@@ -224,10 +227,10 @@ export declare namespace Types {
   };
 
   export type BlockProofParamsStructOutput = [
-    priorMmrRoot: string,
-    newMmrRoot: string,
-    compressedBlockLeaves: string,
-    tipBlockLeaf: Types.BlockLeafStructOutput
+    string,
+    string,
+    string,
+    Types.BlockLeafStructOutput
   ] & {
     priorMmrRoot: string;
     newMmrRoot: string;
@@ -236,9 +239,36 @@ export declare namespace Types {
   };
 }
 
-export interface RiftExchangeInterface extends Interface {
+export interface RiftExchangeInterface extends utils.Interface {
+  functions: {
+    "CIRCUIT_VERIFICATION_KEY()": FunctionFragment;
+    "DEPOSIT_TOKEN()": FunctionFragment;
+    "FEE_ROUTER_ADDRESS()": FunctionFragment;
+    "TOKEN_DECIMALS()": FunctionFragment;
+    "VERIFIER()": FunctionFragment;
+    "accumulatedFeeBalance()": FunctionFragment;
+    "checkpoints(bytes32)": FunctionFragment;
+    "depositLiquidity((address,address,uint256,uint64,bytes22,bytes32,uint8,(bytes32,uint32,uint256),bytes32[],bytes32[]))": FunctionFragment;
+    "depositLiquidityWithOverwrite(((address,address,uint256,uint64,bytes22,bytes32,uint8,(bytes32,uint32,uint256),bytes32[],bytes32[]),(uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64)))": FunctionFragment;
+    "getLightClientHeight()": FunctionFragment;
+    "getSwapCommitment(uint256)": FunctionFragment;
+    "getSwapCommitmentsLength()": FunctionFragment;
+    "getVaultCommitment(uint256)": FunctionFragment;
+    "getVaultCommitmentsLength()": FunctionFragment;
+    "mmrRoot()": FunctionFragment;
+    "payoutToFeeRouter()": FunctionFragment;
+    "proveBlockInclusion((bytes32,uint32,uint256),bytes32[],bytes32[])": FunctionFragment;
+    "releaseLiquidityBatch(((uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8),uint256,uint32,bytes32[],bytes32[],(uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64),uint32)[])": FunctionFragment;
+    "submitBatchSwapProof((bytes32,(uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64),uint8,uint16,(bytes32,uint32,uint256),bytes32[],bytes32[])[],(uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8)[],bytes)": FunctionFragment;
+    "submitBatchSwapProofWithLightClientUpdate((bytes32,(uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64),uint8,uint16,(bytes32,uint32,uint256),bytes32[],bytes32[])[],(bytes32,bytes32,bytes,(bytes32,uint32,uint256)),(uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8)[],bytes)": FunctionFragment;
+    "swapCommitments(uint256)": FunctionFragment;
+    "updateLightClient((bytes32,bytes32,bytes,(bytes32,uint32,uint256)),bytes)": FunctionFragment;
+    "vaultCommitments(uint256)": FunctionFragment;
+    "withdrawLiquidity((uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64))": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "CIRCUIT_VERIFICATION_KEY"
       | "DEPOSIT_TOKEN"
       | "FEE_ROUTER_ADDRESS"
@@ -264,13 +294,6 @@ export interface RiftExchangeInterface extends Interface {
       | "vaultCommitments"
       | "withdrawLiquidity"
   ): FunctionFragment;
-
-  getEvent(
-    nameOrSignatureOrTopic:
-      | "BitcoinLightClientUpdated"
-      | "SwapsUpdated"
-      | "VaultsUpdated"
-  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "CIRCUIT_VERIFICATION_KEY",
@@ -462,406 +485,616 @@ export interface RiftExchangeInterface extends Interface {
     functionFragment: "withdrawLiquidity",
     data: BytesLike
   ): Result;
+
+  events: {
+    "BitcoinLightClientUpdated(bytes32,bytes32,bytes)": EventFragment;
+    "SwapsUpdated((uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8)[],uint8)": EventFragment;
+    "VaultsUpdated((uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64)[],uint8)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "BitcoinLightClientUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SwapsUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "VaultsUpdated"): EventFragment;
 }
 
-export namespace BitcoinLightClientUpdatedEvent {
-  export type InputTuple = [
-    priorMmrRoot: BytesLike,
-    newMmrRoot: BytesLike,
-    compressedBlockLeaves: BytesLike
-  ];
-  export type OutputTuple = [
-    priorMmrRoot: string,
-    newMmrRoot: string,
-    compressedBlockLeaves: string
-  ];
-  export interface OutputObject {
-    priorMmrRoot: string;
-    newMmrRoot: string;
-    compressedBlockLeaves: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface BitcoinLightClientUpdatedEventObject {
+  priorMmrRoot: string;
+  newMmrRoot: string;
+  compressedBlockLeaves: string;
 }
+export type BitcoinLightClientUpdatedEvent = TypedEvent<
+  [string, string, string],
+  BitcoinLightClientUpdatedEventObject
+>;
 
-export namespace SwapsUpdatedEvent {
-  export type InputTuple = [
-    swaps: Types.ProposedSwapStruct[],
-    context: BigNumberish
-  ];
-  export type OutputTuple = [
-    swaps: Types.ProposedSwapStructOutput[],
-    context: bigint
-  ];
-  export interface OutputObject {
-    swaps: Types.ProposedSwapStructOutput[];
-    context: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
+export type BitcoinLightClientUpdatedEventFilter =
+  TypedEventFilter<BitcoinLightClientUpdatedEvent>;
 
-export namespace VaultsUpdatedEvent {
-  export type InputTuple = [
-    vaults: Types.DepositVaultStruct[],
-    context: BigNumberish
-  ];
-  export type OutputTuple = [
-    vaults: Types.DepositVaultStructOutput[],
-    context: bigint
-  ];
-  export interface OutputObject {
-    vaults: Types.DepositVaultStructOutput[];
-    context: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface SwapsUpdatedEventObject {
+  swaps: Types.ProposedSwapStructOutput[];
+  context: number;
 }
+export type SwapsUpdatedEvent = TypedEvent<
+  [Types.ProposedSwapStructOutput[], number],
+  SwapsUpdatedEventObject
+>;
+
+export type SwapsUpdatedEventFilter = TypedEventFilter<SwapsUpdatedEvent>;
+
+export interface VaultsUpdatedEventObject {
+  vaults: Types.DepositVaultStructOutput[];
+  context: number;
+}
+export type VaultsUpdatedEvent = TypedEvent<
+  [Types.DepositVaultStructOutput[], number],
+  VaultsUpdatedEventObject
+>;
+
+export type VaultsUpdatedEventFilter = TypedEventFilter<VaultsUpdatedEvent>;
 
 export interface RiftExchange extends BaseContract {
-  connect(runner?: ContractRunner | null): RiftExchange;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: RiftExchangeInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    CIRCUIT_VERIFICATION_KEY(overrides?: CallOverrides): Promise<[string]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    DEPOSIT_TOKEN(overrides?: CallOverrides): Promise<[string]>;
 
-  CIRCUIT_VERIFICATION_KEY: TypedContractMethod<[], [string], "view">;
+    FEE_ROUTER_ADDRESS(overrides?: CallOverrides): Promise<[string]>;
 
-  DEPOSIT_TOKEN: TypedContractMethod<[], [string], "view">;
+    TOKEN_DECIMALS(overrides?: CallOverrides): Promise<[number]>;
 
-  FEE_ROUTER_ADDRESS: TypedContractMethod<[], [string], "view">;
+    VERIFIER(overrides?: CallOverrides): Promise<[string]>;
 
-  TOKEN_DECIMALS: TypedContractMethod<[], [bigint], "view">;
+    accumulatedFeeBalance(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-  VERIFIER: TypedContractMethod<[], [string], "view">;
-
-  accumulatedFeeBalance: TypedContractMethod<[], [bigint], "view">;
-
-  checkpoints: TypedContractMethod<
-    [arg0: BytesLike],
-    [
+    checkpoints(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
       [boolean, Types.BlockLeafStructOutput] & {
         established: boolean;
         tipBlockLeaf: Types.BlockLeafStructOutput;
       }
-    ],
-    "view"
-  >;
+    >;
 
-  depositLiquidity: TypedContractMethod<
-    [params: Types.DepositLiquidityParamsStruct],
-    [void],
-    "nonpayable"
-  >;
+    depositLiquidity(
+      params: Types.DepositLiquidityParamsStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  depositLiquidityWithOverwrite: TypedContractMethod<
-    [params: Types.DepositLiquidityWithOverwriteParamsStruct],
-    [void],
-    "nonpayable"
-  >;
+    depositLiquidityWithOverwrite(
+      params: Types.DepositLiquidityWithOverwriteParamsStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  getLightClientHeight: TypedContractMethod<[], [bigint], "view">;
+    getLightClientHeight(overrides?: CallOverrides): Promise<[number]>;
 
-  getSwapCommitment: TypedContractMethod<
-    [swapIndex: BigNumberish],
-    [string],
-    "view"
-  >;
+    getSwapCommitment(
+      swapIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  getSwapCommitmentsLength: TypedContractMethod<[], [bigint], "view">;
+    getSwapCommitmentsLength(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-  getVaultCommitment: TypedContractMethod<
-    [vaultIndex: BigNumberish],
-    [string],
-    "view"
-  >;
+    getVaultCommitment(
+      vaultIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
 
-  getVaultCommitmentsLength: TypedContractMethod<[], [bigint], "view">;
+    getVaultCommitmentsLength(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-  mmrRoot: TypedContractMethod<[], [string], "view">;
+    mmrRoot(overrides?: CallOverrides): Promise<[string]>;
 
-  payoutToFeeRouter: TypedContractMethod<[], [void], "nonpayable">;
+    payoutToFeeRouter(
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  proveBlockInclusion: TypedContractMethod<
-    [
+    proveBlockInclusion(
       blockLeaf: Types.BlockLeafStruct,
       siblings: BytesLike[],
-      peaks: BytesLike[]
-    ],
-    [boolean],
-    "view"
-  >;
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
 
-  releaseLiquidityBatch: TypedContractMethod<
-    [paramsArray: Types.ReleaseLiquidityParamsStruct[]],
-    [void],
-    "nonpayable"
-  >;
+    releaseLiquidityBatch(
+      paramsArray: Types.ReleaseLiquidityParamsStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  submitBatchSwapProof: TypedContractMethod<
-    [
+    submitBatchSwapProof(
       swapParams: Types.SubmitSwapProofParamsStruct[],
       overwriteSwaps: Types.ProposedSwapStruct[],
-      proof: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  submitBatchSwapProofWithLightClientUpdate: TypedContractMethod<
-    [
+    submitBatchSwapProofWithLightClientUpdate(
       swapParams: Types.SubmitSwapProofParamsStruct[],
       blockProofParams: Types.BlockProofParamsStruct,
       overwriteSwaps: Types.ProposedSwapStruct[],
-      proof: BytesLike
-    ],
-    [void],
-    "nonpayable"
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    swapCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    updateLightClient(
+      blockProofParams: Types.BlockProofParamsStruct,
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+
+    vaultCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    withdrawLiquidity(
+      vault: Types.DepositVaultStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+  };
+
+  CIRCUIT_VERIFICATION_KEY(overrides?: CallOverrides): Promise<string>;
+
+  DEPOSIT_TOKEN(overrides?: CallOverrides): Promise<string>;
+
+  FEE_ROUTER_ADDRESS(overrides?: CallOverrides): Promise<string>;
+
+  TOKEN_DECIMALS(overrides?: CallOverrides): Promise<number>;
+
+  VERIFIER(overrides?: CallOverrides): Promise<string>;
+
+  accumulatedFeeBalance(overrides?: CallOverrides): Promise<BigNumber>;
+
+  checkpoints(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<
+    [boolean, Types.BlockLeafStructOutput] & {
+      established: boolean;
+      tipBlockLeaf: Types.BlockLeafStructOutput;
+    }
   >;
 
-  swapCommitments: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  depositLiquidity(
+    params: Types.DepositLiquidityParamsStruct,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
 
-  updateLightClient: TypedContractMethod<
-    [blockProofParams: Types.BlockProofParamsStruct, proof: BytesLike],
-    [void],
-    "nonpayable"
-  >;
+  depositLiquidityWithOverwrite(
+    params: Types.DepositLiquidityWithOverwriteParamsStruct,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
 
-  vaultCommitments: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getLightClientHeight(overrides?: CallOverrides): Promise<number>;
 
-  withdrawLiquidity: TypedContractMethod<
-    [vault: Types.DepositVaultStruct],
-    [void],
-    "nonpayable"
-  >;
+  getSwapCommitment(
+    swapIndex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  getSwapCommitmentsLength(overrides?: CallOverrides): Promise<BigNumber>;
 
-  getFunction(
-    nameOrSignature: "CIRCUIT_VERIFICATION_KEY"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "DEPOSIT_TOKEN"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "FEE_ROUTER_ADDRESS"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "TOKEN_DECIMALS"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "VERIFIER"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "accumulatedFeeBalance"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "checkpoints"
-  ): TypedContractMethod<
-    [arg0: BytesLike],
-    [
+  getVaultCommitment(
+    vaultIndex: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  getVaultCommitmentsLength(overrides?: CallOverrides): Promise<BigNumber>;
+
+  mmrRoot(overrides?: CallOverrides): Promise<string>;
+
+  payoutToFeeRouter(
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  proveBlockInclusion(
+    blockLeaf: Types.BlockLeafStruct,
+    siblings: BytesLike[],
+    peaks: BytesLike[],
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  releaseLiquidityBatch(
+    paramsArray: Types.ReleaseLiquidityParamsStruct[],
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  submitBatchSwapProof(
+    swapParams: Types.SubmitSwapProofParamsStruct[],
+    overwriteSwaps: Types.ProposedSwapStruct[],
+    proof: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  submitBatchSwapProofWithLightClientUpdate(
+    swapParams: Types.SubmitSwapProofParamsStruct[],
+    blockProofParams: Types.BlockProofParamsStruct,
+    overwriteSwaps: Types.ProposedSwapStruct[],
+    proof: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  swapCommitments(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  updateLightClient(
+    blockProofParams: Types.BlockProofParamsStruct,
+    proof: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  vaultCommitments(
+    arg0: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  withdrawLiquidity(
+    vault: Types.DepositVaultStruct,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  callStatic: {
+    CIRCUIT_VERIFICATION_KEY(overrides?: CallOverrides): Promise<string>;
+
+    DEPOSIT_TOKEN(overrides?: CallOverrides): Promise<string>;
+
+    FEE_ROUTER_ADDRESS(overrides?: CallOverrides): Promise<string>;
+
+    TOKEN_DECIMALS(overrides?: CallOverrides): Promise<number>;
+
+    VERIFIER(overrides?: CallOverrides): Promise<string>;
+
+    accumulatedFeeBalance(overrides?: CallOverrides): Promise<BigNumber>;
+
+    checkpoints(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
       [boolean, Types.BlockLeafStructOutput] & {
         established: boolean;
         tipBlockLeaf: Types.BlockLeafStructOutput;
       }
-    ],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "depositLiquidity"
-  ): TypedContractMethod<
-    [params: Types.DepositLiquidityParamsStruct],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "depositLiquidityWithOverwrite"
-  ): TypedContractMethod<
-    [params: Types.DepositLiquidityWithOverwriteParamsStruct],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "getLightClientHeight"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "getSwapCommitment"
-  ): TypedContractMethod<[swapIndex: BigNumberish], [string], "view">;
-  getFunction(
-    nameOrSignature: "getSwapCommitmentsLength"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "getVaultCommitment"
-  ): TypedContractMethod<[vaultIndex: BigNumberish], [string], "view">;
-  getFunction(
-    nameOrSignature: "getVaultCommitmentsLength"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "mmrRoot"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "payoutToFeeRouter"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "proveBlockInclusion"
-  ): TypedContractMethod<
-    [
+    >;
+
+    depositLiquidity(
+      params: Types.DepositLiquidityParamsStruct,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    depositLiquidityWithOverwrite(
+      params: Types.DepositLiquidityWithOverwriteParamsStruct,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    getLightClientHeight(overrides?: CallOverrides): Promise<number>;
+
+    getSwapCommitment(
+      swapIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    getSwapCommitmentsLength(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getVaultCommitment(
+      vaultIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    getVaultCommitmentsLength(overrides?: CallOverrides): Promise<BigNumber>;
+
+    mmrRoot(overrides?: CallOverrides): Promise<string>;
+
+    payoutToFeeRouter(overrides?: CallOverrides): Promise<void>;
+
+    proveBlockInclusion(
       blockLeaf: Types.BlockLeafStruct,
       siblings: BytesLike[],
-      peaks: BytesLike[]
-    ],
-    [boolean],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "releaseLiquidityBatch"
-  ): TypedContractMethod<
-    [paramsArray: Types.ReleaseLiquidityParamsStruct[]],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "submitBatchSwapProof"
-  ): TypedContractMethod<
-    [
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    releaseLiquidityBatch(
+      paramsArray: Types.ReleaseLiquidityParamsStruct[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    submitBatchSwapProof(
       swapParams: Types.SubmitSwapProofParamsStruct[],
       overwriteSwaps: Types.ProposedSwapStruct[],
-      proof: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "submitBatchSwapProofWithLightClientUpdate"
-  ): TypedContractMethod<
-    [
+      proof: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    submitBatchSwapProofWithLightClientUpdate(
       swapParams: Types.SubmitSwapProofParamsStruct[],
       blockProofParams: Types.BlockProofParamsStruct,
       overwriteSwaps: Types.ProposedSwapStruct[],
-      proof: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "swapCommitments"
-  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
-  getFunction(
-    nameOrSignature: "updateLightClient"
-  ): TypedContractMethod<
-    [blockProofParams: Types.BlockProofParamsStruct, proof: BytesLike],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "vaultCommitments"
-  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
-  getFunction(
-    nameOrSignature: "withdrawLiquidity"
-  ): TypedContractMethod<
-    [vault: Types.DepositVaultStruct],
-    [void],
-    "nonpayable"
-  >;
+      proof: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
-  getEvent(
-    key: "BitcoinLightClientUpdated"
-  ): TypedContractEvent<
-    BitcoinLightClientUpdatedEvent.InputTuple,
-    BitcoinLightClientUpdatedEvent.OutputTuple,
-    BitcoinLightClientUpdatedEvent.OutputObject
-  >;
-  getEvent(
-    key: "SwapsUpdated"
-  ): TypedContractEvent<
-    SwapsUpdatedEvent.InputTuple,
-    SwapsUpdatedEvent.OutputTuple,
-    SwapsUpdatedEvent.OutputObject
-  >;
-  getEvent(
-    key: "VaultsUpdated"
-  ): TypedContractEvent<
-    VaultsUpdatedEvent.InputTuple,
-    VaultsUpdatedEvent.OutputTuple,
-    VaultsUpdatedEvent.OutputObject
-  >;
+    swapCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    updateLightClient(
+      blockProofParams: Types.BlockProofParamsStruct,
+      proof: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    vaultCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    withdrawLiquidity(
+      vault: Types.DepositVaultStruct,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {
-    "BitcoinLightClientUpdated(bytes32,bytes32,bytes)": TypedContractEvent<
-      BitcoinLightClientUpdatedEvent.InputTuple,
-      BitcoinLightClientUpdatedEvent.OutputTuple,
-      BitcoinLightClientUpdatedEvent.OutputObject
-    >;
-    BitcoinLightClientUpdated: TypedContractEvent<
-      BitcoinLightClientUpdatedEvent.InputTuple,
-      BitcoinLightClientUpdatedEvent.OutputTuple,
-      BitcoinLightClientUpdatedEvent.OutputObject
-    >;
+    "BitcoinLightClientUpdated(bytes32,bytes32,bytes)"(
+      priorMmrRoot?: null,
+      newMmrRoot?: null,
+      compressedBlockLeaves?: null
+    ): BitcoinLightClientUpdatedEventFilter;
+    BitcoinLightClientUpdated(
+      priorMmrRoot?: null,
+      newMmrRoot?: null,
+      compressedBlockLeaves?: null
+    ): BitcoinLightClientUpdatedEventFilter;
 
-    "SwapsUpdated(tuple[],uint8)": TypedContractEvent<
-      SwapsUpdatedEvent.InputTuple,
-      SwapsUpdatedEvent.OutputTuple,
-      SwapsUpdatedEvent.OutputObject
-    >;
-    SwapsUpdated: TypedContractEvent<
-      SwapsUpdatedEvent.InputTuple,
-      SwapsUpdatedEvent.OutputTuple,
-      SwapsUpdatedEvent.OutputObject
-    >;
+    "SwapsUpdated((uint256,bytes32,bytes32,uint8,uint64,address,uint256,uint256,uint8)[],uint8)"(
+      swaps?: null,
+      context?: null
+    ): SwapsUpdatedEventFilter;
+    SwapsUpdated(swaps?: null, context?: null): SwapsUpdatedEventFilter;
 
-    "VaultsUpdated(tuple[],uint8)": TypedContractEvent<
-      VaultsUpdatedEvent.InputTuple,
-      VaultsUpdatedEvent.OutputTuple,
-      VaultsUpdatedEvent.OutputObject
-    >;
-    VaultsUpdated: TypedContractEvent<
-      VaultsUpdatedEvent.InputTuple,
-      VaultsUpdatedEvent.OutputTuple,
-      VaultsUpdatedEvent.OutputObject
-    >;
+    "VaultsUpdated((uint256,uint64,uint256,uint256,uint64,bytes22,address,address,bytes32,uint8,uint64)[],uint8)"(
+      vaults?: null,
+      context?: null
+    ): VaultsUpdatedEventFilter;
+    VaultsUpdated(vaults?: null, context?: null): VaultsUpdatedEventFilter;
+  };
+
+  estimateGas: {
+    CIRCUIT_VERIFICATION_KEY(overrides?: CallOverrides): Promise<BigNumber>;
+
+    DEPOSIT_TOKEN(overrides?: CallOverrides): Promise<BigNumber>;
+
+    FEE_ROUTER_ADDRESS(overrides?: CallOverrides): Promise<BigNumber>;
+
+    TOKEN_DECIMALS(overrides?: CallOverrides): Promise<BigNumber>;
+
+    VERIFIER(overrides?: CallOverrides): Promise<BigNumber>;
+
+    accumulatedFeeBalance(overrides?: CallOverrides): Promise<BigNumber>;
+
+    checkpoints(arg0: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
+
+    depositLiquidity(
+      params: Types.DepositLiquidityParamsStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    depositLiquidityWithOverwrite(
+      params: Types.DepositLiquidityWithOverwriteParamsStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    getLightClientHeight(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getSwapCommitment(
+      swapIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getSwapCommitmentsLength(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getVaultCommitment(
+      vaultIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getVaultCommitmentsLength(overrides?: CallOverrides): Promise<BigNumber>;
+
+    mmrRoot(overrides?: CallOverrides): Promise<BigNumber>;
+
+    payoutToFeeRouter(
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    proveBlockInclusion(
+      blockLeaf: Types.BlockLeafStruct,
+      siblings: BytesLike[],
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    releaseLiquidityBatch(
+      paramsArray: Types.ReleaseLiquidityParamsStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    submitBatchSwapProof(
+      swapParams: Types.SubmitSwapProofParamsStruct[],
+      overwriteSwaps: Types.ProposedSwapStruct[],
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    submitBatchSwapProofWithLightClientUpdate(
+      swapParams: Types.SubmitSwapProofParamsStruct[],
+      blockProofParams: Types.BlockProofParamsStruct,
+      overwriteSwaps: Types.ProposedSwapStruct[],
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    swapCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    updateLightClient(
+      blockProofParams: Types.BlockProofParamsStruct,
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    vaultCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    withdrawLiquidity(
+      vault: Types.DepositVaultStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    CIRCUIT_VERIFICATION_KEY(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    DEPOSIT_TOKEN(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    FEE_ROUTER_ADDRESS(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    TOKEN_DECIMALS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    VERIFIER(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    accumulatedFeeBalance(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    checkpoints(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    depositLiquidity(
+      params: Types.DepositLiquidityParamsStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    depositLiquidityWithOverwrite(
+      params: Types.DepositLiquidityWithOverwriteParamsStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    getLightClientHeight(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getSwapCommitment(
+      swapIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getSwapCommitmentsLength(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getVaultCommitment(
+      vaultIndex: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getVaultCommitmentsLength(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    mmrRoot(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    payoutToFeeRouter(
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    proveBlockInclusion(
+      blockLeaf: Types.BlockLeafStruct,
+      siblings: BytesLike[],
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    releaseLiquidityBatch(
+      paramsArray: Types.ReleaseLiquidityParamsStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    submitBatchSwapProof(
+      swapParams: Types.SubmitSwapProofParamsStruct[],
+      overwriteSwaps: Types.ProposedSwapStruct[],
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    submitBatchSwapProofWithLightClientUpdate(
+      swapParams: Types.SubmitSwapProofParamsStruct[],
+      blockProofParams: Types.BlockProofParamsStruct,
+      overwriteSwaps: Types.ProposedSwapStruct[],
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    swapCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    updateLightClient(
+      blockProofParams: Types.BlockProofParamsStruct,
+      proof: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    vaultCommitments(
+      arg0: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    withdrawLiquidity(
+      vault: Types.DepositVaultStruct,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
   };
 }

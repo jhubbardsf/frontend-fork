@@ -1,7 +1,7 @@
 import type { BigNumber, BigNumberish, BytesLike, ethers } from 'ethers';
 import type { Address } from 'viem';
 import type { ISignatureTransfer } from './utils/typechain-types';
-import type { DepositLiquidityParamsStruct } from './utils/typechain-types/contracts/Bundler.sol/BundlerSwapAndDepositWithPermit2';
+import type { Types } from './utils/typechain-types/contracts/Bundler';
 
 export enum ReservationState {
     None,
@@ -179,7 +179,7 @@ export interface TokenMeta {
 export type SingleExecuteSwapAndDeposit = [
     amountIn: BigNumberish,
     swapCalldata: BytesLike,
-    params: DepositLiquidityParamsStruct,
+    params: Types.DepositLiquidityParamsStruct,
     owner: Address,
     permit: ISignatureTransfer.PermitTransferFromStruct,
     signature: BytesLike,
@@ -190,7 +190,7 @@ export type BatchExecuteSwapAndDeposit = [
     owner: Address,
     signature: BytesLike,
     swapCalldata: BytesLike,
-    params: DepositLiquidityParamsStruct,
+    params: Types.DepositLiquidityParamsStruct,
 ];
 
 export interface NestedDepositData {

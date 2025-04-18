@@ -3,25 +3,37 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../common";
 
-export interface ConstantsInterface extends Interface {
+export interface ConstantsInterface extends utils.Interface {
+  functions: {
+    "CHALLENGE_PERIOD_BUFFER()": FunctionFragment;
+    "DEPOSIT_LOCKUP_PERIOD_SCALAR()": FunctionFragment;
+    "MIN_CONFIRMATION_BLOCKS()": FunctionFragment;
+    "MIN_DEPOSIT_AMOUNT()": FunctionFragment;
+    "MIN_OUTPUT_SATS()": FunctionFragment;
+    "PROOF_GEN_SCALING_FACTOR()": FunctionFragment;
+    "PROTOCOL_FEE_BP()": FunctionFragment;
+    "SCALED_PROOF_GEN_INTERCEPT()": FunctionFragment;
+    "SCALED_PROOF_GEN_SLOPE()": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "CHALLENGE_PERIOD_BUFFER"
       | "DEPOSIT_LOCKUP_PERIOD_SCALAR"
       | "MIN_CONFIRMATION_BLOCKS"
@@ -106,100 +118,147 @@ export interface ConstantsInterface extends Interface {
     functionFragment: "SCALED_PROOF_GEN_SLOPE",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface Constants extends BaseContract {
-  connect(runner?: ContractRunner | null): Constants;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: ConstantsInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    CHALLENGE_PERIOD_BUFFER(overrides?: CallOverrides): Promise<[number]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    DEPOSIT_LOCKUP_PERIOD_SCALAR(overrides?: CallOverrides): Promise<[number]>;
 
-  CHALLENGE_PERIOD_BUFFER: TypedContractMethod<[], [bigint], "view">;
+    MIN_CONFIRMATION_BLOCKS(overrides?: CallOverrides): Promise<[number]>;
 
-  DEPOSIT_LOCKUP_PERIOD_SCALAR: TypedContractMethod<[], [bigint], "view">;
+    MIN_DEPOSIT_AMOUNT(overrides?: CallOverrides): Promise<[number]>;
 
-  MIN_CONFIRMATION_BLOCKS: TypedContractMethod<[], [bigint], "view">;
+    MIN_OUTPUT_SATS(overrides?: CallOverrides): Promise<[number]>;
 
-  MIN_DEPOSIT_AMOUNT: TypedContractMethod<[], [bigint], "view">;
+    PROOF_GEN_SCALING_FACTOR(overrides?: CallOverrides): Promise<[number]>;
 
-  MIN_OUTPUT_SATS: TypedContractMethod<[], [bigint], "view">;
+    PROTOCOL_FEE_BP(overrides?: CallOverrides): Promise<[number]>;
 
-  PROOF_GEN_SCALING_FACTOR: TypedContractMethod<[], [bigint], "view">;
+    SCALED_PROOF_GEN_INTERCEPT(overrides?: CallOverrides): Promise<[number]>;
 
-  PROTOCOL_FEE_BP: TypedContractMethod<[], [bigint], "view">;
+    SCALED_PROOF_GEN_SLOPE(overrides?: CallOverrides): Promise<[number]>;
+  };
 
-  SCALED_PROOF_GEN_INTERCEPT: TypedContractMethod<[], [bigint], "view">;
+  CHALLENGE_PERIOD_BUFFER(overrides?: CallOverrides): Promise<number>;
 
-  SCALED_PROOF_GEN_SLOPE: TypedContractMethod<[], [bigint], "view">;
+  DEPOSIT_LOCKUP_PERIOD_SCALAR(overrides?: CallOverrides): Promise<number>;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  MIN_CONFIRMATION_BLOCKS(overrides?: CallOverrides): Promise<number>;
 
-  getFunction(
-    nameOrSignature: "CHALLENGE_PERIOD_BUFFER"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "DEPOSIT_LOCKUP_PERIOD_SCALAR"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "MIN_CONFIRMATION_BLOCKS"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "MIN_DEPOSIT_AMOUNT"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "MIN_OUTPUT_SATS"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "PROOF_GEN_SCALING_FACTOR"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "PROTOCOL_FEE_BP"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "SCALED_PROOF_GEN_INTERCEPT"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "SCALED_PROOF_GEN_SLOPE"
-  ): TypedContractMethod<[], [bigint], "view">;
+  MIN_DEPOSIT_AMOUNT(overrides?: CallOverrides): Promise<number>;
+
+  MIN_OUTPUT_SATS(overrides?: CallOverrides): Promise<number>;
+
+  PROOF_GEN_SCALING_FACTOR(overrides?: CallOverrides): Promise<number>;
+
+  PROTOCOL_FEE_BP(overrides?: CallOverrides): Promise<number>;
+
+  SCALED_PROOF_GEN_INTERCEPT(overrides?: CallOverrides): Promise<number>;
+
+  SCALED_PROOF_GEN_SLOPE(overrides?: CallOverrides): Promise<number>;
+
+  callStatic: {
+    CHALLENGE_PERIOD_BUFFER(overrides?: CallOverrides): Promise<number>;
+
+    DEPOSIT_LOCKUP_PERIOD_SCALAR(overrides?: CallOverrides): Promise<number>;
+
+    MIN_CONFIRMATION_BLOCKS(overrides?: CallOverrides): Promise<number>;
+
+    MIN_DEPOSIT_AMOUNT(overrides?: CallOverrides): Promise<number>;
+
+    MIN_OUTPUT_SATS(overrides?: CallOverrides): Promise<number>;
+
+    PROOF_GEN_SCALING_FACTOR(overrides?: CallOverrides): Promise<number>;
+
+    PROTOCOL_FEE_BP(overrides?: CallOverrides): Promise<number>;
+
+    SCALED_PROOF_GEN_INTERCEPT(overrides?: CallOverrides): Promise<number>;
+
+    SCALED_PROOF_GEN_SLOPE(overrides?: CallOverrides): Promise<number>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    CHALLENGE_PERIOD_BUFFER(overrides?: CallOverrides): Promise<BigNumber>;
+
+    DEPOSIT_LOCKUP_PERIOD_SCALAR(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MIN_CONFIRMATION_BLOCKS(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MIN_DEPOSIT_AMOUNT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MIN_OUTPUT_SATS(overrides?: CallOverrides): Promise<BigNumber>;
+
+    PROOF_GEN_SCALING_FACTOR(overrides?: CallOverrides): Promise<BigNumber>;
+
+    PROTOCOL_FEE_BP(overrides?: CallOverrides): Promise<BigNumber>;
+
+    SCALED_PROOF_GEN_INTERCEPT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    SCALED_PROOF_GEN_SLOPE(overrides?: CallOverrides): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    CHALLENGE_PERIOD_BUFFER(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    DEPOSIT_LOCKUP_PERIOD_SCALAR(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    MIN_CONFIRMATION_BLOCKS(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    MIN_DEPOSIT_AMOUNT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    MIN_OUTPUT_SATS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    PROOF_GEN_SCALING_FACTOR(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    PROTOCOL_FEE_BP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    SCALED_PROOF_GEN_INTERCEPT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    SCALED_PROOF_GEN_SLOPE(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

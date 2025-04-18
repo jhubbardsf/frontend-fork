@@ -3,26 +3,32 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../common";
 
-export interface Groth16VerifierInterface extends Interface {
+export interface Groth16VerifierInterface extends utils.Interface {
+  functions: {
+    "Verify(uint256[8],uint256[2])": FunctionFragment;
+    "compressProof(uint256[8])": FunctionFragment;
+    "verifyCompressedProof(uint256[4],uint256[2])": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature: "Verify" | "compressProof" | "verifyCompressedProof"
+    nameOrSignatureOrTopic: "Verify" | "compressProof" | "verifyCompressedProof"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -50,100 +56,132 @@ export interface Groth16VerifierInterface extends Interface {
     functionFragment: "verifyCompressedProof",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface Groth16Verifier extends BaseContract {
-  connect(runner?: ContractRunner | null): Groth16Verifier;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: Groth16VerifierInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    Verify(
+      proof: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<[void]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
+    compressProof(
+      proof: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<
+      [[BigNumber, BigNumber, BigNumber, BigNumber]] & {
+        compressed: [BigNumber, BigNumber, BigNumber, BigNumber];
+      }
+    >;
 
-  Verify: TypedContractMethod<
-    [proof: BigNumberish[], input: [BigNumberish, BigNumberish]],
-    [void],
-    "view"
-  >;
-
-  compressProof: TypedContractMethod<
-    [proof: BigNumberish[]],
-    [[bigint, bigint, bigint, bigint]],
-    "view"
-  >;
-
-  verifyCompressedProof: TypedContractMethod<
-    [
+    verifyCompressedProof(
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
-      input: [BigNumberish, BigNumberish]
-    ],
-    [void],
-    "view"
-  >;
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<[void]>;
+  };
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  Verify(
+    proof: BigNumberish[],
+    input: [BigNumberish, BigNumberish],
+    overrides?: CallOverrides
+  ): Promise<void>;
 
-  getFunction(
-    nameOrSignature: "Verify"
-  ): TypedContractMethod<
-    [proof: BigNumberish[], input: [BigNumberish, BigNumberish]],
-    [void],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "compressProof"
-  ): TypedContractMethod<
-    [proof: BigNumberish[]],
-    [[bigint, bigint, bigint, bigint]],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "verifyCompressedProof"
-  ): TypedContractMethod<
-    [
+  compressProof(
+    proof: BigNumberish[],
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
+  verifyCompressedProof(
+    compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+    input: [BigNumberish, BigNumberish],
+    overrides?: CallOverrides
+  ): Promise<void>;
+
+  callStatic: {
+    Verify(
+      proof: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    compressProof(
+      proof: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
+    verifyCompressedProof(
       compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
-      input: [BigNumberish, BigNumberish]
-    ],
-    [void],
-    "view"
-  >;
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    Verify(
+      proof: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    compressProof(
+      proof: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    verifyCompressedProof(
+      compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    Verify(
+      proof: BigNumberish[],
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    compressProof(
+      proof: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    verifyCompressedProof(
+      compressedProof: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+      input: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

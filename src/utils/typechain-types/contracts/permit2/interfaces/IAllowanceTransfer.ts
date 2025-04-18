@@ -3,101 +3,113 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  EventFragment,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  ContractTransaction,
+  Overrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
-  TypedLogDescription,
+  FunctionFragment,
+  Result,
+  EventFragment,
+} from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
+import type {
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../../../common";
 
 export declare namespace IAllowanceTransfer {
-  export type TokenSpenderPairStruct = {
-    token: AddressLike;
-    spender: AddressLike;
+  export type TokenSpenderPairStruct = { token: string; spender: string };
+
+  export type TokenSpenderPairStructOutput = [string, string] & {
+    token: string;
+    spender: string;
   };
 
-  export type TokenSpenderPairStructOutput = [
-    token: string,
-    spender: string
-  ] & { token: string; spender: string };
-
   export type PermitDetailsStruct = {
-    token: AddressLike;
+    token: string;
     amount: BigNumberish;
     expiration: BigNumberish;
     nonce: BigNumberish;
   };
 
   export type PermitDetailsStructOutput = [
-    token: string,
-    amount: bigint,
-    expiration: bigint,
-    nonce: bigint
-  ] & { token: string; amount: bigint; expiration: bigint; nonce: bigint };
+    string,
+    BigNumber,
+    number,
+    number
+  ] & { token: string; amount: BigNumber; expiration: number; nonce: number };
 
   export type PermitBatchStruct = {
     details: IAllowanceTransfer.PermitDetailsStruct[];
-    spender: AddressLike;
+    spender: string;
     sigDeadline: BigNumberish;
   };
 
   export type PermitBatchStructOutput = [
-    details: IAllowanceTransfer.PermitDetailsStructOutput[],
-    spender: string,
-    sigDeadline: bigint
+    IAllowanceTransfer.PermitDetailsStructOutput[],
+    string,
+    BigNumber
   ] & {
     details: IAllowanceTransfer.PermitDetailsStructOutput[];
     spender: string;
-    sigDeadline: bigint;
+    sigDeadline: BigNumber;
   };
 
   export type PermitSingleStruct = {
     details: IAllowanceTransfer.PermitDetailsStruct;
-    spender: AddressLike;
+    spender: string;
     sigDeadline: BigNumberish;
   };
 
   export type PermitSingleStructOutput = [
-    details: IAllowanceTransfer.PermitDetailsStructOutput,
-    spender: string,
-    sigDeadline: bigint
+    IAllowanceTransfer.PermitDetailsStructOutput,
+    string,
+    BigNumber
   ] & {
     details: IAllowanceTransfer.PermitDetailsStructOutput;
     spender: string;
-    sigDeadline: bigint;
+    sigDeadline: BigNumber;
   };
 
   export type AllowanceTransferDetailsStruct = {
-    from: AddressLike;
-    to: AddressLike;
+    from: string;
+    to: string;
     amount: BigNumberish;
-    token: AddressLike;
+    token: string;
   };
 
   export type AllowanceTransferDetailsStructOutput = [
-    from: string,
-    to: string,
-    amount: bigint,
-    token: string
-  ] & { from: string; to: string; amount: bigint; token: string };
+    string,
+    string,
+    BigNumber,
+    string
+  ] & { from: string; to: string; amount: BigNumber; token: string };
 }
 
-export interface IAllowanceTransferInterface extends Interface {
+export interface IAllowanceTransferInterface extends utils.Interface {
+  functions: {
+    "DOMAIN_SEPARATOR()": FunctionFragment;
+    "allowance(address,address,address)": FunctionFragment;
+    "approve(address,address,uint160,uint48)": FunctionFragment;
+    "invalidateNonces(address,address,uint48)": FunctionFragment;
+    "lockdown((address,address)[])": FunctionFragment;
+    "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)": FunctionFragment;
+    "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)": FunctionFragment;
+    "transferFrom((address,address,uint160,address)[])": FunctionFragment;
+    "transferFrom(address,address,uint160,address)": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "DOMAIN_SEPARATOR"
       | "allowance"
       | "approve"
@@ -109,29 +121,21 @@ export interface IAllowanceTransferInterface extends Interface {
       | "transferFrom(address,address,uint160,address)"
   ): FunctionFragment;
 
-  getEvent(
-    nameOrSignatureOrTopic:
-      | "Approval"
-      | "Lockdown"
-      | "NonceInvalidation"
-      | "Permit"
-  ): EventFragment;
-
   encodeFunctionData(
     functionFragment: "DOMAIN_SEPARATOR",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
-    values: [AddressLike, AddressLike, AddressLike]
+    values: [string, string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
-    values: [AddressLike, AddressLike, BigNumberish, BigNumberish]
+    values: [string, string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "invalidateNonces",
-    values: [AddressLike, AddressLike, BigNumberish]
+    values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "lockdown",
@@ -139,11 +143,11 @@ export interface IAllowanceTransferInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)",
-    values: [AddressLike, IAllowanceTransfer.PermitBatchStruct, BytesLike]
+    values: [string, IAllowanceTransfer.PermitBatchStruct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)",
-    values: [AddressLike, IAllowanceTransfer.PermitSingleStruct, BytesLike]
+    values: [string, IAllowanceTransfer.PermitSingleStruct, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom((address,address,uint160,address)[])",
@@ -151,7 +155,7 @@ export interface IAllowanceTransferInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "transferFrom(address,address,uint160,address)",
-    values: [AddressLike, AddressLike, BigNumberish, AddressLike]
+    values: [string, string, BigNumberish, string]
   ): string;
 
   decodeFunctionResult(
@@ -181,390 +185,465 @@ export interface IAllowanceTransferInterface extends Interface {
     functionFragment: "transferFrom(address,address,uint160,address)",
     data: BytesLike
   ): Result;
+
+  events: {
+    "Approval(address,address,address,uint160,uint48)": EventFragment;
+    "Lockdown(address,address,address)": EventFragment;
+    "NonceInvalidation(address,address,address,uint48,uint48)": EventFragment;
+    "Permit(address,address,address,uint160,uint48,uint48)": EventFragment;
+  };
+
+  getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Lockdown"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NonceInvalidation"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Permit"): EventFragment;
 }
 
-export namespace ApprovalEvent {
-  export type InputTuple = [
-    owner: AddressLike,
-    token: AddressLike,
-    spender: AddressLike,
-    amount: BigNumberish,
-    expiration: BigNumberish
-  ];
-  export type OutputTuple = [
-    owner: string,
-    token: string,
-    spender: string,
-    amount: bigint,
-    expiration: bigint
-  ];
-  export interface OutputObject {
-    owner: string;
-    token: string;
-    spender: string;
-    amount: bigint;
-    expiration: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface ApprovalEventObject {
+  owner: string;
+  token: string;
+  spender: string;
+  amount: BigNumber;
+  expiration: number;
 }
+export type ApprovalEvent = TypedEvent<
+  [string, string, string, BigNumber, number],
+  ApprovalEventObject
+>;
 
-export namespace LockdownEvent {
-  export type InputTuple = [
-    owner: AddressLike,
-    token: AddressLike,
-    spender: AddressLike
-  ];
-  export type OutputTuple = [owner: string, token: string, spender: string];
-  export interface OutputObject {
-    owner: string;
-    token: string;
-    spender: string;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
+export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
 
-export namespace NonceInvalidationEvent {
-  export type InputTuple = [
-    owner: AddressLike,
-    token: AddressLike,
-    spender: AddressLike,
-    newNonce: BigNumberish,
-    oldNonce: BigNumberish
-  ];
-  export type OutputTuple = [
-    owner: string,
-    token: string,
-    spender: string,
-    newNonce: bigint,
-    oldNonce: bigint
-  ];
-  export interface OutputObject {
-    owner: string;
-    token: string;
-    spender: string;
-    newNonce: bigint;
-    oldNonce: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export interface LockdownEventObject {
+  owner: string;
+  token: string;
+  spender: string;
 }
+export type LockdownEvent = TypedEvent<
+  [string, string, string],
+  LockdownEventObject
+>;
 
-export namespace PermitEvent {
-  export type InputTuple = [
-    owner: AddressLike,
-    token: AddressLike,
-    spender: AddressLike,
-    amount: BigNumberish,
-    expiration: BigNumberish,
-    nonce: BigNumberish
-  ];
-  export type OutputTuple = [
-    owner: string,
-    token: string,
-    spender: string,
-    amount: bigint,
-    expiration: bigint,
-    nonce: bigint
-  ];
-  export interface OutputObject {
-    owner: string;
-    token: string;
-    spender: string;
-    amount: bigint;
-    expiration: bigint;
-    nonce: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
+export type LockdownEventFilter = TypedEventFilter<LockdownEvent>;
+
+export interface NonceInvalidationEventObject {
+  owner: string;
+  token: string;
+  spender: string;
+  newNonce: number;
+  oldNonce: number;
 }
+export type NonceInvalidationEvent = TypedEvent<
+  [string, string, string, number, number],
+  NonceInvalidationEventObject
+>;
+
+export type NonceInvalidationEventFilter =
+  TypedEventFilter<NonceInvalidationEvent>;
+
+export interface PermitEventObject {
+  owner: string;
+  token: string;
+  spender: string;
+  amount: BigNumber;
+  expiration: number;
+  nonce: number;
+}
+export type PermitEvent = TypedEvent<
+  [string, string, string, BigNumber, number, number],
+  PermitEventObject
+>;
+
+export type PermitEventFilter = TypedEventFilter<PermitEvent>;
 
 export interface IAllowanceTransfer extends BaseContract {
-  connect(runner?: ContractRunner | null): IAllowanceTransfer;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: IAllowanceTransferInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  functions: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
 
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
-
-  DOMAIN_SEPARATOR: TypedContractMethod<[], [string], "view">;
-
-  allowance: TypedContractMethod<
-    [user: AddressLike, token: AddressLike, spender: AddressLike],
-    [
-      [bigint, bigint, bigint] & {
-        amount: bigint;
-        expiration: bigint;
-        nonce: bigint;
+    allowance(
+      user: string,
+      token: string,
+      spender: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, number, number] & {
+        amount: BigNumber;
+        expiration: number;
+        nonce: number;
       }
-    ],
-    "view"
-  >;
+    >;
 
-  approve: TypedContractMethod<
-    [
-      token: AddressLike,
-      spender: AddressLike,
+    approve(
+      token: string,
+      spender: string,
       amount: BigNumberish,
-      expiration: BigNumberish
-    ],
-    [void],
-    "nonpayable"
-  >;
+      expiration: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  invalidateNonces: TypedContractMethod<
-    [token: AddressLike, spender: AddressLike, newNonce: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
+    invalidateNonces(
+      token: string,
+      spender: string,
+      newNonce: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  lockdown: TypedContractMethod<
-    [approvals: IAllowanceTransfer.TokenSpenderPairStruct[]],
-    [void],
-    "nonpayable"
-  >;
+    lockdown(
+      approvals: IAllowanceTransfer.TokenSpenderPairStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)": TypedContractMethod<
-    [
-      owner: AddressLike,
+    "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)"(
+      owner: string,
       permitBatch: IAllowanceTransfer.PermitBatchStruct,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)": TypedContractMethod<
-    [
-      owner: AddressLike,
+    "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)"(
+      owner: string,
       permitSingle: IAllowanceTransfer.PermitSingleStruct,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "transferFrom((address,address,uint160,address)[])": TypedContractMethod<
-    [transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[]],
-    [void],
-    "nonpayable"
-  >;
+    "transferFrom((address,address,uint160,address)[])"(
+      transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
 
-  "transferFrom(address,address,uint160,address)": TypedContractMethod<
-    [
-      from: AddressLike,
-      to: AddressLike,
+    "transferFrom(address,address,uint160,address)"(
+      from: string,
+      to: string,
       amount: BigNumberish,
-      token: AddressLike
-    ],
-    [void],
-    "nonpayable"
+      token: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<ContractTransaction>;
+  };
+
+  DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
+
+  allowance(
+    user: string,
+    token: string,
+    spender: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, number, number] & {
+      amount: BigNumber;
+      expiration: number;
+      nonce: number;
+    }
   >;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  approve(
+    token: string,
+    spender: string,
+    amount: BigNumberish,
+    expiration: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
 
-  getFunction(
-    nameOrSignature: "DOMAIN_SEPARATOR"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "allowance"
-  ): TypedContractMethod<
-    [user: AddressLike, token: AddressLike, spender: AddressLike],
-    [
-      [bigint, bigint, bigint] & {
-        amount: bigint;
-        expiration: bigint;
-        nonce: bigint;
+  invalidateNonces(
+    token: string,
+    spender: string,
+    newNonce: BigNumberish,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  lockdown(
+    approvals: IAllowanceTransfer.TokenSpenderPairStruct[],
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)"(
+    owner: string,
+    permitBatch: IAllowanceTransfer.PermitBatchStruct,
+    signature: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)"(
+    owner: string,
+    permitSingle: IAllowanceTransfer.PermitSingleStruct,
+    signature: BytesLike,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "transferFrom((address,address,uint160,address)[])"(
+    transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[],
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  "transferFrom(address,address,uint160,address)"(
+    from: string,
+    to: string,
+    amount: BigNumberish,
+    token: string,
+    overrides?: Overrides & { from?: string }
+  ): Promise<ContractTransaction>;
+
+  callStatic: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
+
+    allowance(
+      user: string,
+      token: string,
+      spender: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, number, number] & {
+        amount: BigNumber;
+        expiration: number;
+        nonce: number;
       }
-    ],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "approve"
-  ): TypedContractMethod<
-    [
-      token: AddressLike,
-      spender: AddressLike,
-      amount: BigNumberish,
-      expiration: BigNumberish
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "invalidateNonces"
-  ): TypedContractMethod<
-    [token: AddressLike, spender: AddressLike, newNonce: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "lockdown"
-  ): TypedContractMethod<
-    [approvals: IAllowanceTransfer.TokenSpenderPairStruct[]],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)"
-  ): TypedContractMethod<
-    [
-      owner: AddressLike,
-      permitBatch: IAllowanceTransfer.PermitBatchStruct,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)"
-  ): TypedContractMethod<
-    [
-      owner: AddressLike,
-      permitSingle: IAllowanceTransfer.PermitSingleStruct,
-      signature: BytesLike
-    ],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "transferFrom((address,address,uint160,address)[])"
-  ): TypedContractMethod<
-    [transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[]],
-    [void],
-    "nonpayable"
-  >;
-  getFunction(
-    nameOrSignature: "transferFrom(address,address,uint160,address)"
-  ): TypedContractMethod<
-    [
-      from: AddressLike,
-      to: AddressLike,
-      amount: BigNumberish,
-      token: AddressLike
-    ],
-    [void],
-    "nonpayable"
-  >;
+    >;
 
-  getEvent(
-    key: "Approval"
-  ): TypedContractEvent<
-    ApprovalEvent.InputTuple,
-    ApprovalEvent.OutputTuple,
-    ApprovalEvent.OutputObject
-  >;
-  getEvent(
-    key: "Lockdown"
-  ): TypedContractEvent<
-    LockdownEvent.InputTuple,
-    LockdownEvent.OutputTuple,
-    LockdownEvent.OutputObject
-  >;
-  getEvent(
-    key: "NonceInvalidation"
-  ): TypedContractEvent<
-    NonceInvalidationEvent.InputTuple,
-    NonceInvalidationEvent.OutputTuple,
-    NonceInvalidationEvent.OutputObject
-  >;
-  getEvent(
-    key: "Permit"
-  ): TypedContractEvent<
-    PermitEvent.InputTuple,
-    PermitEvent.OutputTuple,
-    PermitEvent.OutputObject
-  >;
+    approve(
+      token: string,
+      spender: string,
+      amount: BigNumberish,
+      expiration: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    invalidateNonces(
+      token: string,
+      spender: string,
+      newNonce: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    lockdown(
+      approvals: IAllowanceTransfer.TokenSpenderPairStruct[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)"(
+      owner: string,
+      permitBatch: IAllowanceTransfer.PermitBatchStruct,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)"(
+      owner: string,
+      permitSingle: IAllowanceTransfer.PermitSingleStruct,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "transferFrom((address,address,uint160,address)[])"(
+      transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "transferFrom(address,address,uint160,address)"(
+      from: string,
+      to: string,
+      amount: BigNumberish,
+      token: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+  };
 
   filters: {
-    "Approval(address,address,address,uint160,uint48)": TypedContractEvent<
-      ApprovalEvent.InputTuple,
-      ApprovalEvent.OutputTuple,
-      ApprovalEvent.OutputObject
-    >;
-    Approval: TypedContractEvent<
-      ApprovalEvent.InputTuple,
-      ApprovalEvent.OutputTuple,
-      ApprovalEvent.OutputObject
-    >;
+    "Approval(address,address,address,uint160,uint48)"(
+      owner?: string | null,
+      token?: string | null,
+      spender?: string | null,
+      amount?: null,
+      expiration?: null
+    ): ApprovalEventFilter;
+    Approval(
+      owner?: string | null,
+      token?: string | null,
+      spender?: string | null,
+      amount?: null,
+      expiration?: null
+    ): ApprovalEventFilter;
 
-    "Lockdown(address,address,address)": TypedContractEvent<
-      LockdownEvent.InputTuple,
-      LockdownEvent.OutputTuple,
-      LockdownEvent.OutputObject
-    >;
-    Lockdown: TypedContractEvent<
-      LockdownEvent.InputTuple,
-      LockdownEvent.OutputTuple,
-      LockdownEvent.OutputObject
-    >;
+    "Lockdown(address,address,address)"(
+      owner?: string | null,
+      token?: null,
+      spender?: null
+    ): LockdownEventFilter;
+    Lockdown(
+      owner?: string | null,
+      token?: null,
+      spender?: null
+    ): LockdownEventFilter;
 
-    "NonceInvalidation(address,address,address,uint48,uint48)": TypedContractEvent<
-      NonceInvalidationEvent.InputTuple,
-      NonceInvalidationEvent.OutputTuple,
-      NonceInvalidationEvent.OutputObject
-    >;
-    NonceInvalidation: TypedContractEvent<
-      NonceInvalidationEvent.InputTuple,
-      NonceInvalidationEvent.OutputTuple,
-      NonceInvalidationEvent.OutputObject
-    >;
+    "NonceInvalidation(address,address,address,uint48,uint48)"(
+      owner?: string | null,
+      token?: string | null,
+      spender?: string | null,
+      newNonce?: null,
+      oldNonce?: null
+    ): NonceInvalidationEventFilter;
+    NonceInvalidation(
+      owner?: string | null,
+      token?: string | null,
+      spender?: string | null,
+      newNonce?: null,
+      oldNonce?: null
+    ): NonceInvalidationEventFilter;
 
-    "Permit(address,address,address,uint160,uint48,uint48)": TypedContractEvent<
-      PermitEvent.InputTuple,
-      PermitEvent.OutputTuple,
-      PermitEvent.OutputObject
-    >;
-    Permit: TypedContractEvent<
-      PermitEvent.InputTuple,
-      PermitEvent.OutputTuple,
-      PermitEvent.OutputObject
-    >;
+    "Permit(address,address,address,uint160,uint48,uint48)"(
+      owner?: string | null,
+      token?: string | null,
+      spender?: string | null,
+      amount?: null,
+      expiration?: null,
+      nonce?: null
+    ): PermitEventFilter;
+    Permit(
+      owner?: string | null,
+      token?: string | null,
+      spender?: string | null,
+      amount?: null,
+      expiration?: null,
+      nonce?: null
+    ): PermitEventFilter;
+  };
+
+  estimateGas: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
+
+    allowance(
+      user: string,
+      token: string,
+      spender: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    approve(
+      token: string,
+      spender: string,
+      amount: BigNumberish,
+      expiration: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    invalidateNonces(
+      token: string,
+      spender: string,
+      newNonce: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    lockdown(
+      approvals: IAllowanceTransfer.TokenSpenderPairStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)"(
+      owner: string,
+      permitBatch: IAllowanceTransfer.PermitBatchStruct,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)"(
+      owner: string,
+      permitSingle: IAllowanceTransfer.PermitSingleStruct,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "transferFrom((address,address,uint160,address)[])"(
+      transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+
+    "transferFrom(address,address,uint160,address)"(
+      from: string,
+      to: string,
+      amount: BigNumberish,
+      token: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    allowance(
+      user: string,
+      token: string,
+      spender: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    approve(
+      token: string,
+      spender: string,
+      amount: BigNumberish,
+      expiration: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    invalidateNonces(
+      token: string,
+      spender: string,
+      newNonce: BigNumberish,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    lockdown(
+      approvals: IAllowanceTransfer.TokenSpenderPairStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "permit(address,((address,uint160,uint48,uint48)[],address,uint256),bytes)"(
+      owner: string,
+      permitBatch: IAllowanceTransfer.PermitBatchStruct,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)"(
+      owner: string,
+      permitSingle: IAllowanceTransfer.PermitSingleStruct,
+      signature: BytesLike,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "transferFrom((address,address,uint160,address)[])"(
+      transferDetails: IAllowanceTransfer.AllowanceTransferDetailsStruct[],
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
+
+    "transferFrom(address,address,uint160,address)"(
+      from: string,
+      to: string,
+      amount: BigNumberish,
+      token: string,
+      overrides?: Overrides & { from?: string }
+    ): Promise<PopulatedTransaction>;
   };
 }

@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Interface, type ContractRunner } from "ethers";
+import { Contract, Signer, utils } from "ethers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   IRiftExchange,
   IRiftExchangeInterface,
@@ -1134,12 +1135,12 @@ const _abi = [
 export class IRiftExchange__factory {
   static readonly abi = _abi;
   static createInterface(): IRiftExchangeInterface {
-    return new Interface(_abi) as IRiftExchangeInterface;
+    return new utils.Interface(_abi) as IRiftExchangeInterface;
   }
   static connect(
     address: string,
-    runner?: ContractRunner | null
+    signerOrProvider: Signer | Provider
   ): IRiftExchange {
-    return new Contract(address, _abi, runner) as unknown as IRiftExchange;
+    return new Contract(address, _abi, signerOrProvider) as IRiftExchange;
   }
 }

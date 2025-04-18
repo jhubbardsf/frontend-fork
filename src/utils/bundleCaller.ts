@@ -14,7 +14,7 @@ import { convertToBitcoinLockingScript } from './dappHelper';
 import { type BigNumber, type Signer, constants, ethers } from 'ethers';
 import { Bundler__factory } from './typechain-types'; // adjust the path accordingly
 import { SignatureTransfer, type PermitTransferFrom, PERMIT2_ADDRESS } from '@uniswap/permit2-sdk';
-import { decodeError, ErrorType } from 'ethers-decode-error';
+import { decodeError, ErrorType } from '@jhubbardsf/ethers-decode-error';
 import ErrorsABI from '@/abis/Errors.json';
 import RiftExchangeABI from '@/abis/RiftExchange.json';
 import BundlerABI from '@/abis/Bundler.json';
@@ -22,7 +22,7 @@ import type { SwapRoute } from '@uniswap/smart-order-router';
 // import type { DepositLiquidityParamsStruct } from "./typechain-types/contracts/Bundler.sol/Bundler";
 import type { Address } from 'viem';
 import type { SingleExecuteSwapAndDeposit } from '@/types';
-import type { DepositLiquidityParamsStruct } from './typechain-types/contracts/Bundler.sol/BundlerSwapAndDepositWithPermit2';
+import type { Types } from './typechain-types/contracts/Bundler';
 import { useLogState } from '@/hooks/useLogState';
 import { getContract } from 'viem';
 import { useBundlerContract } from '@/utils/wagmiClients';
@@ -159,7 +159,7 @@ export const useBundlerCaller = () => {
     });
 
     const proceedWithBundler = useCallback(
-        async (swapRoute: SwapRoute, depositParams: DepositLiquidityParamsStruct, setStatus: any) => {
+        async (swapRoute: SwapRoute, depositParams: Types.DepositLiquidityParamsStruct, setStatus: any) => {
             if (typeof window === 'undefined' || !window.ethereum) {
                 throw new Error('No Ethereum provider found');
             }
