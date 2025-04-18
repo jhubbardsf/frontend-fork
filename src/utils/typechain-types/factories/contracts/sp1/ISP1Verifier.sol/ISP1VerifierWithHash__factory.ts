@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Interface, type ContractRunner } from "ethers";
+import { Contract, Signer, utils } from "ethers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   ISP1VerifierWithHash,
   ISP1VerifierWithHashInterface,
@@ -50,16 +51,16 @@ const _abi = [
 export class ISP1VerifierWithHash__factory {
   static readonly abi = _abi;
   static createInterface(): ISP1VerifierWithHashInterface {
-    return new Interface(_abi) as ISP1VerifierWithHashInterface;
+    return new utils.Interface(_abi) as ISP1VerifierWithHashInterface;
   }
   static connect(
     address: string,
-    runner?: ContractRunner | null
+    signerOrProvider: Signer | Provider
   ): ISP1VerifierWithHash {
     return new Contract(
       address,
       _abi,
-      runner
-    ) as unknown as ISP1VerifierWithHash;
+      signerOrProvider
+    ) as ISP1VerifierWithHash;
   }
 }

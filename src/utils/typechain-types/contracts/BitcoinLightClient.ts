@@ -3,21 +3,21 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumber,
   BigNumberish,
   BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  ContractRunner,
-  ContractMethod,
-  Listener,
+  CallOverrides,
+  PopulatedTransaction,
+  Signer,
+  utils,
 } from "ethers";
+import type { FunctionFragment, Result } from "@ethersproject/abi";
+import type { Listener, Provider } from "@ethersproject/providers";
 import type {
-  TypedContractEvent,
-  TypedDeferredTopicFilter,
-  TypedEventLog,
+  TypedEventFilter,
+  TypedEvent,
   TypedListener,
-  TypedContractMethod,
+  OnEvent,
 } from "../common";
 
 export declare namespace Types {
@@ -27,16 +27,23 @@ export declare namespace Types {
     cumulativeChainwork: BigNumberish;
   };
 
-  export type BlockLeafStructOutput = [
-    blockHash: string,
-    height: bigint,
-    cumulativeChainwork: bigint
-  ] & { blockHash: string; height: bigint; cumulativeChainwork: bigint };
+  export type BlockLeafStructOutput = [string, number, BigNumber] & {
+    blockHash: string;
+    height: number;
+    cumulativeChainwork: BigNumber;
+  };
 }
 
-export interface BitcoinLightClientInterface extends Interface {
+export interface BitcoinLightClientInterface extends utils.Interface {
+  functions: {
+    "checkpoints(bytes32)": FunctionFragment;
+    "getLightClientHeight()": FunctionFragment;
+    "mmrRoot()": FunctionFragment;
+    "proveBlockInclusion((bytes32,uint32,uint256),bytes32[],bytes32[])": FunctionFragment;
+  };
+
   getFunction(
-    nameOrSignature:
+    nameOrSignatureOrTopic:
       | "checkpoints"
       | "getLightClientHeight"
       | "mmrRoot"
@@ -70,109 +77,137 @@ export interface BitcoinLightClientInterface extends Interface {
     functionFragment: "proveBlockInclusion",
     data: BytesLike
   ): Result;
+
+  events: {};
 }
 
 export interface BitcoinLightClient extends BaseContract {
-  connect(runner?: ContractRunner | null): BitcoinLightClient;
-  waitForDeployment(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this;
+  attach(addressOrName: string): this;
+  deployed(): Promise<this>;
 
   interface: BitcoinLightClientInterface;
 
-  queryFilter<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
+  queryFilter<TEvent extends TypedEvent>(
+    event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
-  queryFilter<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    fromBlockOrBlockhash?: string | number | undefined,
-    toBlock?: string | number | undefined
-  ): Promise<Array<TypedEventLog<TCEvent>>>;
+  ): Promise<Array<TEvent>>;
 
-  on<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  on<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
+  listeners<TEvent extends TypedEvent>(
+    eventFilter?: TypedEventFilter<TEvent>
+  ): Array<TypedListener<TEvent>>;
+  listeners(eventName?: string): Array<Listener>;
+  removeAllListeners<TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>
+  ): this;
+  removeAllListeners(eventName?: string): this;
+  off: OnEvent<this>;
+  on: OnEvent<this>;
+  once: OnEvent<this>;
+  removeListener: OnEvent<this>;
 
-  once<TCEvent extends TypedContractEvent>(
-    event: TCEvent,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-  once<TCEvent extends TypedContractEvent>(
-    filter: TypedDeferredTopicFilter<TCEvent>,
-    listener: TypedListener<TCEvent>
-  ): Promise<this>;
-
-  listeners<TCEvent extends TypedContractEvent>(
-    event: TCEvent
-  ): Promise<Array<TypedListener<TCEvent>>>;
-  listeners(eventName?: string): Promise<Array<Listener>>;
-  removeAllListeners<TCEvent extends TypedContractEvent>(
-    event?: TCEvent
-  ): Promise<this>;
-
-  checkpoints: TypedContractMethod<
-    [arg0: BytesLike],
-    [
+  functions: {
+    checkpoints(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
       [boolean, Types.BlockLeafStructOutput] & {
         established: boolean;
         tipBlockLeaf: Types.BlockLeafStructOutput;
       }
-    ],
-    "view"
-  >;
+    >;
 
-  getLightClientHeight: TypedContractMethod<[], [bigint], "view">;
+    getLightClientHeight(overrides?: CallOverrides): Promise<[number]>;
 
-  mmrRoot: TypedContractMethod<[], [string], "view">;
+    mmrRoot(overrides?: CallOverrides): Promise<[string]>;
 
-  proveBlockInclusion: TypedContractMethod<
-    [
+    proveBlockInclusion(
       blockLeaf: Types.BlockLeafStruct,
       siblings: BytesLike[],
-      peaks: BytesLike[]
-    ],
-    [boolean],
-    "view"
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+  };
+
+  checkpoints(
+    arg0: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<
+    [boolean, Types.BlockLeafStructOutput] & {
+      established: boolean;
+      tipBlockLeaf: Types.BlockLeafStructOutput;
+    }
   >;
 
-  getFunction<T extends ContractMethod = ContractMethod>(
-    key: string | FunctionFragment
-  ): T;
+  getLightClientHeight(overrides?: CallOverrides): Promise<number>;
 
-  getFunction(
-    nameOrSignature: "checkpoints"
-  ): TypedContractMethod<
-    [arg0: BytesLike],
-    [
+  mmrRoot(overrides?: CallOverrides): Promise<string>;
+
+  proveBlockInclusion(
+    blockLeaf: Types.BlockLeafStruct,
+    siblings: BytesLike[],
+    peaks: BytesLike[],
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  callStatic: {
+    checkpoints(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<
       [boolean, Types.BlockLeafStructOutput] & {
         established: boolean;
         tipBlockLeaf: Types.BlockLeafStructOutput;
       }
-    ],
-    "view"
-  >;
-  getFunction(
-    nameOrSignature: "getLightClientHeight"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "mmrRoot"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "proveBlockInclusion"
-  ): TypedContractMethod<
-    [
+    >;
+
+    getLightClientHeight(overrides?: CallOverrides): Promise<number>;
+
+    mmrRoot(overrides?: CallOverrides): Promise<string>;
+
+    proveBlockInclusion(
       blockLeaf: Types.BlockLeafStruct,
       siblings: BytesLike[],
-      peaks: BytesLike[]
-    ],
-    [boolean],
-    "view"
-  >;
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+  };
 
   filters: {};
+
+  estimateGas: {
+    checkpoints(arg0: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
+
+    getLightClientHeight(overrides?: CallOverrides): Promise<BigNumber>;
+
+    mmrRoot(overrides?: CallOverrides): Promise<BigNumber>;
+
+    proveBlockInclusion(
+      blockLeaf: Types.BlockLeafStruct,
+      siblings: BytesLike[],
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    checkpoints(
+      arg0: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getLightClientHeight(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    mmrRoot(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    proveBlockInclusion(
+      blockLeaf: Types.BlockLeafStruct,
+      siblings: BytesLike[],
+      peaks: BytesLike[],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

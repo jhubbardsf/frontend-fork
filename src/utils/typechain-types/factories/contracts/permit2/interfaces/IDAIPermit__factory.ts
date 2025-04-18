@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Interface, type ContractRunner } from "ethers";
+import { Contract, Signer, utils } from "ethers";
+import type { Provider } from "@ethersproject/providers";
 import type {
   IDAIPermit,
   IDAIPermitInterface,
@@ -62,9 +63,12 @@ const _abi = [
 export class IDAIPermit__factory {
   static readonly abi = _abi;
   static createInterface(): IDAIPermitInterface {
-    return new Interface(_abi) as IDAIPermitInterface;
+    return new utils.Interface(_abi) as IDAIPermitInterface;
   }
-  static connect(address: string, runner?: ContractRunner | null): IDAIPermit {
-    return new Contract(address, _abi, runner) as unknown as IDAIPermit;
+  static connect(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): IDAIPermit {
+    return new Contract(address, _abi, signerOrProvider) as IDAIPermit;
   }
 }

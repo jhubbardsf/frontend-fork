@@ -4,10 +4,9 @@
 
 import { ethers } from "ethers";
 import {
-  DeployContractOptions,
   FactoryOptions,
   HardhatEthersHelpers as HardhatEthersHelpersBase,
-} from "@nomicfoundation/hardhat-ethers/types";
+} from "@nomiclabs/hardhat-ethers/types";
 
 import * as Contracts from ".";
 
@@ -164,523 +163,188 @@ declare module "hardhat/types/runtime" {
 
     getContractAt(
       name: "Ownable",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Ownable>;
     getContractAt(
       name: "IERC20Metadata",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20Metadata>;
     getContractAt(
       name: "IERC20",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
     getContractAt(
       name: "BitcoinLightClient",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.BitcoinLightClient>;
     getContractAt(
       name: "Bundler",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Bundler>;
     getContractAt(
       name: "IBundler",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IBundler>;
     getContractAt(
       name: "IRiftExchange",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IRiftExchange>;
     getContractAt(
       name: "Constants",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Constants>;
     getContractAt(
       name: "Errors",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Errors>;
     getContractAt(
       name: "Events",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Events>;
     getContractAt(
       name: "Lock",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Lock>;
     getContractAt(
       name: "AllowanceTransfer",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.AllowanceTransfer>;
     getContractAt(
       name: "EIP712",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.EIP712>;
     getContractAt(
       name: "IAllowanceTransfer",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IAllowanceTransfer>;
     getContractAt(
       name: "IDAIPermit",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IDAIPermit>;
     getContractAt(
       name: "IEIP712",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IEIP712>;
     getContractAt(
       name: "IERC1271",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC1271>;
     getContractAt(
       name: "IPermit2",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IPermit2>;
     getContractAt(
       name: "ISignatureTransfer",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ISignatureTransfer>;
     getContractAt(
       name: "PermitHash",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.PermitHash>;
     getContractAt(
       name: "SafeCast160",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SafeCast160>;
     getContractAt(
       name: "SignatureVerification",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SignatureVerification>;
     getContractAt(
       name: "Permit2",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Permit2>;
     getContractAt(
       name: "SignatureTransfer",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SignatureTransfer>;
     getContractAt(
       name: "RiftExchange",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.RiftExchange>;
     getContractAt(
       name: "Groth16Verifier",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Groth16Verifier>;
     getContractAt(
       name: "ISP1Verifier",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ISP1Verifier>;
     getContractAt(
       name: "ISP1VerifierWithHash",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ISP1VerifierWithHash>;
     getContractAt(
       name: "ISP1VerifierGateway",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ISP1VerifierGateway>;
     getContractAt(
       name: "ISP1VerifierGatewayErrors",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ISP1VerifierGatewayErrors>;
     getContractAt(
       name: "ISP1VerifierGatewayEvents",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ISP1VerifierGatewayEvents>;
     getContractAt(
       name: "PlonkVerifier",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.PlonkVerifier>;
     getContractAt(
       name: "SP1MockVerifier",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SP1MockVerifier>;
     getContractAt(
       name: "SP1VerifierGateway",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SP1VerifierGateway>;
     getContractAt(
       name: "SP1Verifier",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SP1Verifier>;
     getContractAt(
       name: "SP1Verifier",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SP1Verifier>;
     getContractAt(
       name: "ERC20",
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.ERC20>;
-
-    deployContract(
-      name: "Ownable",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Ownable>;
-    deployContract(
-      name: "IERC20Metadata",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20Metadata>;
-    deployContract(
-      name: "IERC20",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20>;
-    deployContract(
-      name: "BitcoinLightClient",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BitcoinLightClient>;
-    deployContract(
-      name: "Bundler",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Bundler>;
-    deployContract(
-      name: "IBundler",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBundler>;
-    deployContract(
-      name: "IRiftExchange",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IRiftExchange>;
-    deployContract(
-      name: "Constants",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Constants>;
-    deployContract(
-      name: "Errors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Errors>;
-    deployContract(
-      name: "Events",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Events>;
-    deployContract(
-      name: "Lock",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Lock>;
-    deployContract(
-      name: "AllowanceTransfer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AllowanceTransfer>;
-    deployContract(
-      name: "EIP712",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.EIP712>;
-    deployContract(
-      name: "IAllowanceTransfer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAllowanceTransfer>;
-    deployContract(
-      name: "IDAIPermit",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IDAIPermit>;
-    deployContract(
-      name: "IEIP712",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IEIP712>;
-    deployContract(
-      name: "IERC1271",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC1271>;
-    deployContract(
-      name: "IPermit2",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPermit2>;
-    deployContract(
-      name: "ISignatureTransfer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISignatureTransfer>;
-    deployContract(
-      name: "PermitHash",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PermitHash>;
-    deployContract(
-      name: "SafeCast160",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SafeCast160>;
-    deployContract(
-      name: "SignatureVerification",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SignatureVerification>;
-    deployContract(
-      name: "Permit2",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Permit2>;
-    deployContract(
-      name: "SignatureTransfer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SignatureTransfer>;
-    deployContract(
-      name: "RiftExchange",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.RiftExchange>;
-    deployContract(
-      name: "Groth16Verifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Groth16Verifier>;
-    deployContract(
-      name: "ISP1Verifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1Verifier>;
-    deployContract(
-      name: "ISP1VerifierWithHash",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierWithHash>;
-    deployContract(
-      name: "ISP1VerifierGateway",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierGateway>;
-    deployContract(
-      name: "ISP1VerifierGatewayErrors",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierGatewayErrors>;
-    deployContract(
-      name: "ISP1VerifierGatewayEvents",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierGatewayEvents>;
-    deployContract(
-      name: "PlonkVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PlonkVerifier>;
-    deployContract(
-      name: "SP1MockVerifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1MockVerifier>;
-    deployContract(
-      name: "SP1VerifierGateway",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1VerifierGateway>;
-    deployContract(
-      name: "SP1Verifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1Verifier>;
-    deployContract(
-      name: "SP1Verifier",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1Verifier>;
-    deployContract(
-      name: "ERC20",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20>;
-
-    deployContract(
-      name: "Ownable",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Ownable>;
-    deployContract(
-      name: "IERC20Metadata",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20Metadata>;
-    deployContract(
-      name: "IERC20",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC20>;
-    deployContract(
-      name: "BitcoinLightClient",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.BitcoinLightClient>;
-    deployContract(
-      name: "Bundler",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Bundler>;
-    deployContract(
-      name: "IBundler",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IBundler>;
-    deployContract(
-      name: "IRiftExchange",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IRiftExchange>;
-    deployContract(
-      name: "Constants",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Constants>;
-    deployContract(
-      name: "Errors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Errors>;
-    deployContract(
-      name: "Events",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Events>;
-    deployContract(
-      name: "Lock",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Lock>;
-    deployContract(
-      name: "AllowanceTransfer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AllowanceTransfer>;
-    deployContract(
-      name: "EIP712",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.EIP712>;
-    deployContract(
-      name: "IAllowanceTransfer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IAllowanceTransfer>;
-    deployContract(
-      name: "IDAIPermit",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IDAIPermit>;
-    deployContract(
-      name: "IEIP712",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IEIP712>;
-    deployContract(
-      name: "IERC1271",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IERC1271>;
-    deployContract(
-      name: "IPermit2",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IPermit2>;
-    deployContract(
-      name: "ISignatureTransfer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISignatureTransfer>;
-    deployContract(
-      name: "PermitHash",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PermitHash>;
-    deployContract(
-      name: "SafeCast160",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SafeCast160>;
-    deployContract(
-      name: "SignatureVerification",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SignatureVerification>;
-    deployContract(
-      name: "Permit2",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Permit2>;
-    deployContract(
-      name: "SignatureTransfer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SignatureTransfer>;
-    deployContract(
-      name: "RiftExchange",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.RiftExchange>;
-    deployContract(
-      name: "Groth16Verifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.Groth16Verifier>;
-    deployContract(
-      name: "ISP1Verifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1Verifier>;
-    deployContract(
-      name: "ISP1VerifierWithHash",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierWithHash>;
-    deployContract(
-      name: "ISP1VerifierGateway",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierGateway>;
-    deployContract(
-      name: "ISP1VerifierGatewayErrors",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierGatewayErrors>;
-    deployContract(
-      name: "ISP1VerifierGatewayEvents",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ISP1VerifierGatewayEvents>;
-    deployContract(
-      name: "PlonkVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.PlonkVerifier>;
-    deployContract(
-      name: "SP1MockVerifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1MockVerifier>;
-    deployContract(
-      name: "SP1VerifierGateway",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1VerifierGateway>;
-    deployContract(
-      name: "SP1Verifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1Verifier>;
-    deployContract(
-      name: "SP1Verifier",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.SP1Verifier>;
-    deployContract(
-      name: "ERC20",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ERC20>;
 
     // default types
@@ -690,22 +354,13 @@ declare module "hardhat/types/runtime" {
     ): Promise<ethers.ContractFactory>;
     getContractFactory(
       abi: any[],
-      bytecode: ethers.BytesLike,
+      bytecode: ethers.utils.BytesLike,
       signer?: ethers.Signer
     ): Promise<ethers.ContractFactory>;
     getContractAt(
       nameOrAbi: string | any[],
-      address: string | ethers.Addressable,
+      address: string,
       signer?: ethers.Signer
-    ): Promise<ethers.Contract>;
-    deployContract(
-      name: string,
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<ethers.Contract>;
-    deployContract(
-      name: string,
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<ethers.Contract>;
   }
 }
