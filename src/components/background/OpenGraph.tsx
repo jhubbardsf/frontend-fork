@@ -14,14 +14,23 @@ export interface Props {
 const DESCRIPTION = 'Rift - The first trustless Bitcoin exchange.';
 const DEFAULT_IMAGE = '/images/PreviewArt.png';
 
-export const OpenGraph: NextPage<Props> = ({ title, description = DESCRIPTION, owner, additionalKeywords = [], embed = { image: DEFAULT_IMAGE } }) => {
+export const OpenGraph: NextPage<Props> = ({
+    title,
+    description = DESCRIPTION,
+    owner,
+    additionalKeywords = [],
+    embed = { image: DEFAULT_IMAGE },
+}) => {
     if (!description) description = DESCRIPTION;
     return (
         <Header>
-            {title ? <title>{title} • Rift HyperBridge</title> : <title>Rift HyperBridge</title>}
+            <title>{title ? `${title} • Rift HyperBridge` : 'Rift HyperBridge'}</title>
             <meta name='description' content={description} />
             {owner ? <meta name='author' content={owner} /> : ''}
-            <meta name='keywords' content={`Rift, HyperBridge, Ethereum, Bitcoin, Swap, Decentralized Exchange, DEX, ${additionalKeywords?.map((k) => `, ${k}`)}`} />
+            <meta
+                name='keywords'
+                content={`Rift, HyperBridge, Ethereum, Bitcoin, Swap, Decentralized Exchange, DEX, ${additionalKeywords?.map((k) => `, ${k}`)}`}
+            />
             <meta name='theme-color' content={colors.RiftOrange} />
             {embed ? (
                 <>

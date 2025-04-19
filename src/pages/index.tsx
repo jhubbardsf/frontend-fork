@@ -1,9 +1,7 @@
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
-import { Navbar } from '../components/nav/Navbar';
 import { colors } from '../utils/colors';
-import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
 import OrangeText from '../components/other/OrangeText';
@@ -14,6 +12,7 @@ import { DepositUI } from '../components/deposit/DepositUI';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
 import OfflinePage from '../components/background/OfflinePage';
+import MainLayout from '../components/layout/MainLayout';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -44,7 +43,12 @@ const Home = () => {
 
     const RiftSVG = () => {
         return (
-            <svg width={isTablet ? '50' : '90'} height={isTablet ? '30' : '40'} viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <svg
+                width={isTablet ? '50' : '90'}
+                height={isTablet ? '30' : '40'}
+                viewBox='0 0 2293 547'
+                fill='none'
+                xmlns='http://www.w3.org/2000/svg'>
                 <path
                     fillRule='evenodd'
                     clipRule='evenodd'
@@ -56,81 +60,79 @@ const Home = () => {
     };
 
     return (
-        <>
-            <OpenGraph />
-            {/* <OfflinePage> */}
-            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
-                <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '15vh' : '100px'}>
-                    {swapFlowState != '0-not-started' ? (
-                        <ReserveLiquidityContainer />
-                    ) : (
-                        // {/* LOGOS & TEXT */}
-                        <>
-                            {depositFlowState === '0-not-started' && (
-                                <>
-                                    <RiftSVG />
-                                    <Flex
-                                        userSelect={'none'}
-                                        cursor={'default'}
-                                        sx={{
-                                            WebkitTextFillColor: 'transparent',
-                                            backgroundClip: 'text',
-                                            WebkitBackgroundClip: 'text',
-                                        }}
-                                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                                        letterSpacing={isTablet ? '1px' : '2px'}
-                                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
-                                        fontFamily={'Klein'}
-                                        fontWeight='bold'
-                                        mt={isTablet ? '-18px' : '-25px'}>
-                                        <Text px='12px' as='h1'>
-                                            HyperBrid
-                                        </Text>
-                                        <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
-                                            ge
-                                        </Text>
-                                    </Flex>
+        <MainLayout>
+            <Flex
+                direction={'column'}
+                align='center'
+                w='100%'
+                mt={swapFlowState === '0-not-started' ? '15vh' : '100px'}>
+                {swapFlowState != '0-not-started' ? (
+                    <ReserveLiquidityContainer />
+                ) : (
+                    // {/* LOGOS & TEXT */}
+                    <>
+                        {depositFlowState === '0-not-started' && (
+                            <>
+                                <RiftSVG />
+                                <Flex
+                                    userSelect={'none'}
+                                    cursor={'default'}
+                                    sx={{
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                    }}
+                                    bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                                    letterSpacing={isTablet ? '1px' : '2px'}
+                                    fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
+                                    fontFamily={'Klein'}
+                                    fontWeight='bold'
+                                    mt={isTablet ? '-18px' : '-25px'}>
+                                    <Text px='12px' as='h1'>
+                                        HyperBrid
+                                    </Text>
+                                    <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
+                                        ge
+                                    </Text>
+                                </Flex>
 
-                                    <Flex
-                                        flexDir={'column'}
-                                        textAlign={'center'}
-                                        userSelect={'none'}
-                                        fontSize={isTablet ? '12px' : '15px'}
-                                        mt={'8px'}
-                                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                                        color={'#c3c3c3'}
-                                        cursor={'default'}
-                                        fontWeight={'normal'}
-                                        gap={'0px'}>
-                                        <Text>
-                                            The first trustless <OrangeText>Bitcoin</OrangeText> exchange
-                                        </Text>
-                                        <Text>
-                                            See{' '}
-                                            <Box
-                                                as='span'
-                                                // go to https://rift.exchange
-                                                onClick={() => (window.location.href = 'https://rift.exchange')}
-                                                style={{
-                                                    textDecoration: 'underline',
-                                                    cursor: 'pointer !important',
-                                                }}
-                                                fontWeight={'bold'}>
-                                                how it works
-                                            </Box>
-                                        </Text>
-                                    </Flex>
-                                </>
-                            )}
-                            <SwapContainer />
-                        </>
-                    )}
-                </Flex>
-                <CurrencyModal />
+                                <Flex
+                                    flexDir={'column'}
+                                    textAlign={'center'}
+                                    userSelect={'none'}
+                                    fontSize={isTablet ? '12px' : '15px'}
+                                    mt={'8px'}
+                                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                                    color={'#c3c3c3'}
+                                    cursor={'default'}
+                                    fontWeight={'normal'}
+                                    gap={'0px'}>
+                                    <Text>
+                                        The first trustless <OrangeText>Bitcoin</OrangeText> exchange
+                                    </Text>
+                                    <Text>
+                                        See{' '}
+                                        <Box
+                                            as='span'
+                                            // go to https://rift.exchange
+                                            onClick={() => (window.location.href = 'https://rift.exchange')}
+                                            style={{
+                                                textDecoration: 'underline',
+                                                cursor: 'pointer !important',
+                                            }}
+                                            fontWeight={'bold'}>
+                                            how it works
+                                        </Box>
+                                    </Text>
+                                </Flex>
+                            </>
+                        )}
+                        <SwapContainer />
+                    </>
+                )}
             </Flex>
-            {/* </OfflinePage> */}
-        </>
+            <CurrencyModal />
+        </MainLayout>
     );
 };
 
