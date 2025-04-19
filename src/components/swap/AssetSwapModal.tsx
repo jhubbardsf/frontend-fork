@@ -5,7 +5,6 @@ import {
     ModalContent,
     ModalHeader,
     ModalBody,
-    ModalCloseButton,
     Flex,
     IconButton,
     Box,
@@ -219,41 +218,34 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                 <ModalBody px={0} py={0} flex='1' display='flex' flexDirection='column' overflow='hidden'>
                     {/* Network Selection */}
                     <Box px={4} pt={3} pb={2}>
-                        <Grid templateColumns='repeat(4, 1fr)' gap={2}>
-                            {networks.slice(0, 8).map((net) => (
-                                <GridItem key={net.id}>
-                                    <Center
-                                        bg={
-                                            selectedNetwork === net.id
-                                                ? networkColors[net.id]?.bg || 'rgba(255,255,255,0.12)'
-                                                : 'rgba(255,255,255,0.05)'
-                                        }
-                                        borderRadius='lg'
-                                        cursor={net.isMore ? 'default' : 'pointer'}
-                                        w='100%'
-                                        h='54px'
-                                        position='relative'
-                                        overflow='hidden'
-                                        _hover={{ bg: net.isMore ? undefined : 'rgba(255,255,255,0.08)' }}
-                                        boxShadow={
-                                            selectedNetwork === net.id
-                                                ? `0 0 0 2px ${networkColors[net.id]?.border || 'rgba(99,102,241,0.5)'}`
-                                                : 'none'
-                                        }
-                                        onClick={() => !net.isMore && setSelectedNetwork(net.id)}>
-                                        {net.isMore ? (
-                                            <Text
-                                                fontSize='md'
-                                                fontWeight='bold'
-                                                fontFamily="'Chakra Petch', monospace">
-                                                +{networks.length - 7}
-                                            </Text>
-                                        ) : (
+                        <Grid templateColumns='repeat(2, 1fr)' gap={2}>
+                            {networks
+                                .filter((net) => net.id === 1 || net.id === 8453)
+                                .map((net) => (
+                                    <GridItem key={net.id}>
+                                        <Center
+                                            bg={
+                                                selectedNetwork === net.id
+                                                    ? networkColors[net.id]?.bg || 'rgba(255,255,255,0.12)'
+                                                    : 'rgba(255,255,255,0.05)'
+                                            }
+                                            borderRadius='lg'
+                                            cursor='pointer'
+                                            w='100%'
+                                            h='54px'
+                                            position='relative'
+                                            overflow='hidden'
+                                            _hover={{ bg: 'rgba(255,255,255,0.08)' }}
+                                            boxShadow={
+                                                selectedNetwork === net.id
+                                                    ? `0 0 0 2px ${networkColors[net.id]?.border || 'rgba(99,102,241,0.5)'}`
+                                                    : 'none'
+                                            }
+                                            onClick={() => setSelectedNetwork(net.id)}>
                                             <Image src={net.logo} alt={net.name} boxSize='32px' borderRadius='full' />
-                                        )}
-                                    </Center>
-                                </GridItem>
-                            ))}
+                                        </Center>
+                                    </GridItem>
+                                ))}
                         </Grid>
                     </Box>
 
