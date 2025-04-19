@@ -2499,6 +2499,11 @@
     tiny-invariant "^1.1.0"
     tiny-warning "^1.0.3"
 
+"@vercel/functions@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@vercel/functions/-/functions-2.0.0.tgz#be72057235a667b8c5b2713880fba717cd5a372b"
+  integrity sha512-BSwIihLHoV18gerKZJyGuqd3rtaYM6rJvET1kOwKktshucyaHXTJel7Cxegs+sdX0NZqsX4LO2MFnMU2jG01Cw==
+
 "@vue/compiler-core@3.5.13":
   version "3.5.13"
   resolved "https://registry.yarnpkg.com/@vue/compiler-core/-/compiler-core-3.5.13.tgz#b0ae6c4347f60c03e849a05d34e5bf747c9bda05"
