@@ -2,6 +2,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuidv4 } from 'uuid';
 
+// ————————————————————————————————————————————————————————————————————————
+// Define the exact response shape from TRM Labs
+// ————————————————————————————————————————————————————————————————————————
+/** A single risk indicator on an address  */
+export interface AddressRiskIndicator {
+    category: string;
+    categoryId: string;
+    categoryRiskScoreLevel: number;
+    categoryRiskScoreLevelLabel: string;
+    totalVolumeUsd: string;
+    incomingVolumeUsd?: string;
+    outgoingVolumeUsd?: string;
+    riskType?: string;
+}
+
+/** The POST /public/v2/screening/addresses response for a single wallet */
+export interface WalletScreeningResult {
+    accountExternalId: string | null;
+    address: string;
+    addressIncomingVolumeUsd?: string;
+    addressOutgoingVolumeUsd?: string;
+    addressTotalVolumeUsd?: string;
+    addressRiskIndicators: AddressRiskIndicator[];
+    addressSubmitted: string;
+    chain: string;
+    externalId: string;
+    trmAppUrl: string;
+    /** Only present if includeDataPerChain=true */
+    entities?: any[];
+}
+
 const TRM_API_URL = process.env.TRM_SCREENING_URL!;
 const API_KEY = process.env.TRM_API_KEY!;
 const AUTH_HEADER = 'Basic ' + Buffer.from(`${API_KEY}:${API_KEY}`).toString('base64');
@@ -65,7 +96,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Success: parse result (201 -> JSON array)
-    const data = (await apiRes.json()) as any[];
+    const data = (await apiRes.json()) as WalletScreeningResult[];
+    console.log({ screeningData: data });
     const result = data[0];
+    console.log({ screeningResult: result });
     return res.status(200).json(result);
 }
