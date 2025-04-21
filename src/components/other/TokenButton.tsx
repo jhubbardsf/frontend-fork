@@ -6,10 +6,9 @@ import type { AssetType, TokenMeta, ValidAsset } from '@/types';
 import useWindowSize from '../../hooks/useWindowSize';
 import { ARBITRUM_LOGO, BASE_LOGO } from './SVGs';
 import Image from 'next/image';
-import TokenImageMap from '@/json/tokenImageMap.json';
+import combinedTokenData from '@/json/tokenData.json';
 import { useStore } from '@/store';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
-import { getImageUrl } from '@/utils/imageUrl';
 
 interface TokenProps {
     asset: TokenMeta | ValidAsset;
@@ -48,9 +47,10 @@ const TokenButton: React.FC<TokenProps> = ({
     const key = `${address}-${asset.symbol}`;
     console.log('Key: ', key);
 
-    const tokenMapping = TokenImageMap[key];
-    const bgColor = greyedOut || !tokenMapping ? '#383838' : tokenMapping?.bgColor;
-    const borderColor = greyedOut || !tokenMapping ? '#838383' : tokenMapping?.borderColor;
+    // Use the style from our combined data file
+    const tokenStyle = combinedTokenData.styleMap?.[key] || combinedTokenData.styleMap?.[asset.symbol];
+    const bgColor = greyedOut || !tokenStyle ? '#383838' : tokenStyle.bgColor;
+    const borderColor = greyedOut || !tokenStyle ? '#838383' : tokenStyle.borderColor;
     const pX = px ?? '20px';
 
     return (

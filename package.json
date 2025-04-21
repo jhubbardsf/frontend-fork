@@ -8,7 +8,7 @@
     "start": "next start",
     "sync": "chmod +x ./populate_artifacts.sh && ./populate_artifacts.sh",
     "lint": "next lint",
-    "update-tokens": "tsx scripts/update_uniswap_tokens.ts"
+    "update-tokens": "tsx scripts/token_manager.ts"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.2",
