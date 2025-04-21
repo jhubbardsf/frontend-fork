@@ -3,8 +3,8 @@ import { ValidAsset, DeploymentType } from '../types';
 import { useStore } from '../store';
 import { ETH_Icon, ETH_Logo, USDT_Icon } from '../components/other/SVGs';
 
-export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.MAINNET; // Local devnet
-export const IS_FRONTEND_PAUSED = true;
+export const DEPLOYMENT_TYPE: DeploymentType = DeploymentType.DEVNET; // Local devnet
+export const IS_FRONTEND_PAUSED = false;
 export const MIN_SWAP_AMOUNT_SATS = 3000; // 1000 sats = ~$0.96 currently
 export const MAX_SWAP_AMOUNT_SATS = 100_000_000_000; // 1,000 cbBTC
 export const SAMEES_DEMO_CB_BTC_ADDRESS = '0xA976a1F4Ee6DC8011e777133C6719087C10b6259';
@@ -30,8 +30,8 @@ export const DEVNET_BASE_CHAIN_ID = 1337;
 export const DEVNET_BASE_ETHERSCAN_URL = 'http://localhost:50101';
 export const DEVNET_BASE_RPC_URL = 'http://localhost:50101';
 export const DEVNET_DATA_ENGINE_URL = 'http://localhost:50100';
-export const DEVNET_BASE_CBBTC_TOKEN_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+export const DEVNET_BASE_CBBTC_TOKEN_ADDRESS = '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf';
+export const DEVNET_BASE_RIFT_EXCHANGE_ADDRESS = '0x737b8F095E3c575a6Ae5FE1711AdB8F271E20269';
 
 // // MAINNET ARBITRUM
 // export const MAINNET_ARBITRUM_CHAIN_ID = 42161;
