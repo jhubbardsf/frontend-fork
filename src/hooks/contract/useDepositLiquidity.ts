@@ -21,34 +21,6 @@ export enum DepositStatus {
     Error = 'error',
 }
 
-/*
-      *
-     * @notice Struct for depositLiquidity parameters
-     *
-     * @param specifiedPayoutAddress Address to receive swap proceeds
-     * @param depositAmount Amount of ERC20 tokens to deposit including fee
-     * @param expectedSats Expected BTC output in satoshis
-     * @param btcPayoutScriptPubKey Bitcoin script for receiving BTC
-     * @param depositSalt User generated salt for vault nonce
-     * @param confirmationBlocks Number of Bitcoin blocks required for confirmation
-     * @param safeBlockLeaf The leaf representing a block the depositor believes is highly unlikely to be reorged out of the chain
-     * @param safeBlockSiblings Merkle proof siblings for safe block inclusion
-     * @param safeBlockPeaks MMR peaks for safe block inclusion
-    struct DepositLiquidityParams {
-        address depositOwnerAddress;
-        address specifiedPayoutAddress;
-        uint256 depositAmount;
-        uint64 expectedSats;
-        bytes22 btcPayoutScriptPubKey;
-        bytes32 depositSalt;
-        uint8 confirmationBlocks;
-        Types.BlockLeaf safeBlockLeaf;
-        bytes32[] safeBlockSiblings;
-        bytes32[] safeBlockPeaks;
-    }
-  */
-
-// Updated to match the smart contract struct
 interface DepositLiquidityParams {
     signer: ethers.providers.JsonRpcSigner;
     riftExchangeAbi: ethers.ContractInterface;
@@ -119,12 +91,6 @@ export function useDepositLiquidity() {
         }
 
         if (bundlerStatus === 'pending') {
-            console.log('Bun pending data', {
-                status: bundlerStatus,
-                error: bundlerError,
-                data: bundlerTxHash,
-                ...rest,
-            });
             setError(null);
             setTxHash(bundlerTxHash);
             setStatus(DepositStatus.DepositPending);
