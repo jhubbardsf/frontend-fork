@@ -17,6 +17,7 @@ import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
 import { wagmiAdapter, queryClient, modal } from '../config/reown';
+import { ScreenGuard } from '@/components/background/ScreenGuard';
 
 const myCustomTheme = {
     blurs: {
@@ -114,6 +115,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <QueryClientProvider client={queryClient}>
                 <ChakraProvider theme={theme}>
                     <ContractDataProvider>
+                        <ScreenGuard />
                         {/* <title>Rift Hyperbridge - </title> */}
                         <Component {...pageProps} />
                         <Toaster

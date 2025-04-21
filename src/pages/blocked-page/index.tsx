@@ -1,9 +1,8 @@
 import { useRouter } from 'next/router';
 import { Flex, Text, Box } from '@chakra-ui/react';
-import { Navbar } from '../../components/nav/Navbar';
 import { FONT_FAMILIES } from '../../utils/font';
-import { OpenGraph } from '../../components/background/OpenGraph';
 import useWindowSize from '../../hooks/useWindowSize';
+import MainLayout from '../../components/layout/MainLayout';
 
 export default function BlockedPage() {
     const { isTablet, isMobile } = useWindowSize();
@@ -27,63 +26,53 @@ export default function BlockedPage() {
     };
 
     return (
-        <>
-            <OpenGraph />
-            <Flex
-                h='100vh'
-                width='100%'
-                direction='column'
-                backgroundImage={'/images/rift_background_low.webp'}
-                backgroundSize='cover'
-                backgroundPosition='center'>
-                <Navbar />
-                <Flex direction={'column'} align='center' w='100%' mt='15vh'>
-                    <RiftSVG />
-                    <Flex
-                        userSelect={'none'}
-                        cursor={'default'}
-                        sx={{
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text',
-                        }}
-                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                        letterSpacing={isTablet ? '1px' : '2px'}
-                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
-                        fontFamily={'Klein'}
-                        fontWeight='bold'
-                        mt={isTablet ? '-18px' : '-25px'}>
-                        <Text px='12px' as='h1'>
-                            Access
-                        </Text>
-                        <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
-                            Blocked
-                        </Text>
-                    </Flex>
+        <MainLayout title='Access Blocked'>
+            <Flex direction={'column'} align='center' w='100%' mt='15vh'>
+                <RiftSVG />
+                <Flex
+                    userSelect={'none'}
+                    cursor={'default'}
+                    sx={{
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                    }}
+                    bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
+                    letterSpacing={isTablet ? '1px' : '2px'}
+                    fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
+                    fontFamily={'Klein'}
+                    fontWeight='bold'
+                    mt={isTablet ? '-18px' : '-25px'}>
+                    <Text px='12px' as='h1'>
+                        Access
+                    </Text>
+                    <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
+                        Blocked
+                    </Text>
+                </Flex>
 
-                    <Flex
-                        flexDir={'column'}
-                        textAlign={'center'}
-                        userSelect={'none'}
-                        fontSize={isTablet ? '14px' : '18px'}
-                        mt={'32px'}
-                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                        color={'#c3c3c3'}
-                        cursor={'default'}
-                        fontWeight={'normal'}
-                        maxW={'600px'}
-                        px={4}
-                        gap={'16px'}>
-                        <Text>
-                            We're unable to provide service to your location or address due to compliance requirements.
-                        </Text>
-                        <Text>
-                            Rift Exchange is not available in certain regions or to addresses that may be subject to
-                            sanctions.
-                        </Text>
-                    </Flex>
+                <Flex
+                    flexDir={'column'}
+                    textAlign={'center'}
+                    userSelect={'none'}
+                    fontSize={isTablet ? '14px' : '18px'}
+                    mt={'32px'}
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    color={'#c3c3c3'}
+                    cursor={'default'}
+                    fontWeight={'normal'}
+                    maxW={'600px'}
+                    px={4}
+                    gap={'16px'}>
+                    <Text>
+                        We're unable to provide service to your location or address due to compliance requirements.
+                    </Text>
+                    <Text>
+                        Rift Exchange is not available in certain regions or to addresses that may be subject to
+                        sanctions.
+                    </Text>
                 </Flex>
             </Flex>
-        </>
+        </MainLayout>
     );
 }

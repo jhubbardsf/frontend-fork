@@ -3,11 +3,9 @@ import { useConnectModal } from '../hooks/useReownConnect';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
-import { OpenGraph } from '../components/background/OpenGraph';
 import HorizontalButtonSelector from '../components/other/HorizontalButtonSelector';
 import OrangeText from '../components/other/OrangeText';
 import WhiteText from '../components/other/WhiteText';
-import { Navbar } from '../components/nav/Navbar';
 import { SwapHistory } from '../components/deposit/SwapHistory';
 import useHorizontalSelectorInput from '../hooks/useHorizontalSelectorInput';
 import useWindowSize from '../hooks/useWindowSize';
@@ -21,6 +19,7 @@ import { BigNumber } from 'ethers';
 import { FONT_FAMILIES } from '../utils/font';
 import { formatUnits } from 'ethers/lib/utils';
 import React from 'react';
+import MainLayout from '../components/layout/MainLayout';
 
 const Activity = () => {
     const { isMobile } = useWindowSize();
@@ -28,7 +27,11 @@ const Activity = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+    const {
+        options: optionsButton,
+        selected: selectedButton,
+        setSelected: setSelectedButton,
+    } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
     const userSwapsFromAddress = useStore((state) => state.userSwapsFromAddress);
 
@@ -67,70 +70,72 @@ const Activity = () => {
     };
 
     return (
-        <>
-            <OpenGraph title='Liquidity' />
-            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
-                <Navbar />
-                <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
-                    {/* LOGOS & TEXT */}
-                    <Flex direction={'column'} align='center' mt={!isConnected ? '20vh' : '10px'} w='100%'>
-                        <Flex
-                            sx={{
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                WebkitBackgroundClip: 'text',
-                            }}
-                            bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
-                            opacity={0.9}
-                            letterSpacing={'2px'}
-                            mt='-10px'>
-                            <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
-                                Activity
-                            </Text>
-                        </Flex>
-                    </Flex>
-                    {/* CHARTS */}
-                    {/* <Flex w='100%' mt='25px' maxW='1100px' gap='12px' align='center' justify='center' direction='column'>
-                         <Flex
-                            letterSpacing={'-2px'}
-                            bg={colors.offBlack}
-                            mb='10px'
-                            fontSize={'24px'}
-                            direction={'column'}
-                            px='36px'
-                            py={'12px'}
-                            align='center'
-                            justify='center'
-                            borderRadius={'10px'}
-                            border='2px solid '
-                            color={colors.textGray}
-                            borderColor={colors.borderGray}
-                            gap='0px'
-                            height={'120px'}>
-                            <Text fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.offWhite}>
-                                TOTAL AVAILABLE LIQUIDITY
-                            </Text>
-                            <Text fontSize={'29px'} color={selectedInputAsset.border_color_light} fontFamily={FONT_FAMILIES.AUX_MONO}>{`${formatUnits(
-                                availableLiquidity,
-                                selectedInputAsset.decimals,
-                            )} ${selectedInputAsset.name}`}</Text>
-                        </Flex> 
-
-                 <Flex w='100%' direction='row' gap='12px'>
-                            <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
-                                <ActiveLiquidityRawChart />
-                            </ActivityChartContainer>
-                            <ActivityChartContainer title='Monthly Volume' value='$21.23B'>
-                                <MonthlyValueRawChart />
-                            </ActivityChartContainer>
-                        </Flex> 
-                    </Flex>*/}
-                    <Flex w='100%' maxW='1200px' align={'center'} justify={'center'}>
-                        <SwapHistory />
+        <MainLayout title='Liquidity'>
+            <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
+                {/* LOGOS & TEXT */}
+                <Flex direction={'column'} align='center' mt={!isConnected ? '20vh' : '10px'} w='100%'>
+                    <Flex
+                        sx={{
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                        }}
+                        bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
+                        opacity={0.9}
+                        letterSpacing={'2px'}
+                        mt='-10px'>
+                        <Text
+                            userSelect={'none'}
+                            fontSize='60px'
+                            fontFamily={'Klein'}
+                            fontWeight='bold'
+                            px='12px'
+                            as='h1'>
+                            Activity
+                        </Text>
                     </Flex>
                 </Flex>
+                {/* CHARTS */}
+                {/* <Flex w='100%' mt='25px' maxW='1100px' gap='12px' align='center' justify='center' direction='column'>
+                     <Flex
+                        letterSpacing={'-2px'}
+                        bg={colors.offBlack}
+                        mb='10px'
+                        fontSize={'24px'}
+                        direction={'column'}
+                        px='36px'
+                        py={'12px'}
+                        align='center'
+                        justify='center'
+                        borderRadius={'10px'}
+                        border='2px solid '
+                        color={colors.textGray}
+                        borderColor={colors.borderGray}
+                        gap='0px'
+                        height={'120px'}>
+                        <Text fontSize={'14px'} fontFamily={FONT_FAMILIES.AUX_MONO} color={colors.offWhite}>
+                            TOTAL AVAILABLE LIQUIDITY
+                        </Text>
+                        <Text fontSize={'29px'} color={selectedInputAsset.border_color_light} fontFamily={FONT_FAMILIES.AUX_MONO}>{`${formatUnits(
+                            availableLiquidity,
+                            selectedInputAsset.decimals,
+                        )} ${selectedInputAsset.name}`}</Text>
+                    </Flex> 
+
+                <Flex w='100%' direction='row' gap='12px'>
+                        <ActivityChartContainer title='Active Liquidity' value='329,343.32'>
+                            <ActiveLiquidityRawChart />
+                        </ActivityChartContainer>
+                        <ActivityChartContainer title='Monthly Volume' value='$21.23B'>
+                            <MonthlyValueRawChart />
+                        </ActivityChartContainer>
+                    </Flex> 
+                </Flex>*/}
+                <Flex w='100%' maxW='1200px' align={'center'} justify={'center'}>
+                    <SwapHistory />
+                </Flex>
             </Flex>
-        </>
+        </MainLayout>
     );
 };
 
