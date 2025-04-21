@@ -34,7 +34,7 @@ import { base, baseGoerli, baseSepolia } from 'viem/chains';
 import { DeploymentType } from './types';
 import { getDeploymentValue } from './utils/deploymentUtils';
 import { callApi } from './utils/callApi';
-import UniswapListJSON from '@/json/tokenList.json';
+import combinedTokenData from '@/json/tokenData.json';
 
 /**
  * Merges a Uniswap token list into an existing record of valid assets.
@@ -272,7 +272,7 @@ export const useStore = create<Store>((set, get) => {
         },
     };
     const updatedValidAssets = mergeTokenListIntoValidAssets(
-        UniswapListJSON,
+        combinedTokenData,
         validAssets.CoinbaseBTC,
         DEVNET_BASE_CHAIN_ID,
         validAssets,
@@ -424,7 +424,7 @@ export const useStore = create<Store>((set, get) => {
             DEVNET_BASE_CHAIN_ID,
         ),
         setSelectChainID: (chainID: number) => set({ selectedChainID: chainID }),
-        uniswapTokens: UniswapListJSON.tokens.filter((t: TokenMeta) => t.chainId === 8453),
+        uniswapTokens: combinedTokenData.tokens.filter((t: TokenMeta) => t.chainId === 8453),
         setUniswapTokens: (tokens: TokenMeta[]) => set({ uniswapTokens: tokens }),
     };
 });
