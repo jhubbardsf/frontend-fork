@@ -78,7 +78,7 @@ export function useWalletScreening() {
 
                 if (result.riskScoreLevel >= threshold) {
                     // 3) Set our cookie so we don't re‑call TRM on reload:
-                    setBlockingCookie(address);
+                    // setBlockingCookie(address);
 
                     // 4) Now block the UI
                     redirectToBlockedPage();
