@@ -19,6 +19,7 @@ import { ContractDataProvider } from '../components/providers/ContractDataProvid
 import { RiftApi } from '../proxy-wallet/rift';
 import useWindowSize from '../hooks/useWindowSize';
 import { FONT_FAMILIES } from '../utils/font';
+import { ScreenGuard } from '../components/background/ScreenGuard';
 
 // Define the custom Anvil chain
 const anvilChain = {
@@ -48,6 +49,7 @@ const config = getDefaultConfig({
     chains: [base],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
+
 
 const myCustomTheme = {
     blurs: {
@@ -145,7 +147,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
                     <ChakraProvider theme={theme}>
                         <ContractDataProvider>
-                            {/* <title>Rift Hyperbridge - </title> */}
+                            <ScreenGuard />
+                        {/* <title>Rift Hyperbridge - </title> */}
                             <Component {...pageProps} />
                             <Toaster
                                 toastOptions={{

@@ -9,3 +9,6 @@ __pycache__/
 .next/cache/webpack/
 /src/utils/vault.json
 .env
+.cursorignore
+.cursor/
+.vercel
