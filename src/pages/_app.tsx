@@ -48,6 +48,7 @@ const config = getDefaultConfig({
     chains: [base],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
+import { ScreenGuard } from '@/components/background/ScreenGuard';
 
 const myCustomTheme = {
     blurs: {
@@ -145,7 +146,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
                     <ChakraProvider theme={theme}>
                         <ContractDataProvider>
-                            {/* <title>Rift Hyperbridge - </title> */}
+                            <ScreenGuard />
+                        {/* <title>Rift Hyperbridge - </title> */}
                             <Component {...pageProps} />
                             <Toaster
                                 toastOptions={{
