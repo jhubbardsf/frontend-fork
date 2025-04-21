@@ -27,12 +27,12 @@ export function useWalletScreening() {
     const [screened, setScreened] = useState(false);
 
     // Helper to check if we're already on the blocked page
-    const isBlockedPage = () => router.pathname === '/blocked-page';
+    const isBlockedPage = () => router.pathname === '/restricted';
 
     // Helper to redirect to blocked page if not already there
     const redirectToBlockedPage = (query = '') => {
         if (!isBlockedPage()) {
-            router.replace(`/blocked-page${query}`);
+            router.replace(`/restricted${query}`);
         }
     };
 
