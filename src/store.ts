@@ -65,14 +65,12 @@ function deduplicateTokens(tokenList: UniswapTokenList): UniswapTokenList {
  * @param tokenList - The Uniswap token list object.
  * @param defaultAssetTemplate - A template ValidAsset (e.g. your CoinbaseBTC asset) that contains all required properties.
  * @param existingAssets - (Optional) Existing valid assets record to merge into.
- * @param currentChainId - The current chain ID to filter tokens by.
  * @returns A new record of ValidAsset objects keyed by token symbol.
  */
 export function mergeTokenListIntoValidAssets(
     tokenList: UniswapTokenList,
     defaultAssetTemplate: ValidAsset,
     existingAssets: Record<string, ValidAsset> = {},
-    currentChainId?: number,
 ): Record<string, ValidAsset> {
     const convertIpfsUri = (uri: string | undefined, gateway: string = 'https://ipfs.io/ipfs/') => {
         if (!uri) return null;
@@ -91,13 +89,7 @@ export function mergeTokenListIntoValidAssets(
     // Start with the provided existing assets
     const mergedAssets: Record<string, ValidAsset> = { ...existingAssets };
 
-    // Filter tokens by current chain ID if provided
-    const effectiveChainID = currentChainId ? getEffectiveChainID(currentChainId) : undefined;
-    const tokensToAdd = effectiveChainID
-        ? tokenList.tokens.filter((token) => token.chainId === effectiveChainID)
-        : tokenList.tokens;
-
-    tokensToAdd.forEach((token) => {
+    tokenList.tokens.forEach((token) => {
         // Use a unique key based on chain ID and address
         const key = `${token.chainId}-${token.address.toLowerCase()}`;
 
@@ -353,7 +345,6 @@ export const useStore = create<Store>((set, get) => {
         deduplicateTokens(combinedTokenData),
         coinbaseBtc,
         initialValidAssets,
-        currentChainId,
     );
 
     return {
@@ -655,6 +646,8 @@ export const useStore = create<Store>((set, get) => {
                 const key = findAssetKeyByName(assets, 'CoinbaseBTC', chainId ?? currentChainId);
                 if (key) return assets[key];
             }
+
+            console.log('Debug', { assets });
 
             // Search across all assets
             return Object.values(assets).find(

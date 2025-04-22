@@ -45,7 +45,6 @@ const TokenButton: React.FC<TokenProps> = ({
     // Handle both types - TokenMeta has address, ValidAsset might have tokenAddress
     const address = 'tokenAddress' in asset ? asset.tokenAddress : asset.address;
     const key = `${address}-${asset.symbol}`;
-    console.log('Key: ', key);
 
     // Use the style from our combined data file
     const tokenStyle = combinedTokenData.styleMap?.[key] || combinedTokenData.styleMap?.[asset.symbol];

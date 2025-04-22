@@ -101,14 +101,6 @@ export function useDepositLiquidity() {
         hash: bundlerTxHash,
     });
 
-    console.log('Bundler transaction receipt data', {
-        data,
-        ConfirmingCreation,
-        creationSuccess,
-        transactionError,
-        ...receiptRest,
-    });
-
     useEffect(() => {
         if (bundlerStatus === DepositStatus.Error || transactionError) {
             setError(bundlerError?.message || transactionError.message);
@@ -166,7 +158,6 @@ export function useDepositLiquidity() {
                 const isCoinbaseBTC = selectedInputAsset.symbol === 'cbBTC';
                 // Check allowance
                 if (isCoinbaseBTC) {
-                    console.log('Is Coinbase BTC');
                     const allowance = await tokenContract.allowance(userEthAddress, params.riftExchangeContractAddress);
                     if (BigNumber.from(allowance).lt(params.params.depositAmount)) {
                         setStatus(DepositStatus.WaitingForDepositTokenApproval);
@@ -198,7 +189,6 @@ export function useDepositLiquidity() {
                     refreshUserSwapsFromAddress();
                 } else {
                     // Other ERC20, use bundler
-                    console.log('Is not Coinbase BTC');
                     await proceedWithBundler(swapRoute, params.params, setStatus);
 
                     // REPEATED CODE

@@ -27,6 +27,7 @@ import TokenCard from './TokenCard';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { fetchAndUpdatePriceByAddress, fetchTokenPrice } from '@/hooks/useLifiPriceUpdate';
 import { getEffectiveChainID } from '@/utils/dappHelper';
+import { useChainId } from 'wagmi';
 
 interface AssetSwapModalProps {
     isOpen: boolean;
@@ -97,6 +98,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     const selectedChainID = useStore((state) => state.selectedChainID);
     const validAssets = useStore((state) => state.validAssets);
     const findAssetByName = useStore((state) => state.findAssetByName);
+    const findAssetByAddress = useStore((state) => state.findAssetByAddress);
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const effectiveChainID = getEffectiveChainID(selectedChainID);
     const [parent] = useAutoAnimate({ duration: 200 });
@@ -148,16 +150,21 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     };
 
     const handleTokenClick = (token: TokenMeta) => {
-        // Always use the effective chain ID when looking up assets
         const effectiveTokenChainId = getEffectiveChainID(token.chainId);
-        const asset = findAssetByName(token.name, effectiveTokenChainId);
+        // Try to find by name first
+        let asset = findAssetByName(token.name, effectiveTokenChainId);
+
+        // If not found by name, try by address
+        if (!asset) {
+            asset = findAssetByAddress(token.address, effectiveTokenChainId);
+        }
 
         if (asset) {
             onTokenSelected(asset);
             handleTokenFetch(token, onClose);
         } else {
             console.error(
-                `Asset not found for token: ${token.name} on chain ${effectiveTokenChainId} (original: ${token.chainId})`,
+                `Asset not found for token: ${token.name} (${token.address}) on chain ${effectiveTokenChainId} (original: ${token.chainId})`,
             );
             onClose();
         }

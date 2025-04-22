@@ -55,7 +55,7 @@ import { getTipProof } from '../../utils/dataEngineClient';
 import { BigNumber, ethers } from 'ethers';
 import { DepositStatus, useDepositLiquidity } from '../../hooks/contract/useDepositLiquidity';
 import DepositStatusModal from './DepositStatusModal';
-import UniswapSwapWidget from '../swap/AssetSwapModal';
+import AssetSwapModal from '../swap/AssetSwapModal';
 import TokenButton from '../other/TokenButton';
 import GooSpinner from '../other/GooSpiner';
 import { useQuery } from '@tanstack/react-query';
@@ -113,7 +113,7 @@ export const DepositUI = () => {
 
     // New token stuff
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isUniswapSwapWidgetOpen, setIsUniswapSwapWidgetOpen] = useState(false);
+    const [isAssetSwapModalOpen, setIsAssetSwapModalOpen] = useState(false);
     const uniswapTokens = useStore((state) => state.uniswapTokens);
     const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
     const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
@@ -750,7 +750,7 @@ export const DepositUI = () => {
                                             cursor='pointer'
                                             asset={selectedInputAsset}
                                             onDropDown={() => {
-                                                setIsUniswapSwapWidgetOpen(true);
+                                                setIsAssetSwapModalOpen(true);
                                             }}
                                         />
                                     </Flex>
@@ -1126,9 +1126,9 @@ export const DepositUI = () => {
                     error={depositLiquidityError}
                     txHash={txHash}
                 />
-                <UniswapSwapWidget
-                    isOpen={isUniswapSwapWidgetOpen}
-                    onClose={() => setIsUniswapSwapWidgetOpen(false)}
+                <AssetSwapModal
+                    isOpen={isAssetSwapModalOpen}
+                    onClose={() => setIsAssetSwapModalOpen(false)}
                     onTokenSelected={setSelectedInputAsset}
                 />
             </Flex>
