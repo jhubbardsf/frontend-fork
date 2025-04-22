@@ -17,7 +17,7 @@
     "@emotion/styled": "^11.9.0",
     "@formkit/auto-animate": "^0.8.2",
     "@jhubbardsf/ethers-decode-error": "^1.0.3",
-    "@metamask/detect-provider": "github:metamask/detect-provider",
+    "@metamask/detect-provider": "^2.0.0",
     "@openzeppelin/contracts": "^5.2.0",
     "@pushprotocol/restapi": "^0.2.1",
     "@reown/appkit": "^1.7.3",
