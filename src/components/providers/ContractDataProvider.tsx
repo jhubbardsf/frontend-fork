@@ -141,20 +141,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
 
     // [4] Continuously fetch non-wallet-dependent data (prices, pause status)
     useEffect(() => {
-        const fetchPriceData = async () => {
-            try {
-                let { btcPriceUSD, cbbtcPriceUSD } = await getUSDPrices();
-                // TODO: This needs updating
-                if (btcPriceUSD !== '0')
-                    updatePriceUsd(useStore.getState().validAssets.BTC.name, parseFloat(btcPriceUSD));
-                if (cbbtcPriceUSD !== '0')
-                    updatePriceUsd(useStore.getState().validAssets.CoinbaseBTC.name, parseFloat(cbbtcPriceUSD));
-            } catch (e) {
-                console.error(e);
-                return;
-            }
-        };
-
         const checkIfNewDepositsArePausedFromContract = async () => {
             if (!useStore.getState().ethersRpcProvider || !selectedInputAsset) return;
             // TODO - update this with new contract pause functionality if we have it
@@ -162,14 +148,11 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             setAreNewDepositsPaused(IS_FRONTEND_PAUSED);
         };
 
-        fetchPriceData();
-
         // [4] call check if new deposits are paused in the contract
         checkIfNewDepositsArePausedFromContract();
 
         if (!intervalRef.current) {
             intervalRef.current = setInterval(() => {
-                fetchPriceData();
                 fetchSelectedAssetUserBalance();
                 checkIfNewDepositsArePausedFromContract();
             }, 12000);

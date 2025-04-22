@@ -25,6 +25,7 @@ import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
 import type { TokenMeta, ValidAsset } from '@/types';
 import TokenCard from './TokenCard';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { fetchTokenPrice } from '@/hooks/useLifiPriceUpdate';
 
 interface AssetSwapModalProps {
     isOpen: boolean;
@@ -101,6 +102,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const effectiveChainID = getEffectiveChainID(selectedChainID);
     const [parent] = useAutoAnimate({ duration: 200 });
+    console.log('JSH: ', { uniswapTokens });
 
     const [tokensForChain, setTokensForChain] = useState<TokenMeta[]>(
         uniswapTokens.filter((t) => t.chainId === effectiveChainID),
@@ -109,7 +111,29 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
 
     // Sync token list when network or chain changes
     useEffect(() => {
-        const filtered = uniswapTokens.filter((t) => t.chainId === selectedNetwork);
+        console.log('Network or tokens changed:', {
+            selectedNetwork,
+            uniswapTokensCount: uniswapTokens.length,
+            uniswapTokensForNetwork: uniswapTokens.filter((t) => t.chainId === selectedNetwork).length,
+        });
+
+        // Deduplicate tokens by address to prevent duplicate entries
+        const addressMap = new Map<string, TokenMeta>();
+        uniswapTokens
+            .filter((t) => t.chainId === selectedNetwork)
+            .forEach((token) => {
+                const lowerCaseAddress = token.address.toLowerCase();
+                // Only add if not already in the map, or replace if it's a newer/better entry
+                if (!addressMap.has(lowerCaseAddress)) {
+                    addressMap.set(lowerCaseAddress, token);
+                }
+            });
+
+        // Convert to array and sort alphabetically by symbol
+        const filtered = Array.from(addressMap.values()).sort((a, b) =>
+            a.symbol.toUpperCase().localeCompare(b.symbol.toUpperCase()),
+        );
+
         setTokensForChain(filtered);
         setSearchTerm('');
     }, [selectedNetwork, uniswapTokens]);
@@ -120,27 +144,22 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     }, [effectiveChainID]);
 
     // Handle token price fetch
-    const fetchTokenPrice = async (token: TokenMeta, cb: () => void) => {
-        const url = `https://li.quest/v1/token?chain=${token.chainId}&token=${token.address}`;
+    const handleTokenFetch = async (token: TokenMeta, cb: () => void) => {
         try {
-            const res = await fetch(url);
-            const json = await res.json();
-            updatePriceUSD(token.address, json.priceUSD);
+            const price = await fetchTokenPrice(token.chainId, token.address);
+            if (price !== null) {
+                updatePriceUSD(token.address, price);
+            }
             cb();
         } catch (e) {
             console.error('Error fetching price for', token.symbol, e);
+            cb();
         }
     };
 
     const handleTokenClick = (token: TokenMeta) => {
-        console.log('JSH+ handleTokenClick', {
-            token,
-            address: token.address,
-            validAssets,
-            validAsset: validAssets[token.address],
-        });
         onTokenSelected(validAssets[token.name]);
-        fetchTokenPrice(token, onClose);
+        handleTokenFetch(token, onClose);
     };
 
     const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,20 +181,6 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
             handleTokenClick(tokensForChain[0]);
         }
     };
-
-    // // Custom font for UI
-    // useEffect(() => {
-    //     const link = document.createElement('link');
-    //     link.href = 'https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap';
-    //     link.rel = 'stylesheet';
-    //     document.head.appendChild(link);
-
-    //     return () => {
-    //         if (link && document.head.contains(link)) {
-    //             document.head.removeChild(link);
-    //         }
-    //     };
-    // }, []);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size='md' isCentered>

@@ -33,8 +33,31 @@ import riftExchangeABI from './abis/RiftExchange.json';
 import { base, baseGoerli, baseSepolia } from 'viem/chains';
 import { DeploymentType } from './types';
 import { getDeploymentValue } from './utils/deploymentUtils';
-import { callApi } from './utils/callApi';
 import combinedTokenData from '@/json/tokenData.json';
+
+/**
+ * Deduplicates tokens in a token list to ensure only unique tokens per chain by address
+ */
+function deduplicateTokens(tokenList: UniswapTokenList): UniswapTokenList {
+    const addressChainMap = new Map<string, TokenMeta>();
+
+    tokenList.tokens.forEach((token) => {
+        const key = `${token.chainId}-${token.address.toLowerCase()}`;
+        if (!addressChainMap.has(key)) {
+            addressChainMap.set(key, token);
+        }
+    });
+
+    // Sort tokens alphabetically by symbol after deduplication
+    const sortedTokens = Array.from(addressChainMap.values()).sort((a, b) =>
+        a.symbol.toUpperCase().localeCompare(b.symbol.toUpperCase()),
+    );
+
+    return {
+        ...tokenList,
+        tokens: sortedTokens,
+    };
+}
 
 /**
  * Merges a Uniswap token list into an existing record of valid assets.
@@ -47,7 +70,6 @@ import combinedTokenData from '@/json/tokenData.json';
 export function mergeTokenListIntoValidAssets(
     tokenList: UniswapTokenList,
     defaultAssetTemplate: ValidAsset,
-    chainId: number,
     existingAssets: Record<string, ValidAsset> = {},
 ): Record<string, ValidAsset> {
     const convertIpfsUri = (uri: string | undefined, gateway: string = 'https://ipfs.io/ipfs/') => {
@@ -66,24 +88,22 @@ export function mergeTokenListIntoValidAssets(
 
     // Start with the provided existing assets
     const mergedAssets: Record<string, ValidAsset> = { ...existingAssets };
-    const devChainID = chainId === 1337 ? 8453 : chainId;
+
+    // We don't filter by chainId anymore to include all tokens
     tokenList.tokens.forEach((token) => {
         // Use the token symbol as the key.
         // The new asset is built by taking the template and overriding
         // properties with those from the token.
-
-        if (token.chainId === devChainID) {
-            mergedAssets[token.name] = {
-                ...defaultAssetTemplate,
-                ...token,
-                // Override with token-specific data:
-                display_name: token.symbol,
-                tokenAddress: token.address,
-                // If available, use the token's logo URI; otherwise, fall back to the template icon.
-                icon_svg: convertIpfsUri(token.logoURI) || defaultAssetTemplate.icon_svg,
-                fromTokenList: true,
-            };
-        }
+        mergedAssets[token.name] = {
+            ...defaultAssetTemplate,
+            ...token,
+            // Override with token-specific data:
+            display_name: token.symbol,
+            tokenAddress: token.address,
+            // If available, use the token's logo URI; otherwise, fall back to the template icon.
+            icon_svg: convertIpfsUri(token.logoURI) || defaultAssetTemplate.icon_svg,
+            fromTokenList: true,
+        };
     });
 
     return mergedAssets;
@@ -272,9 +292,8 @@ export const useStore = create<Store>((set, get) => {
         },
     };
     const updatedValidAssets = mergeTokenListIntoValidAssets(
-        combinedTokenData,
+        deduplicateTokens(combinedTokenData),
         validAssets.CoinbaseBTC,
-        DEVNET_BASE_CHAIN_ID,
         validAssets,
     );
 
@@ -424,7 +443,7 @@ export const useStore = create<Store>((set, get) => {
             DEVNET_BASE_CHAIN_ID,
         ),
         setSelectChainID: (chainID: number) => set({ selectedChainID: chainID }),
-        uniswapTokens: combinedTokenData.tokens.filter((t: TokenMeta) => t.chainId === 8453),
+        uniswapTokens: deduplicateTokens(combinedTokenData).tokens,
         setUniswapTokens: (tokens: TokenMeta[]) => set({ uniswapTokens: tokens }),
     };
 });

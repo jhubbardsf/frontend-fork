@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { MAINNET_ETH_RPC_URL } from './constants';
-import { getPriceFromAPI } from './fetchPrice';
 
 const wbtcAddress = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
 const chainLinkUsdcPriceOracleAddress = '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6';
@@ -72,8 +71,15 @@ const univ3ABI = [
 export async function getPricesDataProvider(mainnetRpcIndex: number) {
     const mainnetChainId = 1;
     const utilizedRpcUrl = MAINNET_ETH_RPC_URL[mainnetRpcIndex];
-    const staticMainnetProvider = new ethers.providers.StaticJsonRpcProvider(utilizedRpcUrl, { chainId: mainnetChainId, name: 'mainnet' });
-    const contract = new ethers.Contract(chainLinkUsdcPriceOracleAddress, chainLinkUsdcPriceOracleAddressABI, staticMainnetProvider);
+    const staticMainnetProvider = new ethers.providers.StaticJsonRpcProvider(utilizedRpcUrl, {
+        chainId: mainnetChainId,
+        name: 'mainnet',
+    });
+    const contract = new ethers.Contract(
+        chainLinkUsdcPriceOracleAddress,
+        chainLinkUsdcPriceOracleAddressABI,
+        staticMainnetProvider,
+    );
     const poolContract = new ethers.Contract(wbtcUsdcPool, univ3ABI, staticMainnetProvider);
 
     const dataProvider = {
@@ -88,12 +94,7 @@ export async function getPricesDataProvider(mainnetRpcIndex: number) {
 }
 
 export async function getUSDPrices(): Promise<{ btcPriceUSD: string; cbbtcPriceUSD: string }> {
-    // TODO: get these BTC and CoinbaseBTC USD prices from coinbase API from MM
-    // server
-    // TODO: JSH - This function should be retired
     return {
-        // btcPriceUSD: (await getPriceFromAPI('BTC')).toString(),
-        // cbbtcPriceUSD: (await getPriceFromAPI('cbBTC')).toString(),
         btcPriceUSD: '0',
         cbbtcPriceUSD: '0',
     };
