@@ -571,7 +571,6 @@ export const DepositUI = () => {
         proceedWithDepositRef.current = proceedWithDeposit;
     }, [proceedWithDeposit]);
 
-    console.log({ btcPriceUSD, btcOutputAmount, coinbaseBtcPriceUSD });
     // DEPOSIT INPUTS UI
     return (
         <>
@@ -940,6 +939,7 @@ export const DepositUI = () => {
 
                                 {/* BTC Payout Address */}
                                 <Text
+                                    as='div'
                                     ml='8px'
                                     display='flex'
                                     alignItems='center'
@@ -966,6 +966,7 @@ export const DepositUI = () => {
                                         </Flex>
                                     </Tooltip>
                                 </Text>
+
                                 <Flex
                                     mt='-4px'
                                     mb='10px'

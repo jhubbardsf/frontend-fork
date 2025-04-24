@@ -26,18 +26,21 @@ const GlowingText = styled.p`
     text-align: center;
     margin-top: 15px;
     margin-bottom: 16px; // Equivalent to mb={4} in most design systems
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.8) 100%);
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 1) 50%,
+        rgba(255, 255, 255, 0.8) 100%
+    );
     background-size: 50% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: ${shimmer} 8s ease-in-out infinite;
 `;
 
-const GlowingShimmerText = ({ text }) => <GlowingText>{text}</GlowingText>;
-
 // Default props in case no text is provided
-GlowingShimmerText.defaultProps = {
-    text: 'The Rift early alpha is awaiting audits - swaps are limited to 100 USDT - use at your own risk',
-};
+const GlowingShimmerText = ({
+    text = 'The Rift early alpha is awaiting audits - swaps are limited to 100 USDT - use at your own risk',
+}) => <GlowingText>{text}</GlowingText>;
 
 export default GlowingShimmerText;
