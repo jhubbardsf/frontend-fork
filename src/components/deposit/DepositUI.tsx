@@ -114,9 +114,6 @@ export const DepositUI = () => {
     // New token stuff
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAssetSwapModalOpen, setIsAssetSwapModalOpen] = useState(false);
-    const uniswapTokens = useStore((state) => state.uniswapTokens);
-    const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
-    const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
 
     const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
 

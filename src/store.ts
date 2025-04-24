@@ -111,13 +111,6 @@ export function mergeTokenListIntoValidAssets(
 }
 
 /**
- * Helper function to find an asset by name in the validAssets Record
- */
-function findAssetByName(assets: Record<string, ValidAsset>, name: string, chainId: number): ValidAsset | undefined {
-    return Object.values(assets).find((asset) => asset.name === name && (asset.chainId === chainId || !asset.chainId));
-}
-
-/**
  * Helper function to find an asset key by name in the validAssets Record
  */
 function findAssetKeyByName(assets: Record<string, ValidAsset>, name: string, chainId: number): string | undefined {
@@ -134,10 +127,8 @@ type Store = {
     setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
     validAssets: Record<string, ValidAsset>;
     setValidAssets: (assets: Record<string, ValidAsset>) => void;
-    updateValidValidAsset: (assetKey: string, updates: Partial<ValidAsset>) => void;
     mergeValidAssets: (assets: Record<string, ValidAsset>) => void;
     updatePriceUSD: (assetKey: string, newPrice: number) => void;
-    updatePriceUSDByAddress: (address: string, newPrice: number) => void;
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
@@ -148,9 +139,7 @@ type Store = {
     setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
 
     // Helper functions to find assets
-    findAssetByAddress: (address: string, chainId?: number) => ValidAsset | undefined;
     findAssetByName: (name: string, chainId?: number) => ValidAsset | undefined;
-    findAssetBySymbol: (symbol: string, chainId?: number) => ValidAsset | undefined;
     getAssetKey: (asset: ValidAsset) => string;
 
     // contract data (deposit vaults, swap reservations)
@@ -232,14 +221,8 @@ type Store = {
     setIsOnline: (b: boolean) => void;
 
     // Uniswap
-    uniswapInputAssetPriceUSD: number;
-    setUniswapInputAssetPriceUSD: (price: number) => void;
-    selectedUniswapInputAsset: TokenMeta;
-    setSelectedUniswapInputAsset: (asset: TokenMeta) => void;
     selectedChainID: number;
     setSelectChainID: (chainID: number) => void;
-    uniswapTokens: TokenMeta[];
-    setUniswapTokens: (tokens: TokenMeta[]) => void;
 };
 
 export const useStore = create<Store>((set, get) => {
@@ -310,16 +293,6 @@ export const useStore = create<Store>((set, get) => {
         logoURI: 'https://assets.coingecko.com/coins/images/40143/standard/cbbtc.webp',
     };
 
-    // Create default Uniswap asset from coinbaseBtc
-    const defaultUniswapAsset: TokenMeta = {
-        chainId: coinbaseBtc.chainId,
-        name: 'Coinbase Wrapped BTC',
-        address: coinbaseBtc.address,
-        symbol: coinbaseBtc.symbol,
-        decimals: coinbaseBtc.decimals,
-        logoURI: coinbaseBtc.logoURI,
-    };
-
     // Off-chain BTC is a special case
     const btc = {
         name: 'BTC',
@@ -358,32 +331,7 @@ export const useStore = create<Store>((set, get) => {
         setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
         validAssets: updatedValidAssets,
         setValidAssets: (assets) => set({ validAssets: assets }),
-        updateValidValidAsset: (assetKey, updates) =>
-            set((state) => {
-                const assets = { ...state.validAssets };
 
-                // Try to find the correct key if assetKey is a name
-                let actualKey = assetKey;
-
-                if (!assetKey.includes('-')) {
-                    // Special handling for BTC and CoinbaseBTC
-                    if (assetKey === 'BTC') {
-                        actualKey = '0-bitcoin';
-                    } else if (assetKey === 'CoinbaseBTC') {
-                        actualKey = findAssetKeyByName(assets, 'CoinbaseBTC', currentChainId) || assetKey;
-                    } else {
-                        // Try to find by name
-                        actualKey = findAssetKeyByName(assets, assetKey, currentChainId) || assetKey;
-                    }
-                }
-
-                // Update the asset if we have the key
-                if (assets[actualKey]) {
-                    assets[actualKey] = { ...assets[actualKey], ...updates };
-                }
-
-                return { validAssets: assets };
-            }),
         mergeValidAssets: (newAssets) =>
             set((state) => {
                 const mergedAssets = { ...state.validAssets };
@@ -438,30 +386,6 @@ export const useStore = create<Store>((set, get) => {
                 return { validAssets: assets };
             });
         },
-        updatePriceUSDByAddress: (address, newPrice) =>
-            set((state) => {
-                const assets = { ...state.validAssets };
-
-                // Find keys for the given address across all chains
-                const matchingKeys = Object.keys(assets).filter((key) => {
-                    const asset = assets[key];
-                    return (
-                        asset.tokenAddress?.toLowerCase() === address.toLowerCase() ||
-                        asset.address?.toLowerCase() === address.toLowerCase()
-                    );
-                });
-
-                // If we have matching keys
-                if (matchingKeys.length > 0) {
-                    // Create a new object with updated price for all matching tokens
-                    matchingKeys.forEach((key) => {
-                        assets[key] = { ...assets[key], priceUSD: newPrice };
-                    });
-
-                    return { validAssets: assets };
-                }
-                return state;
-            }),
         updateTotalAvailableLiquidity: (assetKey, newLiquidity) =>
             set((state) => {
                 const assets = { ...state.validAssets };
@@ -618,35 +542,8 @@ export const useStore = create<Store>((set, get) => {
         setIsOnline: (b) => set({ isOnline: b }),
 
         // Uniswap
-        uniswapInputAssetPriceUSD: 0,
-        setUniswapInputAssetPriceUSD: (price: number) => set({ uniswapInputAssetPriceUSD: price }),
-        selectedUniswapInputAsset: defaultUniswapAsset,
-        setSelectedUniswapInputAsset: (asset: TokenMeta) => {
-            set({ selectedUniswapInputAsset: asset });
-        },
         selectedChainID: currentChainId,
         setSelectChainID: (chainID: number) => set({ selectedChainID: chainID }),
-        uniswapTokens: deduplicateTokens(combinedTokenData).tokens,
-        setUniswapTokens: (tokens: TokenMeta[]) => set({ uniswapTokens: tokens }),
-
-        // Helper functions to find assets
-        findAssetByAddress: (address: string, chainId?: number) => {
-            const assets = get().validAssets;
-
-            // If chainId is provided, create a specific key to look up
-            if (chainId !== undefined) {
-                const key = `${chainId}-${address.toLowerCase()}`;
-                return assets[key];
-            }
-
-            // Otherwise, search across all assets
-            return Object.values(assets).find(
-                (asset) =>
-                    (asset.address?.toLowerCase() === address.toLowerCase() ||
-                        asset.tokenAddress?.toLowerCase() === address.toLowerCase()) &&
-                    (chainId === undefined || asset.chainId === chainId),
-            );
-        },
         findAssetByName: (name: string, chainId?: number) => {
             const assets = get().validAssets;
 
@@ -666,17 +563,6 @@ export const useStore = create<Store>((set, get) => {
             return Object.values(assets).find(
                 (asset) =>
                     asset.name?.toLowerCase() === name.toLowerCase() &&
-                    (chainId === undefined || asset.chainId === chainId),
-            );
-        },
-        findAssetBySymbol: (symbol: string, chainId?: number) => {
-            const assets = get().validAssets;
-
-            // Search across all assets
-            return Object.values(assets).find(
-                (asset) =>
-                    (asset.symbol?.toLowerCase() === symbol.toLowerCase() ||
-                        asset.display_name?.toLowerCase() === symbol.toLowerCase()) &&
                     (chainId === undefined || asset.chainId === chainId),
             );
         },

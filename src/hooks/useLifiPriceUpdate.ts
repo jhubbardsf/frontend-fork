@@ -21,44 +21,14 @@ interface LifiResponse {
 }
 
 /**
- * @deprecated Use fetchAndUpdateValidAssetPrice instead
- * Fetches the price for a token by its address and updates it in the store
- * @param chainId The chain ID where the token exists
- * @param tokenAddress The token's contract address
- * @returns A promise that resolves to a boolean indicating success or failure
- */
-export const fetchAndUpdatePriceByAddress = async (chainId: number, tokenAddress: string): Promise<boolean> => {
-    try {
-        const price = await fetchTokenPrice(chainId, tokenAddress);
-
-        if (price !== null) {
-            const store = useStore.getState();
-            // Find the asset by address and chain ID
-            const asset = store.findAssetByAddress(tokenAddress, chainId);
-
-            if (asset) {
-                store.updatePriceForAsset(asset, price);
-            } else {
-                // Fallback to old method if asset not found
-                store.updatePriceUSDByAddress(tokenAddress, price);
-            }
-            return true;
-        }
-
-        return false;
-    } catch (error) {
-        return false;
-    }
-};
-
-/**
  * Fetches the price for a ValidAsset and updates it in the store
  * @param asset The ValidAsset to update the price for
  * @returns A promise that resolves to a boolean indicating success or failure
  */
 export const fetchAndUpdateValidAssetPrice = async (asset: ValidAsset): Promise<boolean> => {
+    console.log('fetchAndUpdateValidAssetPrice', asset);
     try {
-        const chainId = asset.contractChainID || asset.chainId;
+        const chainId = asset.chainId;
         const tokenAddress = asset.tokenAddress || asset.address;
 
         if (!chainId || !tokenAddress) {

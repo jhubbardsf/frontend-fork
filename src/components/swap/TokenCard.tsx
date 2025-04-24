@@ -4,19 +4,14 @@ import { Box, Text, Image, Flex } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import type { TokenMeta } from '../../types';
-import { getEffectiveChainID } from '@/utils/dappHelper';
+import type { ValidAsset } from '../../types';
 import { useStore } from '@/store';
 
 // Framer Motion wrapper for Chakra UI
 const MotionBox = motion(Box);
 
-const TokenCard = ({ token, onClick }: { token: TokenMeta; onClick: (token: TokenMeta) => void }) => {
+const TokenCard = ({ token, onClick }: { token: ValidAsset; onClick: (token: ValidAsset) => void }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const findAssetByName = useStore((state) => state.findAssetByName);
-
-    const effectiveTokenChainId = getEffectiveChainID(token.chainId);
-    const asset = findAssetByName(token.name, effectiveTokenChainId);
 
     return (
         <Flex
@@ -28,7 +23,6 @@ const TokenCard = ({ token, onClick }: { token: TokenMeta; onClick: (token: Toke
             _hover={{ bg: 'rgba(255, 255, 255, 0.05)' }}
             cursor='pointer'
             position='relative'
-            // onMouseOver={updatePrice}
             onClick={() => onClick(token)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}>
