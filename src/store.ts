@@ -260,7 +260,6 @@ export const useStore = create<Store>((set, get) => {
             DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
         ),
         riftExchangeAbi: riftExchangeABI.abi,
-        contractChainID: currentChainId,
         chainDetails: base, // ONLY USE FOR MAINNET SWITCHING NETWORKS WITH METAMASK
         contractRpcURL: getDeploymentValue(
             DEPLOYMENT_TYPE,
@@ -556,8 +555,6 @@ export const useStore = create<Store>((set, get) => {
                 const key = findAssetKeyByName(assets, 'CoinbaseBTC', chainId ?? currentChainId);
                 if (key) return assets[key];
             }
-
-            console.log('Debug', { assets });
 
             // Search across all assets
             return Object.values(assets).find(

@@ -20,6 +20,7 @@ const config = {
     images: {
         domains: ['utfs.io'],
         remotePatterns: buildRemotePatterns([
+            'assets.kraken.com',
             'picsum.photos',
             'utfs.io',
             'assets.coingecko.com',

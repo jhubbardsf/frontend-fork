@@ -30,7 +30,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setUserSwapsLoadingState = useStore((state) => state.setUserSwapsLoadingState);
 
     const contractRpcURL = (selectedInputAsset as ValidAsset)?.contractRpcURL || DEVNET_BASE_RPC_URL;
-    const contractChainID = (selectedInputAsset as ValidAsset)?.contractChainID || DEVNET_BASE_CHAIN_ID;
+    const chainId = (selectedInputAsset as ValidAsset)?.chainId || DEVNET_BASE_CHAIN_ID;
 
     // [1] fetch selected asset user balance - Reads latest state directly
     const fetchSelectedAssetUserBalance = async () => {
@@ -72,11 +72,11 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                 if (!chainIdHex) return;
                 const currentChainId = parseInt(chainIdHex, 16);
 
-                if (currentChainId === contractChainID) {
+                if (currentChainId === chainId) {
                     return;
                 }
 
-                const hexChainId = `0x${contractChainID.toString(16)}`;
+                const hexChainId = `0x${chainId.toString(16)}`;
 
                 try {
                     await ethereum.request({
@@ -108,10 +108,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         };
 
-        if (isConnected && contractChainID) {
+        if (isConnected && chainId) {
             checkAndSwitchNetwork();
         }
-    }, [selectedInputAsset, isConnected, contractChainID]);
+    }, [selectedInputAsset, isConnected, chainId]);
 
     // [4] Continuously fetch non-wallet-dependent data (prices, pause status)
     useEffect(() => {
