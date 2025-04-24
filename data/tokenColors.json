@@ -1295,9 +1295,21 @@
     "borderColor": "#1c6cfc",
     "bgColor": "#012f82"
   },
+  "https://ethereum-optimism.github.io/data/cbETH/logo.svg": {
+    "borderColor": "#0454fc",
+    "bgColor": "#012b83"
+  },
+  "https://ethereum-optimism.github.io/data/COMP/logo.svg": {
+    "borderColor": "#04bf87",
+    "bgColor": "#046c54"
+  },
   "https://coin-images.coingecko.com/coins/images/38450/large/cookie_token_logo_200x200.png?1733194528": {
     "borderColor": "#2ad463",
     "bgColor": "#166e33"
+  },
+  "https://ethereum-optimism.github.io/data/DAI/logo.svg": {
+    "borderColor": "#f4ab34",
+    "bgColor": "#7d5006"
   },
   "https://assets.coingecko.com/coins/images/34515/large/android-chrome-512x512.png?1706198225": {
     "borderColor": "#9c68f5",

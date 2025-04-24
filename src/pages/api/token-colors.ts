@@ -1,7 +1,7 @@
 // pages/api/token-colors.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Vibrant } from 'node-vibrant/node';
-import Sharp from 'sharp'; // for image format conversion
+import Sharp from 'sharp';
 
 // In-memory cache for color results
 const cache = new Map<string, { borderColor: string; bgColor: string }>();
@@ -51,8 +51,12 @@ export default async function handler(
         let buffer = Buffer.from(await response.arrayBuffer());
         const contentType = response.headers.get('content-type') || '';
 
-        // Convert WebP (or other unsupported formats) to PNG so Vibrant can decode
-        if (contentType.includes('image/webp') || contentType.includes('image/avif')) {
+        // Rasterize unsupported formats (WebP/AVIF) and SVG vector formats to PNG
+        if (
+            contentType.includes('image/webp') ||
+            contentType.includes('image/avif') ||
+            contentType.includes('svg+xml')
+        ) {
             buffer = Buffer.from(await Sharp(buffer).png().toBuffer());
         }
 
