@@ -22,16 +22,11 @@ import {
 import { ArrowBackIcon, SearchIcon } from '@chakra-ui/icons';
 import { useStore } from '@/store';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
-import type { TokenMeta, ValidAsset } from '@/types';
+import type { ValidAsset } from '@/types';
 import TokenCard from './TokenCard';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import {
-    fetchAndUpdatePriceByAddress,
-    fetchAndUpdateValidAssetPrice,
-    fetchTokenPrice,
-} from '@/hooks/useLifiPriceUpdate';
+import { fetchAndUpdateValidAssetPrice } from '@/hooks/useLifiPriceUpdate';
 import { getEffectiveChainID } from '@/utils/dappHelper';
-import { useChainId } from 'wagmi';
 
 interface AssetSwapModalProps {
     isOpen: boolean;
@@ -96,44 +91,34 @@ const networks = [
 ];
 
 const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const uniswapTokens = useStore((state) => state.uniswapTokens);
-    const selectedChainID = useStore((state) => state.selectedChainID);
+    // Zustand state
     const validAssets = useStore((state) => state.validAssets);
-    const findAssetByName = useStore((state) => state.findAssetByName);
-    const findAssetByAddress = useStore((state) => state.findAssetByAddress);
-    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
-    const effectiveChainID = getEffectiveChainID(selectedChainID);
-    const [parent] = useAutoAnimate({ duration: 200 });
+    const selectedChainID = useStore((state) => state.selectedChainID);
     const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
 
-    const [tokensForChain, setTokensForChain] = useState<TokenMeta[]>(
-        uniswapTokens.filter((t) => t.chainId === effectiveChainID),
+    // Local state
+    const [searchTerm, setSearchTerm] = useState('');
+    const [parent] = useAutoAnimate({ duration: 200 });
+
+    // Derived state
+    const effectiveChainID = getEffectiveChainID(selectedChainID);
+
+    const [assetsForChain, setAssetsForChain] = useState<ValidAsset[]>(
+        Object.values(validAssets).filter((t) => t.chainId === effectiveChainID),
     );
     const [selectedNetwork, setSelectedNetwork] = useState(effectiveChainID);
 
-    // Sync token list when network or chain changes
+    // Sync asset list when network or chain changes
     useEffect(() => {
-        // Deduplicate tokens by address to prevent duplicate entries
-        const addressMap = new Map<string, TokenMeta>();
-        uniswapTokens
+        // Filter assets by chain ID
+        const filtered = Object.values(validAssets)
             .filter((t) => t.chainId === selectedNetwork)
-            .forEach((token) => {
-                const lowerCaseAddress = token.address.toLowerCase();
-                // Only add if not already in the map, or replace if it's a newer/better entry
-                if (!addressMap.has(lowerCaseAddress)) {
-                    addressMap.set(lowerCaseAddress, token);
-                }
-            });
+            // Sort alphabetically by symbol
+            .sort((a, b) => a.symbol.toUpperCase().localeCompare(b.symbol.toUpperCase()));
 
-        // Convert to array and sort alphabetically by symbol
-        const filtered = Array.from(addressMap.values()).sort((a, b) =>
-            a.symbol.toUpperCase().localeCompare(b.symbol.toUpperCase()),
-        );
-
-        setTokensForChain(filtered);
+        setAssetsForChain(filtered);
         setSearchTerm('');
-    }, [selectedNetwork, uniswapTokens]);
+    }, [selectedNetwork, validAssets]);
 
     // Update selected network whenever chainID updates externally
     useEffect(() => {
@@ -164,8 +149,8 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
         // Get the effective chain ID to ensure proper filtering
         const effectiveNetwork = getEffectiveChainID(selectedNetwork);
 
-        setTokensForChain(
-            uniswapTokens
+        setAssetsForChain(
+            Object.values(validAssets)
                 .filter((t) => t.chainId === effectiveNetwork)
                 .filter(
                     (t) =>
@@ -176,8 +161,8 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && tokensForChain.length > 0) {
-            handleTokenClick(tokensForChain[0]);
+        if (e.key === 'Enter' && assetsForChain.length > 0) {
+            handleTokenClick(assetsForChain[0]);
         }
     };
 
@@ -296,7 +281,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
                             '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.2)' },
                         }}>
                         <List spacing={0} ref={parent}>
-                            {tokensForChain.map((token) => (
+                            {assetsForChain.map((token) => (
                                 <ListItem
                                     key={`${token.symbol}-${token.address}`}
                                     cursor='pointer'
