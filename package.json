@@ -7,7 +7,8 @@
     "start": "next start",
     "sync": "chmod +x ./populate_artifacts.sh && ./populate_artifacts.sh",
     "lint": "next lint",
-    "update-tokens": "tsx scripts/token_manager.ts"
+    "update-tokens": "tsx scripts/token_manager.ts",
+    "generate-colors": "tsx src/pages/api/token-colors.ts"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.0.2",
@@ -57,6 +58,7 @@
     "moment": "^2.30.1",
     "next": "^15.3.1",
     "nft.storage": "^7.0.0",
+    "node-vibrant": "^4.0.3",
     "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -88,7 +90,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "fast-average-color": "^9.5.0",
     "prettier": "^3.5.2",
-    "sharp": "^0.33.5",
+    "sharp": "^0.34.1",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3"
   },

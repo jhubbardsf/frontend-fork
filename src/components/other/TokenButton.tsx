@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useStore } from '@/store';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
 import { useEffect, useState, useRef } from 'react';
+import { useTokenColor } from '../../hooks/useTokenColor';
 
 interface TokenProps {
     asset: TokenMeta | ValidAsset;
@@ -21,55 +22,6 @@ interface TokenProps {
     pointer?: boolean;
     greyedOut?: boolean;
     cursor?: string;
-}
-
-// Simple color cache to avoid redundant API calls
-const colorCache: Record<string, { bgColor: string; borderColor: string }> = {};
-
-// Custom hook to get token color from the server API
-function useTokenColor(assetLogoURI: string | undefined, isGreyedOut: boolean) {
-    const [tokenStyle, setTokenStyle] = useState({
-        bgColor: '#383838',
-        borderColor: '#838383',
-    });
-
-    useEffect(() => {
-        if (isGreyedOut || !assetLogoURI) return;
-
-        // Check client-side cache first
-        if (colorCache[assetLogoURI]) {
-            setTokenStyle(colorCache[assetLogoURI]);
-            return;
-        }
-
-        // Define async function to fetch color
-        const fetchColor = async () => {
-            try {
-                // Call our API endpoint
-                const response = await fetch(`/api/token-colors?url=${encodeURIComponent(assetLogoURI)}`);
-
-                if (!response.ok) {
-                    throw new Error(`API responded with status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                // Store in cache
-                colorCache[assetLogoURI] = data;
-
-                // Update state
-                setTokenStyle(data);
-            } catch (error) {
-                console.error('Failed to fetch token color:', error);
-                // Use default colors on error
-            }
-        };
-
-        // Call the async function
-        fetchColor();
-    }, [assetLogoURI, isGreyedOut]);
-
-    return tokenStyle;
 }
 
 const TokenButton: React.FC<TokenProps> = ({
@@ -91,7 +43,7 @@ const TokenButton: React.FC<TokenProps> = ({
     const arrowSize = fontSize ?? `calc(${adjustedH} / 4)`;
     const adjustedBorderRadius = `calc(${adjustedH} / 4)`;
 
-    // Get token style with server-side color processing
+    // Get token style with cached colors and TanStack Query
     const logoURI = asset.logoURI || ('icon_svg' in asset ? asset.icon_svg : '');
     const tokenStyle = useTokenColor(logoURI, greyedOut);
 
