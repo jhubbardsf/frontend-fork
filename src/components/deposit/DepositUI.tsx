@@ -117,7 +117,7 @@ export const DepositUI = () => {
     const uniswapTokens = useStore((state) => state.uniswapTokens);
     const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
     const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
-    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
+
     const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
 
     // Use the findAssetByName function for dynamic asset lookups
@@ -1127,11 +1127,7 @@ export const DepositUI = () => {
                     error={depositLiquidityError}
                     txHash={txHash}
                 />
-                <AssetSwapModal
-                    isOpen={isAssetSwapModalOpen}
-                    onClose={() => setIsAssetSwapModalOpen(false)}
-                    onTokenSelected={setSelectedInputAsset}
-                />
+                <AssetSwapModal isOpen={isAssetSwapModalOpen} onClose={() => setIsAssetSwapModalOpen(false)} />
             </Flex>
         </>
     );

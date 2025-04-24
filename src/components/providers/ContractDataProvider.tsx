@@ -21,7 +21,6 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
     const setEthersRpcProvider = useStore((state) => state.setEthersRpcProvider);
     const setUserEthAddress = useStore((state) => state.setUserEthAddress);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
-    const updatePriceUsd = useStore((state) => state.updatePriceUSD);
     const updateConnectedUserBalanceRaw = useStore((state) => state.updateConnectedUserBalanceRaw);
     const updateConnectedUserBalanceFormatted = useStore((state) => state.updateConnectedUserBalanceFormatted);
     const setAreNewDepositsPaused = useStore((state) => state.setAreNewDepositsPaused);
@@ -140,7 +139,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedInputAsset, updatePriceUsd, setAreNewDepositsPaused]);
+    }, [selectedInputAsset, setAreNewDepositsPaused]);
 
     // Define the function to fetch user swaps
     const fetchUserSwapsFromAddress = async () => {

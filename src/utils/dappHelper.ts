@@ -316,6 +316,12 @@ export const validateBitcoinPayoutAddress = (address: string): boolean => {
     }
 };
 
-// Helper: compute effective chain id.
+/**
+ * Returns 8453 (Base) if on Devnet, otherwise returns the original chain ID.
+ * This is used to normalize chain IDs between mainnet and testnet environments.
+ *
+ * @param selectedChainID - The chain ID to normalize
+ * @returns 8453 (Base) if on Devnet, or the original chain ID otherwise
+ */
 export const getEffectiveChainID = (selectedChainID: number): number =>
     selectedChainID === DEVNET_BASE_CHAIN_ID ? MAINNET_BASE_CHAIN_ID : selectedChainID;

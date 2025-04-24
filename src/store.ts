@@ -141,6 +141,7 @@ type Store = {
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
+    updatePriceForAsset: (asset: ValidAsset, newPrice: number) => void;
     selectedInputAsset: ValidAsset;
     setSelectedInputAsset: (asset: ValidAsset) => void;
     isPayingFeesInBTC: boolean;
@@ -538,6 +539,18 @@ export const useStore = create<Store>((set, get) => {
                 }
 
                 return { validAssets: assets };
+            }),
+        updatePriceForAsset: (asset: ValidAsset, newPrice: number) =>
+            set((state) => {
+                const key = state.getAssetKey(asset);
+
+                if (state.validAssets[key]) {
+                    const assets = { ...state.validAssets };
+                    assets[key] = { ...assets[key], priceUSD: newPrice };
+                    return { validAssets: assets };
+                }
+
+                return state;
             }),
         isPayingFeesInBTC: true,
         setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),

@@ -25,14 +25,17 @@ import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
 import type { TokenMeta, ValidAsset } from '@/types';
 import TokenCard from './TokenCard';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { fetchAndUpdatePriceByAddress, fetchTokenPrice } from '@/hooks/useLifiPriceUpdate';
+import {
+    fetchAndUpdatePriceByAddress,
+    fetchAndUpdateValidAssetPrice,
+    fetchTokenPrice,
+} from '@/hooks/useLifiPriceUpdate';
 import { getEffectiveChainID } from '@/utils/dappHelper';
 import { useChainId } from 'wagmi';
 
 interface AssetSwapModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onTokenSelected: (token: ValidAsset) => void;
 }
 
 // Network color mapping for custom styling
@@ -92,7 +95,7 @@ const networks = [
     { name: 'More', logo: '', isMore: true, id: 0 },
 ];
 
-const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onTokenSelected }) => {
+const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const uniswapTokens = useStore((state) => state.uniswapTokens);
     const selectedChainID = useStore((state) => state.selectedChainID);
@@ -102,6 +105,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     const updatePriceUSD = useStore((state) => state.updatePriceUSD);
     const effectiveChainID = getEffectiveChainID(selectedChainID);
     const [parent] = useAutoAnimate({ duration: 200 });
+    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
 
     const [tokensForChain, setTokensForChain] = useState<TokenMeta[]>(
         uniswapTokens.filter((t) => t.chainId === effectiveChainID),
@@ -137,11 +141,10 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     }, [effectiveChainID]);
 
     // Handle token price fetch
-    const handleTokenFetch = async (token: TokenMeta, cb: () => void) => {
+    const handleTokenFetch = async (token: ValidAsset, cb: () => void) => {
         try {
             // Use effective chain ID for price fetching
-            const effectiveTokenChainId = getEffectiveChainID(token.chainId);
-            fetchAndUpdatePriceByAddress(effectiveTokenChainId, token.address); // Purposefully don't await this
+            fetchAndUpdateValidAssetPrice(token); // Purposefully don't await this
             cb();
         } catch (e) {
             console.error('Error fetching price for', token.symbol, e);
@@ -149,25 +152,9 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
         }
     };
 
-    const handleTokenClick = (token: TokenMeta) => {
-        const effectiveTokenChainId = getEffectiveChainID(token.chainId);
-        // Try to find by name first
-        let asset = findAssetByName(token.name, effectiveTokenChainId);
-
-        // If not found by name, try by address
-        if (!asset) {
-            asset = findAssetByAddress(token.address, effectiveTokenChainId);
-        }
-
-        if (asset) {
-            onTokenSelected(asset);
-            handleTokenFetch(token, onClose);
-        } else {
-            console.error(
-                `Asset not found for token: ${token.name} (${token.address}) on chain ${effectiveTokenChainId} (original: ${token.chainId})`,
-            );
-            onClose();
-        }
+    const handleTokenClick = (token: ValidAsset) => {
+        setSelectedInputAsset(token);
+        handleTokenFetch(token, onClose);
     };
 
     const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
