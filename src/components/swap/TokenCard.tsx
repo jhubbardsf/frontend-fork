@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import type { ValidAsset } from '../../types';
-import { useInView } from 'react-intersection-observer';
 import Image from 'next/image';
 
 // Framer Motion wrapper for Chakra UI
@@ -12,14 +11,8 @@ const MotionBox = motion(Box);
 const TokenCard = ({ token, onClick }: { token: ValidAsset; onClick: (token: ValidAsset) => void }) => {
     const [isHovered, setIsHovered] = useState(false);
 
-    const { ref, inView } = useInView({
-        triggerOnce: true,
-        rootMargin: '200px', // start a bit before fully on-screen
-    });
-
     return (
         <Flex
-            ref={ref}
             w='100%'
             py={2}
             px={2}
