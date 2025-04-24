@@ -39,6 +39,7 @@ export const fetchAndUpdateValidAssetPrice = async (asset: ValidAsset): Promise<
 
         if (price !== null) {
             const store = useStore.getState();
+            console.log('Updating price for asset', asset.symbol, price);
             store.updatePriceForAsset(asset, price);
             return true;
         }

@@ -53,7 +53,6 @@ export type ValidAsset = {
     decimals: number;
     riftExchangeContractAddress?: string;
     riftExchangeAbi?: any;
-    contractChainID?: number;
     chainDetails?: any;
     contractRpcURL?: string;
     etherScanBaseUrl?: string;

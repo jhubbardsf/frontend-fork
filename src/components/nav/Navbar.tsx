@@ -242,7 +242,7 @@ export const Navbar = ({}) => {
                                         <Flex key={key} justify='space-between'>
                                             <Text>{asset.name}:</Text>
                                             <Text>{asset.riftExchangeContractAddress}</Text>
-                                            <Text>Chain: {getChainName(asset.contractChainID)}</Text>
+                                            <Text>Chain: {getChainName(asset.chainId)}</Text>
                                         </Flex>
                                     );
                                 })}
