@@ -33,6 +33,7 @@ export const anvilNetwork: AppKitNetwork = {
 
 // Change this to your actual project ID from Reown Cloud
 export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 'YOUR_PROJECT_ID';
+// export const projectId = 'YOUR_PROJECT_ID';
 
 // Define the networks your app will support - add anvilNetwork as the first network
 export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [anvilNetwork, base, mainnet, arbitrum];

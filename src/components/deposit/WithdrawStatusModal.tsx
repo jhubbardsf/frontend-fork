@@ -166,6 +166,7 @@ const WithdrawStatusModal: React.FC<WithdrawStatusModalProps> = ({
         if (chainId !== selectedInputAsset.chainId) {
             console.log('Switching network');
             setIsWaitingForCorrectNetwork(true);
+            console.log('jsh=Switching network', selectedInputAsset.chainId);
             switchChain({ chainId: selectedInputAsset.chainId });
             return;
         }

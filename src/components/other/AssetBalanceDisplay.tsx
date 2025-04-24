@@ -16,9 +16,12 @@ export const AssetBalanceDisplay = () => {
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const { refreshConnectedUserBalance } = useContractData();
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const localBalance = useStore(
-        (state) => state.validAssets[selectedInputAsset.name]?.connectedUserBalanceFormatted || '0',
-    );
+
+    // Use the findAssetByName helper function to get the asset with the correct key format
+    const localBalance = useStore((state) => {
+        const asset = state.findAssetByName(selectedInputAsset.name, selectedInputAsset.chainId);
+        return asset?.connectedUserBalanceFormatted || '0';
+    });
 
     // Update balance when chainId changes (wagmi)
     useEffect(() => {

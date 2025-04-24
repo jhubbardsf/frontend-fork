@@ -1,3 +1,11 @@
+/**
+ * @deprecated This monolithic store has been replaced with a slice-based implementation.
+ * Please import from '@/store' instead of '@/store.ts'.
+ * The new store provides the same API for backward compatibility.
+ *
+ * For more information, see the README in the store directory.
+ */
+
 import { create } from 'zustand';
 import { useEffect } from 'react';
 import { CurrencyModalTitle, ReserveLiquidityParams, TokenMeta, UniswapTokenList, UserSwap } from './types';
@@ -127,20 +135,20 @@ type Store = {
     setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
     validAssets: Record<string, ValidAsset>;
     setValidAssets: (assets: Record<string, ValidAsset>) => void;
-    mergeValidAssets: (assets: Record<string, ValidAsset>) => void;
+    mergeValidAssets: (assets: Record<string, ValidAsset>) => void; // New - JSH
     updatePriceUSD: (assetKey: string, newPrice: number) => void;
     updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
     updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
     updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
-    updatePriceForAsset: (asset: ValidAsset, newPrice: number) => void;
+    updatePriceForAsset: (asset: ValidAsset, newPrice: number) => void; // New - JSH
     selectedInputAsset: ValidAsset;
     setSelectedInputAsset: (asset: ValidAsset) => void;
     isPayingFeesInBTC: boolean;
     setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
 
     // Helper functions to find assets
-    findAssetByName: (name: string, chainId?: number) => ValidAsset | undefined;
-    getAssetKey: (asset: ValidAsset) => string;
+    findAssetByName: (name: string, chainId?: number) => ValidAsset | undefined; // New - JSH
+    getAssetKey: (asset: ValidAsset) => string; // New - JSH
 
     // contract data (deposit vaults, swap reservations)
     setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
@@ -243,7 +251,7 @@ export const useStore = create<Store>((set, get) => {
     ).toLowerCase();
 
     const coinbaseBtc = {
-        name: 'CoinbaseBTC',
+        name: 'Coinbase Wrapped BTC',
         display_name: 'cbBTC',
         tokenAddress: coinbaseBtcAddress,
         dataEngineUrl: getDeploymentValue(
