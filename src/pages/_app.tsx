@@ -2,6 +2,9 @@ import { ChakraProvider, Flex, Text } from '@chakra-ui/react';
 import theme from '../theme';
 import Head from 'next/head';
 import { useEffect, useState, useRef } from 'react';
+import { Router } from 'next/router';
+import posthog from 'posthog-js';
+import { PostHogProvider } from 'posthog-js/react';
 import { useStore } from '../store';
 import type { AppProps } from 'next/app';
 import '../styles/custom-fonts.css';
@@ -89,133 +92,136 @@ function MyApp({ Component, pageProps }: AppProps) {
         }
     }, []);
 
-    // TODO: The offline error is here
-    // const setIsOnline = useStore((state) => state.setIsOnline);
+    useEffect(() => {
+        posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
+            api_host: '/ingest',
+            ui_host: 'https://us.posthog.com',
+            loaded: (ph) => {
+                if (process.env.NODE_ENV === 'development') ph.debug();
+            },
+            debug: process.env.NODE_ENV === 'development',
+        });
 
-    // useEffect(() => {
-    //     const handleOnlineStatusChange = () => {
-    //         setIsOnline(navigator.onLine);
-    //         // if (!navigator.onLine) {
-    //         //     toastClear();
-    //         // }
-    //     };
-
-    //     window.addEventListener('online', handleOnlineStatusChange);
-    //     window.addEventListener('offline', handleOnlineStatusChange);
-
-    //     return () => {
-    //         window.removeEventListener('online', handleOnlineStatusChange);
-    //         window.removeEventListener('offline', handleOnlineStatusChange);
-    //     };
-    // }, []);
+        const handleRouteChange = () => posthog?.capture('$pageview');
+        Router.events.on('routeChangeComplete', handleRouteChange);
+        return () => {
+            Router.events.off('routeChangeComplete', handleRouteChange);
+        };
+    }, []);
 
     return (
-        <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-            <QueryClientProvider client={queryClient}>
-                <ChakraProvider theme={theme}>
-                    <ContractDataProvider>
-                        {/* <title>Rift Hyperbridge - </title> */}
-                        <Component {...pageProps} />
-                        <Toaster
-                            toastOptions={{
-                                position: 'bottom-center',
-                                style: {
-                                    borderRadius: '10px',
-                                    background: '#333',
-                                    color: '#fff',
-                                    minWidth: '300px',
-                                    maxWidth: '500px',
-                                    transition: '0.2s all ease-in-out',
-                                    minHeight: '50px',
-                                    zIndex: 2,
-                                },
-                                success: {
+        <PostHogProvider client={posthog}>
+            <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+                <QueryClientProvider client={queryClient}>
+                    <ChakraProvider theme={theme}>
+                        <ContractDataProvider>
+                            {/* <title>Rift Hyperbridge - </title> */}
+                            <Component {...pageProps} />
+                            <Toaster
+                                toastOptions={{
+                                    position: 'bottom-center',
                                     style: {
-                                        // backgroundColor: '#2ECC40',
-                                        // background: 'linear-gradient(155deg, rgba(23,139,11,1) 0%, rgba(33,150,34,1) 42%, rgba(46,204,64,1) 100%)',
-                                        background: colors.toast.success,
+                                        borderRadius: '10px',
+                                        background: '#333',
+                                        color: '#fff',
+                                        minWidth: '300px',
+                                        maxWidth: '500px',
+                                        transition: '0.2s all ease-in-out',
+                                        minHeight: '50px',
+                                        zIndex: 2,
                                     },
-                                    iconTheme: {
-                                        primary: colors.offWhite,
-                                        secondary: colors.toast.success,
+                                    success: {
+                                        style: {
+                                            // backgroundColor: '#2ECC40',
+                                            // background: 'linear-gradient(155deg, rgba(23,139,11,1) 0%, rgba(33,150,34,1) 42%, rgba(46,204,64,1) 100%)',
+                                            background: colors.toast.success,
+                                        },
+                                        iconTheme: {
+                                            primary: colors.offWhite,
+                                            secondary: colors.toast.success,
+                                        },
+                                        duration: 2000,
                                     },
-                                    duration: 2000,
-                                },
-                                loading: {
-                                    style: {
-                                        // background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
-                                        background: colors.toast.info,
+                                    loading: {
+                                        style: {
+                                            // background: 'linear-gradient(155deg, rgba(20,41,77,1) 0%, rgba(45,102,196,1) 42%, rgba(48,123,244,1) 100%)',
+                                            background: colors.toast.info,
+                                        },
                                     },
-                                },
-                                error: {
-                                    style: {
-                                        // background: 'linear-gradient(155deg, rgba(140,29,30,1) 0%, rgba(163,23,24,1) 42%, rgba(219,0,2,1) 100%)',
-                                        background: colors.toast.error,
+                                    error: {
+                                        style: {
+                                            // background: 'linear-gradient(155deg, rgba(140,29,30,1) 0%, rgba(163,23,24,1) 42%, rgba(219,0,2,1) 100%)',
+                                            background: colors.toast.error,
+                                        },
+                                        iconTheme: {
+                                            primary: colors.offWhite,
+                                            secondary: colors.toast.error,
+                                        },
+                                        duration: 4000,
                                     },
-                                    iconTheme: {
-                                        primary: colors.offWhite,
-                                        secondary: colors.toast.error,
-                                    },
-                                    duration: 4000,
-                                },
-                            }}>
-                            {(t) => (
-                                <ToastBar toast={t}>
-                                    {({ icon, message }) => {
-                                        const messages = (message as any).props.children.split(';;');
-                                        const title = messages[0];
-                                        const description = messages.length > 1 ? messages[1] : null;
-                                        return (
-                                            <>
-                                                <Flex
-                                                    fontFamily={'Aux'}
-                                                    h='100%'
-                                                    // pt='5px'
-                                                >
-                                                    {icon}
-                                                </Flex>
-                                                <Flex
-                                                    // bg='black'
-                                                    flex={1}
-                                                    pl='10px'
-                                                    pr='10px'
-                                                    flexDir='column'>
-                                                    <Text fontFamily={'Aux'} fontSize='0.9rem' fontWeight='600'>
-                                                        {title}
-                                                    </Text>
-                                                    {description && description != 'undefined' && (
-                                                        <Text
-                                                            fontFamily={'Aux'}
-                                                            fontSize='0.8rem'
-                                                            fontWeight='300'
-                                                            color={colors.offWhite}>
-                                                            {description}
-                                                        </Text>
-                                                    )}
-                                                </Flex>
-                                                {t.type !== 'loading' && (
+                                }}
+                            >
+                                {(t) => (
+                                    <ToastBar toast={t}>
+                                        {({ icon, message }) => {
+                                            const messages = (message as any).props.children.split(';;');
+                                            const title = messages[0];
+                                            const description = messages.length > 1 ? messages[1] : null;
+                                            return (
+                                                <>
                                                     <Flex
-                                                        p='3px'
-                                                        cursor='pointer'
-                                                        onClick={() => toast.dismiss(t.id)}
-                                                        color={colors.offWhite}
-                                                        transition='0.2s color ease-in-out'
-                                                        _hover={{
-                                                            color: colors.textGray,
-                                                        }}>
-                                                        <MdClose />
+                                                        fontFamily={'Aux'}
+                                                        h='100%'
+                                                        // pt='5px'
+                                                    >
+                                                        {icon}
                                                     </Flex>
-                                                )}
-                                            </>
-                                        );
-                                    }}
-                                </ToastBar>
-                            )}
-                        </Toaster>
-                    </ContractDataProvider>
-                </ChakraProvider>
-            </QueryClientProvider>
-        </WagmiProvider>
+                                                    <Flex
+                                                        // bg='black'
+                                                        flex={1}
+                                                        pl='10px'
+                                                        pr='10px'
+                                                        flexDir='column'
+                                                    >
+                                                        <Text fontFamily={'Aux'} fontSize='0.9rem' fontWeight='600'>
+                                                            {title}
+                                                        </Text>
+                                                        {description && description != 'undefined' && (
+                                                            <Text
+                                                                fontFamily={'Aux'}
+                                                                fontSize='0.8rem'
+                                                                fontWeight='300'
+                                                                color={colors.offWhite}
+                                                            >
+                                                                {description}
+                                                            </Text>
+                                                        )}
+                                                    </Flex>
+                                                    {t.type !== 'loading' && (
+                                                        <Flex
+                                                            p='3px'
+                                                            cursor='pointer'
+                                                            onClick={() => toast.dismiss(t.id)}
+                                                            color={colors.offWhite}
+                                                            transition='0.2s color ease-in-out'
+                                                            _hover={{
+                                                                color: colors.textGray,
+                                                            }}
+                                                        >
+                                                            <MdClose />
+                                                        </Flex>
+                                                    )}
+                                                </>
+                                            );
+                                        }}
+                                    </ToastBar>
+                                )}
+                            </Toaster>
+                        </ContractDataProvider>
+                    </ChakraProvider>
+                </QueryClientProvider>
+            </WagmiProvider>
+        </PostHogProvider>
     );
 }
 
