@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from '@chakra-ui/react';
 import { useChainId } from 'wagmi';
-import { BASE_LOGO, ARBITRUM_LOGO, ETH_Icon, WRENCH_LOGO } from './SVGs';
+import { BASE_LOGO, BASE_LOGO_ALT, ARBITRUM_LOGO, ETH_Icon, WRENCH_LOGO } from './SVGs';
 
 interface NetworkIconProps {
     chainId?: number; // Optional - will use the current chain if not provided
@@ -16,7 +16,7 @@ const getNetworkIcon = (chainId: number, width: string = '20', height: string = 
         case 1337:
             return <WRENCH_LOGO width={width} height={height} />;
         case 8453:
-            return <BASE_LOGO width={width} height={height} />;
+            return <BASE_LOGO_ALT width={width} height={height} />;
         case 42161:
             return <ARBITRUM_LOGO width={width} height={height} />;
         case 1:

@@ -281,3 +281,13 @@ export declare namespace ISignatureTransfer {
         deadline: BigNumber;
     };
 }
+
+// Store Slice Interfaces
+import { AssetSlice } from './store/slices/assetSlice';
+import { UserSlice } from './store/slices/userSlice';
+import { SwapSlice } from './store/slices/swapSlice';
+import { DepositSlice } from './store/slices/depositSlice';
+import { UiSlice } from './store/slices/uiSlice';
+
+// Combined store state with all slices
+export type StoreState = AssetSlice & UserSlice & SwapSlice & DepositSlice & UiSlice;

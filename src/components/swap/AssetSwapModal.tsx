@@ -27,6 +27,7 @@ import TokenCard from './TokenCard';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { fetchAndUpdateValidAssetPrice } from '@/hooks/useLifiPriceUpdate';
 import { getEffectiveChainID } from '@/utils/dappHelper';
+import { NetworkIcon } from '../other/NetworkIcon';
 
 interface AssetSwapModalProps {
     isOpen: boolean;
@@ -49,6 +50,8 @@ const networkColors = {
     56: { bg: 'rgba(240, 185, 11, 0.15)', border: 'rgba(240, 185, 11, 0.7)' },
     // Polygon - purple
     137: { bg: 'rgba(130, 71, 229, 0.15)', border: 'rgba(130, 71, 229, 0.7)' },
+    // Devnet - teal green
+    1337: { bg: 'rgba(0, 184, 148, 0.15)', border: 'rgba(0, 184, 148, 0.7)' },
 };
 
 const networks = [
@@ -87,6 +90,12 @@ const networks = [
         logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/polygon.svg',
         id: 137,
     },
+    {
+        name: 'Devnet',
+        logo: '',
+        id: DEVNET_BASE_CHAIN_ID,
+        useNetworkIcon: true,
+    },
     { name: 'More', logo: '', isMore: true, id: 0 },
 ];
 
@@ -119,11 +128,6 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
         setAssetsForChain(filtered);
         setSearchTerm('');
     }, [selectedNetwork, validAssets]);
-
-    // Update selected network whenever chainID updates externally
-    useEffect(() => {
-        setSelectedNetwork(effectiveChainID);
-    }, [effectiveChainID]);
 
     // Handle token price fetch
     const handleTokenFetch = async (token: ValidAsset, cb: () => void) => {
@@ -207,9 +211,9 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
                 <ModalBody px={0} py={0} flex='1' display='flex' flexDirection='column' overflow='hidden'>
                     {/* Network Selection */}
                     <Box px={4} pt={3} pb={2}>
-                        <Grid templateColumns='repeat(2, 1fr)' gap={2}>
+                        <Grid templateColumns='repeat(3, 1fr)' gap={2}>
                             {networks
-                                .filter((net) => net.id === 1 || net.id === 8453)
+                                .filter((net) => net.id === 1 || net.id === 8453 || net.id === DEVNET_BASE_CHAIN_ID)
                                 .map((net) => (
                                     <GridItem key={net.id}>
                                         <Center
@@ -231,7 +235,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
                                                     : 'none'
                                             }
                                             onClick={() => setSelectedNetwork(net.id)}>
-                                            <Image src={net.logo} alt={net.name} boxSize='32px' borderRadius='full' />
+                                            <NetworkIcon chainId={net.id} width='32' height='32' />
                                         </Center>
                                     </GridItem>
                                 ))}

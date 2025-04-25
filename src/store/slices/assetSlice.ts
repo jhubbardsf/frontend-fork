@@ -1,39 +1,33 @@
-import { create } from 'zustand';
-import { useEffect } from 'react';
-import { CurrencyModalTitle, ReserveLiquidityParams, TokenMeta, UniswapTokenList, UserSwap } from './types';
-import { BigNumber, ethers } from 'ethers';
-import { USDT_Icon, ETH_Icon, ETH_Logo, Coinbase_BTC_Icon } from './components/other/SVGs';
+import { BigNumber } from 'ethers';
+import { base } from 'viem/chains';
+import { TokenMeta, UniswapTokenList, ValidAsset, StoreState } from '../../types';
 import {
-    ERC20ABI,
+    BITCOIN_DECIMALS,
     DEPLOYMENT_TYPE,
+    DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
+    DEVNET_BASE_CHAIN_ID,
+    DEVNET_BASE_ETHERSCAN_URL,
+    DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
+    DEVNET_BASE_RPC_URL,
+    DEVNET_DATA_ENGINE_URL,
+    MAINNET_BASE_CBBTC_TOKEN_ADDRESS,
     MAINNET_BASE_CHAIN_ID,
     MAINNET_BASE_ETHERSCAN_URL,
+    MAINNET_BASE_RIFT_EXCHANGE_ADDRESS,
     MAINNET_BASE_RPC_URL,
-    REQUIRED_BLOCK_CONFIRMATIONS,
+    MAINNET_DATA_ENGINE_URL,
+    TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
     TESTNET_BASE_CHAIN_ID,
     TESTNET_BASE_ETHERSCAN_URL,
     TESTNET_BASE_RIFT_EXCHANGE_ADDRESS,
     TESTNET_BASE_RPC_URL,
-    DEVNET_BASE_CHAIN_ID,
-    DEVNET_BASE_RPC_URL,
-    DEVNET_BASE_ETHERSCAN_URL,
-    DEVNET_BASE_RIFT_EXCHANGE_ADDRESS,
-    MAINNET_BASE_RIFT_EXCHANGE_ADDRESS,
-    MAINNET_BASE_CBBTC_TOKEN_ADDRESS,
-    DEVNET_BASE_CBBTC_TOKEN_ADDRESS,
-    TESTNET_BASE_CBBTC_TOKEN_ADDRESS,
-    BITCOIN_DECIMALS,
-    MAINNET_DATA_ENGINE_URL,
-    DEVNET_DATA_ENGINE_URL,
     TESTNET_DATA_ENGINE_URL,
-} from './utils/constants';
-import { ValidAsset } from './types';
-import riftExchangeABI from './abis/RiftExchange.json';
-import { base, baseGoerli, baseSepolia } from 'viem/chains';
-import { DeploymentType } from './types';
-import { getDeploymentValue } from './utils/deploymentUtils';
-import combinedTokenData from '@/json/tokenData.json';
-import { getEffectiveChainID } from './utils/dappHelper';
+} from '../../utils/constants';
+import { getDeploymentValue } from '../../utils/deploymentUtils';
+import riftExchangeABI from '../../abis/RiftExchange.json';
+import { Coinbase_BTC_Icon } from '../../components/other/SVGs';
+import combinedTokenData from '../../json/tokenData.json';
+import { StateCreator } from 'zustand';
 
 /**
  * Deduplicates tokens in a token list to ensure only unique tokens per chain by address
@@ -61,11 +55,6 @@ function deduplicateTokens(tokenList: UniswapTokenList): UniswapTokenList {
 
 /**
  * Merges a Uniswap token list into an existing record of valid assets.
- *
- * @param tokenList - The Uniswap token list object.
- * @param defaultAssetTemplate - A template ValidAsset (e.g. your CoinbaseBTC asset) that contains all required properties.
- * @param existingAssets - (Optional) Existing valid assets record to merge into.
- * @returns A new record of ValidAsset objects keyed by token symbol.
  */
 export function mergeTokenListIntoValidAssets(
     tokenList: UniswapTokenList,
@@ -119,113 +108,8 @@ function findAssetKeyByName(assets: Record<string, ValidAsset>, name: string, ch
     );
 }
 
-type Store = {
-    // setup & asset data
-    userEthAddress: string;
-    setUserEthAddress: (address: string) => void;
-    ethersRpcProvider: ethers.providers.Provider | null;
-    setEthersRpcProvider: (provider: ethers.providers.Provider) => void;
-    validAssets: Record<string, ValidAsset>;
-    setValidAssets: (assets: Record<string, ValidAsset>) => void;
-    mergeValidAssets: (assets: Record<string, ValidAsset>) => void; // New - JSH
-    updatePriceUSD: (assetKey: string, newPrice: number) => void;
-    updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
-    updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
-    updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
-    updatePriceForAsset: (asset: ValidAsset, newPrice: number) => void; // New - JSH
-    selectedInputAsset: ValidAsset;
-    setSelectedInputAsset: (asset: ValidAsset) => void;
-    isPayingFeesInBTC: boolean;
-    setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
-
-    // Helper functions to find assets
-    findAssetByName: (name: string, chainId?: number) => ValidAsset | undefined; // New - JSH
-    getAssetKey: (asset: ValidAsset) => string; // New - JSH
-
-    // contract data (deposit vaults, swap reservations)
-    setUserSwapsFromAddress: (swaps: UserSwap[]) => void;
-    userSwapsFromAddress: UserSwap[];
-    userSwapsLoadingState: 'loading' | 'error' | 'received';
-    setUserSwapsLoadingState: (state: 'loading' | 'error' | 'received') => void;
-
-    // activity page
-    selectedSwapToManage: UserSwap | null;
-    setSelectedSwapToManage: (swap: UserSwap | null) => void;
-    showManageDepositVaultsScreen: boolean;
-    setShowManageDepositVaultsScreen: (show: boolean) => void;
-
-    // swap flow
-    swapFlowState:
-        | '0-not-started'
-        | '1-reserve-liquidity'
-        | '2-send-bitcoin'
-        | '3-receive-evm-token'
-        | '4-completed'
-        | '5-expired';
-    setSwapFlowState: (
-        state:
-            | '0-not-started'
-            | '1-reserve-liquidity'
-            | '2-send-bitcoin'
-            | '3-receive-evm-token'
-            | '4-completed'
-            | '5-expired',
-    ) => void;
-    depositFlowState: '0-not-started' | '1-confirm-deposit';
-    setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
-    btcInputSwapAmount: string;
-    setBtcInputSwapAmount: (amount: string) => void;
-    coinbaseBtcDepositAmount: string;
-    setCoinbaseBtcDepositAmount: (amount: string) => void;
-    btcOutputAmount: string;
-    setBtcOutputAmount: (amount: string) => void;
-    coinbaseBtcOutputAmount: string;
-    setCoinbaseBtcOutputAmount: (amount: string) => void;
-    payoutBTCAddress: string;
-    setPayoutBTCAddress: (address: string) => void;
-    lowestFeeReservationParams: ReserveLiquidityParams | null;
-    setLowestFeeReservationParams: (reservation: ReserveLiquidityParams | null) => void;
-    showManageReservationScreen: boolean;
-    setShowManageReservationScreen: (show: boolean) => void;
-    depositMode: boolean;
-    setDepositMode: (mode: boolean) => void;
-    withdrawAmount: string;
-    setWithdrawAmount: (amount: string) => void;
-    protocolFeeAmountMicroUsdt: string;
-    setProtocolFeeAmountMicroUsdt: (amount: string) => void;
-    swapReservationNotFound: boolean;
-    setSwapReservationNotFound: (notFound: boolean) => void;
-    currentReservationState: string;
-    setCurrentReservationState: (state: string) => void;
-    areNewDepositsPaused: boolean;
-    setAreNewDepositsPaused: (paused: boolean) => void;
-    isGasFeeTooHigh: boolean;
-    setIsGasFeeTooHigh: (isGasFeeTooHigh: boolean) => void;
-    confirmationBlocksNeeded: number;
-    setConfirmationBlocksNeeded: (blocks: number) => void;
-    currentTotalBlockConfirmations: number;
-    setCurrentTotalBlockConfirmations: (confirmations: number) => void;
-    proxyWalletSwapStatus: number;
-    setProxyWalletSwapStatus: (status: number) => void;
-
-    // modals
-    currencyModalTitle: CurrencyModalTitle;
-    setCurrencyModalTitle: (x: CurrencyModalTitle) => void;
-    ethPayoutAddress: string;
-    setEthPayoutAddress: (address: string) => void;
-    bitcoinSwapTransactionHash: string;
-    setBitcoinSwapTransactionHash: (hash: string) => void;
-
-    // global
-    isOnline: boolean;
-    setIsOnline: (b: boolean) => void;
-
-    // Uniswap
-    selectedChainID: number;
-    setSelectChainID: (chainID: number) => void;
-};
-
-export const useStore = create<Store>((set, get) => {
+// Initialize assets with default values
+const initializeAssets = () => {
     // Get the current chain ID
     const currentChainId = getDeploymentValue(
         DEPLOYMENT_TYPE,
@@ -314,22 +198,54 @@ export const useStore = create<Store>((set, get) => {
         '0-bitcoin': btc,
     };
 
+    return {
+        initialValidAssets,
+        coinbaseBtc,
+        currentChainId,
+    };
+};
+
+// Asset slice state and actions
+export interface AssetSlice {
+    validAssets: Record<string, ValidAsset>;
+    selectedInputAsset: ValidAsset;
+    isPayingFeesInBTC: boolean;
+
+    // Actions
+    setValidAssets: (assets: Record<string, ValidAsset>) => void;
+    setSelectedInputAsset: (asset: ValidAsset) => void;
+    setIsPayingFeesInBTC: (isPayingFeesInBTC: boolean) => void;
+    mergeValidAssets: (newAssets: Record<string, ValidAsset>) => void;
+    updatePriceUSD: (assetKey: string, newPrice: number) => void;
+    updateTotalAvailableLiquidity: (assetKey: string, newLiquidity: BigNumber) => void;
+    updateConnectedUserBalanceRaw: (assetKey: string, newBalance: BigNumber) => void;
+    updateConnectedUserBalanceFormatted: (assetKey: string, newBalance: string) => void;
+    updatePriceForAsset: (asset: ValidAsset, newPrice: number) => void;
+
+    // Helper functions
+    findAssetByName: (name: string, chainId?: number) => ValidAsset | undefined;
+    getAssetKey: (asset: ValidAsset) => string;
+}
+
+// Create the asset slice
+export const createAssetSlice: StateCreator<StoreState, [], [], AssetSlice> = (set, get) => {
+    const { initialValidAssets, coinbaseBtc, currentChainId } = initializeAssets();
+
+    // Create merged assets with token list
     const updatedValidAssets = mergeTokenListIntoValidAssets(
-        deduplicateTokens(combinedTokenData),
+        deduplicateTokens(combinedTokenData as UniswapTokenList),
         coinbaseBtc,
         initialValidAssets,
     );
 
     return {
-        // setup & asset data
-        selectedInputAsset: coinbaseBtc,
-        setSelectedInputAsset: (selectedInputAsset) => set({ selectedInputAsset }),
-        userEthAddress: '',
-        setUserEthAddress: (userEthAddress) => set({ userEthAddress }),
-        ethersRpcProvider: null,
-        setEthersRpcProvider: (provider) => set({ ethersRpcProvider: provider }),
         validAssets: updatedValidAssets,
+        selectedInputAsset: coinbaseBtc,
+        isPayingFeesInBTC: true,
+
         setValidAssets: (assets) => set({ validAssets: assets }),
+        setSelectedInputAsset: (asset) => set({ selectedInputAsset: asset }),
+        setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 
         mergeValidAssets: (newAssets) =>
             set((state) => {
@@ -358,6 +274,7 @@ export const useStore = create<Store>((set, get) => {
 
                 return { validAssets: mergedAssets };
             }),
+
         updatePriceUSD: (assetKey, newPrice) => {
             return set((state) => {
                 const assets = { ...state.validAssets };
@@ -385,6 +302,7 @@ export const useStore = create<Store>((set, get) => {
                 return { validAssets: assets };
             });
         },
+
         updateTotalAvailableLiquidity: (assetKey, newLiquidity) =>
             set((state) => {
                 const assets = { ...state.validAssets };
@@ -411,6 +329,7 @@ export const useStore = create<Store>((set, get) => {
 
                 return { validAssets: assets };
             }),
+
         updateConnectedUserBalanceRaw: (assetKey, newBalance) =>
             set((state) => {
                 const assets = { ...state.validAssets };
@@ -437,6 +356,7 @@ export const useStore = create<Store>((set, get) => {
 
                 return { validAssets: assets };
             }),
+
         updateConnectedUserBalanceFormatted: (assetKey, newBalance) =>
             set((state) => {
                 const assets = { ...state.validAssets };
@@ -463,6 +383,7 @@ export const useStore = create<Store>((set, get) => {
 
                 return { validAssets: assets };
             }),
+
         updatePriceForAsset: (asset: ValidAsset, newPrice: number) =>
             set((state) => {
                 const key = state.getAssetKey(asset);
@@ -475,76 +396,10 @@ export const useStore = create<Store>((set, get) => {
 
                 return state;
             }),
-        isPayingFeesInBTC: true,
-        setIsPayingFeesInBTC: (isPayingFeesInBTC) => set({ isPayingFeesInBTC }),
 
-        // contract data (deposit vaults, swap reservations)
-        setUserSwapsFromAddress: (swaps: UserSwap[]) => set({ userSwapsFromAddress: swaps }),
-        userSwapsFromAddress: [],
-        userSwapsLoadingState: 'loading' as 'loading' | 'error' | 'received',
-        setUserSwapsLoadingState: (state: 'loading' | 'error' | 'received') => set({ userSwapsLoadingState: state }),
-
-        // activity page
-        selectedSwapToManage: null,
-        setSelectedSwapToManage: (selectedSwapToManage) => set({ selectedSwapToManage }),
-        showManageDepositVaultsScreen: false,
-        setShowManageDepositVaultsScreen: (showManageDepositVaultsScreen) => set({ showManageDepositVaultsScreen }),
-
-        // swap flow
-        swapFlowState: '0-not-started',
-        setSwapFlowState: (swapFlowState) => set({ swapFlowState }),
-        depositFlowState: '0-not-started',
-        setDepositFlowState: (depositFlowState) => set({ depositFlowState }),
-        btcInputSwapAmount: '',
-        setBtcInputSwapAmount: (btcInputSwapAmount) => set({ btcInputSwapAmount }),
-        coinbaseBtcDepositAmount: '',
-        setCoinbaseBtcDepositAmount: (coinbaseBtcDepositAmount) => set({ coinbaseBtcDepositAmount }),
-        btcOutputAmount: '',
-        setBtcOutputAmount: (btcOutputAmount) => set({ btcOutputAmount }),
-        coinbaseBtcOutputAmount: '',
-        setCoinbaseBtcOutputAmount: (coinbaseBtcOutputAmount) => set({ coinbaseBtcOutputAmount }),
-        payoutBTCAddress: '',
-        setPayoutBTCAddress: (payoutBTCAddress) => set({ payoutBTCAddress }),
-        lowestFeeReservationParams: null,
-        setLowestFeeReservationParams: (lowestFeeReservationParams) => set({ lowestFeeReservationParams }),
-        showManageReservationScreen: false,
-        setShowManageReservationScreen: (showManageReservationScreen) => set({ showManageReservationScreen }),
-        depositMode: true,
-        setDepositMode: (depositMode) => set({ depositMode }),
-        withdrawAmount: '',
-        setWithdrawAmount: (withdrawAmount) => set({ withdrawAmount }),
-        currencyModalTitle: 'close',
-        setCurrencyModalTitle: (x) => set({ currencyModalTitle: x }),
-        ethPayoutAddress: '',
-        setEthPayoutAddress: (ethPayoutAddress) => set({ ethPayoutAddress }),
-        bitcoinSwapTransactionHash: '',
-        setBitcoinSwapTransactionHash: (bitcoinSwapTransactionHash) => set({ bitcoinSwapTransactionHash }),
-        protocolFeeAmountMicroUsdt: '',
-        setProtocolFeeAmountMicroUsdt: (protocolFeeAmountMicroUsdt) => set({ protocolFeeAmountMicroUsdt }),
-        swapReservationNotFound: false,
-        setSwapReservationNotFound: (swapReservationNotFound) => set({ swapReservationNotFound }),
-        currentReservationState: '',
-        setCurrentReservationState: (currentReservationState) => set({ currentReservationState }),
-        areNewDepositsPaused: false,
-        setAreNewDepositsPaused: (areNewDepositsPaused) => set({ areNewDepositsPaused }),
-        isGasFeeTooHigh: false,
-        setIsGasFeeTooHigh: (isGasFeeTooHigh) => set({ isGasFeeTooHigh }),
-        confirmationBlocksNeeded: REQUIRED_BLOCK_CONFIRMATIONS,
-        setConfirmationBlocksNeeded: (confirmationBlocksNeeded) => set({ confirmationBlocksNeeded }),
-        currentTotalBlockConfirmations: 0,
-        setCurrentTotalBlockConfirmations: (currentTotalBlockConfirmations) => set({ currentTotalBlockConfirmations }),
-        proxyWalletSwapStatus: null,
-        setProxyWalletSwapStatus: (proxyWalletSwapStatus) => set({ proxyWalletSwapStatus }),
-
-        // global
-        isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true
-        setIsOnline: (b) => set({ isOnline: b }),
-
-        // Uniswap
-        selectedChainID: currentChainId,
-        setSelectChainID: (chainID: number) => set({ selectedChainID: chainID }),
         findAssetByName: (name: string, chainId?: number) => {
             const assets = get().validAssets;
+            const effectiveChainId = chainId ?? currentChainId;
 
             // Special handling for BTC and CoinbaseBTC
             if (name === 'BTC' && assets['0-bitcoin']) {
@@ -552,7 +407,7 @@ export const useStore = create<Store>((set, get) => {
             }
 
             if (name === 'CoinbaseBTC') {
-                const key = findAssetKeyByName(assets, 'CoinbaseBTC', chainId ?? currentChainId);
+                const key = findAssetKeyByName(assets, 'CoinbaseBTC', effectiveChainId);
                 if (key) return assets[key];
             }
 
@@ -563,8 +418,9 @@ export const useStore = create<Store>((set, get) => {
                     (chainId === undefined || asset.chainId === chainId),
             );
         },
+
         getAssetKey: (asset: ValidAsset) => {
             return `${asset.chainId || 0}-${(asset.address || asset.tokenAddress || '').toLowerCase()}`;
         },
     };
-});
+};

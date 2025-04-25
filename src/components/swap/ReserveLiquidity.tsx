@@ -135,6 +135,7 @@ export const ReserveLiquidity = ({}) => {
 
             if (chainId !== selectedInputAsset.chainId) {
                 setIsWaitingForCorrectNetwork(true);
+                console.log('jsh=Switching network', selectedInputAsset.chainId);
                 switchChain({ chainId: selectedInputAsset.chainId });
                 return;
             }
@@ -322,6 +323,7 @@ export const ReserveLiquidity = ({}) => {
     const handleSwitchNetwork = () => {
         if (chainId !== selectedInputAsset.chainId) {
             setIsWaitingForCorrectNetwork(true);
+            console.log('jsh2=Switching to chainId');
             switchChain({ chainId: selectedInputAsset.chainId });
         }
     };

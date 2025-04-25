@@ -413,6 +413,7 @@ export const DepositUI = () => {
             // check if the chain is already available in MetaMask
             try {
                 // attempt to switch to the target network
+                console.log('jsh3=Switching to chainId', hexChainId);
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: hexChainId }],
@@ -430,6 +431,7 @@ export const DepositUI = () => {
                         console.log('Deposit Network added successfully');
 
                         // after adding, attempt to switch to the new network
+                        console.log('jsh4=Switching to chainId', hexChainId);
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: hexChainId }],

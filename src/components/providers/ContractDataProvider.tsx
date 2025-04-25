@@ -68,10 +68,13 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             }
 
             try {
+                console.log('jsh=Checking and switching network');
                 const chainIdHex = await ethereum.request({ method: 'eth_chainId' });
+                console.log('jsh=chainIdHex', chainIdHex);
                 if (!chainIdHex) return;
                 const currentChainId = parseInt(chainIdHex, 16);
-
+                console.log('jsh=currentChainId', currentChainId);
+                console.log('jsh=chainId', chainId);
                 if (currentChainId === chainId) {
                     return;
                 }
@@ -79,6 +82,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                 const hexChainId = `0x${chainId.toString(16)}`;
 
                 try {
+                    console.log('jsh=Switching to chainId', hexChainId);
                     await ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: hexChainId }],
@@ -93,6 +97,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
                                 );
                                 return;
                             }
+                            console.log('jsh=Adding network', selectedInputAsset.chainDetails);
                             await addNetwork(selectedInputAsset.chainDetails);
                             await ethereum.request({
                                 method: 'wallet_switchEthereumChain',
