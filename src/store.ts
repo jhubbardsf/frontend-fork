@@ -114,6 +114,10 @@ type Store = {
     // global
     isOnline: boolean;
     setIsOnline: (b: boolean) => void;
+
+    // wallet screening
+    isWalletRestricted: boolean;
+    setIsWalletRestricted: (b: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => {
@@ -267,5 +271,9 @@ export const useStore = create<Store>((set) => {
         // global
         isOnline: true, // typeof window != 'undefined' ? navigator.onLine : true
         setIsOnline: (b) => set({ isOnline: b }),
+
+        // wallet screening
+        isWalletRestricted: false,
+        setIsWalletRestricted: (isWalletRestricted) => set({ isWalletRestricted }),
     };
 });

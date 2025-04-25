@@ -1,67 +1,39 @@
 // pages/api/wallet-screen.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuidv4 } from 'uuid';
-
-// ————————————————————————————————————————————————————————————————————————
-// Define the exact response shape from TRM Labs
-// ————————————————————————————————————————————————————————————————————————
-/** A single risk indicator on an address  */
-export interface AddressRiskIndicator {
-    category: string;
-    categoryId: string;
-    categoryRiskScoreLevel: number;
-    categoryRiskScoreLevelLabel: string;
-    totalVolumeUsd: string;
-    incomingVolumeUsd?: string;
-    outgoingVolumeUsd?: string;
-    riskType?: string;
-}
-
-/** The POST /public/v2/screening/addresses response for a single wallet */
-export interface WalletScreeningResult {
-    accountExternalId: string | null;
-    address: string;
-    addressIncomingVolumeUsd?: string;
-    addressOutgoingVolumeUsd?: string;
-    addressTotalVolumeUsd?: string;
-    addressRiskIndicators: AddressRiskIndicator[];
-    addressSubmitted: string;
-    chain: string;
-    externalId: string;
-    trmAppUrl: string;
-    /** Only present if includeDataPerChain=true */
-    entities?: any[];
-}
+import type { WalletScreeningResult, ScreeningRequestItem } from '../../types';
+import { getWalletScreeningFromCache, setWalletScreeningCache } from '../../components/screening/redis';
 
 const TRM_API_URL = process.env.TRM_SCREENING_URL!;
 const API_KEY = process.env.TRM_API_KEY!;
 const AUTH_HEADER = 'Basic ' + Buffer.from(`${API_KEY}:${API_KEY}`).toString('base64');
-
-type ScreeningRequestItem = {
-    accountExternalId: string | null;
-    address: string;
-    chain: string;
-    externalId: string;
-    includeDataPerChain?: boolean;
-};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     console.log('wallet-screen api called');
     if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
     const { address, chain = 'ethereum', includeDataPerChain = false } = req.body;
+    const includeDataPerChainBool = includeDataPerChain === 'false' ? false : Boolean(includeDataPerChain);
+
     if (!address || typeof address !== 'string') {
         return res.status(400).json({ error: 'Missing or invalid `address`' });
     }
 
+    // First try to get from cache
+    const cachedResult = await getWalletScreeningFromCache(address, chain);
+    if (cachedResult) {
+        console.log('Cache hit for address:', address);
+        return res.status(200).json(cachedResult);
+    }
+
+    console.log('Cache miss for address:', address);
+
     // Build payload per TRM docs (Batch up to 10; we send one)
     const payload: ScreeningRequestItem[] = [
         {
-            accountExternalId: process.env.NEXT_PUBLIC_ACCOUNT_EXTERNAL_ID || null,
             address,
             chain,
-            externalId: uuidv4(),
-            includeDataPerChain: Boolean(includeDataPerChain),
+            includeDataPerChain: includeDataPerChainBool,
         },
     ];
 
@@ -97,7 +69,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Success: parse result (201 -> JSON array)
     const data = (await apiRes.json()) as WalletScreeningResult[];
+    console.log({ screeningData: data });
+
     const result = data[0];
     console.log({ screeningResult: result });
+
+    // Store the result in cache
+    await setWalletScreeningCache(address, chain, result);
+
     return res.status(200).json(result);
 }

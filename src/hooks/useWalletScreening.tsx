@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { useRouter } from 'next/router';
+import { useStore } from '../store';
 
 interface RiskIndicator {
     categoryRiskScoreLevel: number;
@@ -16,22 +17,11 @@ interface ScreeningResult {
     entities?: Entity[];
 }
 
-const COOKIE_NAME = 'blocked_wallet';
-const COOKIE_MAX_AGE = 86400; // 1 day in seconds
-
-function getCookie(name: string): string | null {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-}
-
-function setBlockingCookie(address: string) {
-    document.cookie = [`${COOKIE_NAME}=${encodeURIComponent(address)}`, `Max-Age=${COOKIE_MAX_AGE}`, `Path=/`].join('; ');
-}
-
 export function useWalletScreening() {
     const { address, isConnected } = useAccount();
     const chainId = useChainId();
     const router = useRouter();
+    const { setIsWalletRestricted } = useStore();
     const [screened, setScreened] = useState(false);
 
     const isBlockedPage = () => router.pathname === '/restricted';
@@ -44,14 +34,7 @@ export function useWalletScreening() {
     };
 
     useEffect(() => {
-        // 1) Short‑circuit if we already set a block cookie
-        if (getCookie(COOKIE_NAME)) {
-            console.log('Wallet Screening: blocking due to existing cookie');
-            redirectToBlockedPage();
-            return;
-        }
-
-        // 2) Only screen once per connect
+        // Only screen once per connect
         if (!isConnected || !address || screened) return;
         setScreened(true);
 
@@ -86,7 +69,7 @@ export function useWalletScreening() {
 
                 const result = (await res.json()) as ScreeningResult;
 
-                // 3) Derive overall risk from both addressRiskIndicators and entities
+                // Derive overall risk from both addressRiskIndicators and entities
                 const addrMax = result.addressRiskIndicators.length > 0 ? Math.max(...result.addressRiskIndicators.map((i) => i.categoryRiskScoreLevel)) : 0;
                 const entMax = result.entities && result.entities.length > 0 ? Math.max(...result.entities.map((e) => e.riskScoreLevel)) : 0;
                 const overallRisk = Math.max(addrMax, entMax);
@@ -96,14 +79,14 @@ export function useWalletScreening() {
 
                 if (overallRisk >= threshold) {
                     console.log('Wallet Screening: blocking due to overall risk');
-                    setBlockingCookie(address);
+                    setIsWalletRestricted(true);
                     redirectToBlockedPage();
                 }
             })
             .catch((err) => {
                 console.error('Wallet Screening Error:', err);
                 // Optionally fail‑closed:
-                setBlockingCookie(address!);
+                setIsWalletRestricted(true);
                 redirectToBlockedPage('?reason=error');
             });
     }, [address, isConnected, screened, chainId, router]);

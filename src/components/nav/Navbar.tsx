@@ -17,6 +17,9 @@ import GlowingShimmerText from '../other/GlowingText';
 import riftExchangeABI from '../../abis/RiftExchange.json';
 
 export const Navbar = ({}) => {
+    // disable navigation when this condition is met
+    const isWalletRestricted = useStore((state) => state.isWalletRestricted);
+    const disableNavigation = isWalletRestricted;
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
@@ -59,6 +62,7 @@ export const Navbar = ({}) => {
     }, [lowestFeeReservationParams]);
 
     const handleNavigation = (route: string) => {
+        if (disableNavigation) return;
         router.push(route);
     };
 
@@ -66,7 +70,9 @@ export const Navbar = ({}) => {
         return (
             <Flex
                 _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
-                cursor='pointer'
+                cursor={disableNavigation ? 'not-allowed' : 'pointer'}
+                opacity={disableNavigation ? 0.5 : 1}
+                pointerEvents={disableNavigation ? 'none' : 'auto'}
                 borderRadius='6px'
                 px='10px'
                 onClick={() => {
@@ -110,6 +116,10 @@ export const Navbar = ({}) => {
                 return 'Arbitrum Sepolia';
             case 1:
                 return 'ETH';
+            case 8453:
+                return 'Base';
+            case 1337:
+                return 'Rift Devnet';
             default:
                 return id;
         }

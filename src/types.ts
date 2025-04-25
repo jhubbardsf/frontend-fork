@@ -133,3 +133,43 @@ export type BlockLeaf = {
     height: number;
     cumulativeChainwork: BigNumber;
 };
+
+// Wallet Screening Types
+// ————————————————————————————————————————————————————————————————————————
+// Define the exact response shape from TRM Labs
+// ————————————————————————————————————————————————————————————————————————
+/** A single risk indicator on an address  */
+export interface AddressRiskIndicator {
+    category: string;
+    categoryId: string;
+    categoryRiskScoreLevel: number;
+    categoryRiskScoreLevelLabel: string;
+    totalVolumeUsd: string;
+    incomingVolumeUsd?: string;
+    outgoingVolumeUsd?: string;
+    riskType?: string;
+}
+
+/** The POST /public/v2/screening/addresses response for a single wallet */
+export interface WalletScreeningResult {
+    accountExternalId: string | null;
+    address: string;
+    addressIncomingVolumeUsd?: string;
+    addressOutgoingVolumeUsd?: string;
+    addressTotalVolumeUsd?: string;
+    addressRiskIndicators: AddressRiskIndicator[];
+    addressSubmitted: string;
+    chain: string;
+    externalId: string;
+    trmAppUrl: string;
+    /** Only present if includeDataPerChain=true */
+    entities?: any[];
+}
+
+export type ScreeningRequestItem = {
+    accountExternalId?: string | null;
+    address: string;
+    chain: string;
+    externalId?: string;
+    includeDataPerChain?: boolean;
+};
