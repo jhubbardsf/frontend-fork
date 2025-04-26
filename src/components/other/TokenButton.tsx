@@ -10,6 +10,7 @@ import { useStore } from '@/store';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
 import { useEffect, useState, useRef } from 'react';
 import { useTokenColor } from '../../hooks/useTokenColor';
+import { NetworkIcon } from '@/components/other/NetworkIcon';
 
 interface TokenProps {
     asset: TokenMeta | ValidAsset;
@@ -100,7 +101,8 @@ const TokenButton: React.FC<TokenProps> = ({
                 onClick={onDropDown}>
                 {(selectedChainId === DEVNET_BASE_CHAIN_ID || selectedChainId === MAINNET_BASE_CHAIN_ID) && (
                     <Flex ml='0px' mr='-1px' mt='-1px'>
-                        <BASE_LOGO width='22' height='22' />
+                        <NetworkIcon chainId={selectedChainId} width='22' height='22' />
+                        {/* <BASE_LOGO width='22' height='22' /> */}
                     </Flex>
                 )}
                 {asset.symbol === 'cbBTC' ? (
