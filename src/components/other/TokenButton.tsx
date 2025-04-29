@@ -6,9 +6,11 @@ import type { AssetType, TokenMeta, ValidAsset } from '@/types';
 import useWindowSize from '../../hooks/useWindowSize';
 import { ARBITRUM_LOGO, BASE_LOGO } from './SVGs';
 import Image from 'next/image';
-import combinedTokenData from '@/json/tokenData.json';
 import { useStore } from '@/store';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
+import { useEffect, useState, useRef } from 'react';
+import { useTokenColor } from '../../hooks/useTokenColor';
+import { NetworkIcon } from '@/components/other/NetworkIcon';
 
 interface TokenProps {
     asset: TokenMeta | ValidAsset;
@@ -42,14 +44,12 @@ const TokenButton: React.FC<TokenProps> = ({
     const arrowSize = fontSize ?? `calc(${adjustedH} / 4)`;
     const adjustedBorderRadius = `calc(${adjustedH} / 4)`;
 
-    // Handle both types - TokenMeta has address, ValidAsset might have tokenAddress
-    const address = 'tokenAddress' in asset ? asset.tokenAddress : asset.address;
-    const key = `${address}-${asset.symbol}`;
+    // Get token style with cached colors and TanStack Query
+    const logoURI = asset.logoURI || ('icon_svg' in asset ? asset.icon_svg : '');
+    const tokenStyle = useTokenColor(logoURI, greyedOut);
 
-    // Use the style from our combined data file
-    const tokenStyle = combinedTokenData.styleMap?.[key] || combinedTokenData.styleMap?.[asset.symbol];
-    const bgColor = greyedOut || !tokenStyle ? '#383838' : tokenStyle.bgColor;
-    const borderColor = greyedOut || !tokenStyle ? '#838383' : tokenStyle.borderColor;
+    const bgColor = greyedOut ? '#383838' : tokenStyle.bgColor;
+    const borderColor = greyedOut ? '#838383' : tokenStyle.borderColor;
     const pX = px ?? '20px';
 
     return (
@@ -69,12 +69,21 @@ const TokenButton: React.FC<TokenProps> = ({
                 justify='center'
                 overflow={'hidden'}
                 onClick={onDropDown}>
-                <Image
-                    src={asset.logoURI || ('icon_svg' in asset ? asset.icon_svg : '')}
-                    alt={`${asset.name} icon`}
-                    width={38}
-                    height={38}
-                />
+                {logoURI ? (
+                    <Image
+                        src={logoURI}
+                        alt={`${asset.name} icon`}
+                        width={38}
+                        height={38}
+                        unoptimized={true} // This prevents Next.js image optimization
+                        style={{ objectFit: 'contain' }}
+                    />
+                ) : (
+                    // Fallback for missing logo
+                    <Text fontSize={adjustedFontSize} color={'white'} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                        {asset.symbol.slice(0, 1)}
+                    </Text>
+                )}
             </Flex>
             {/* Button Text */}
             <Flex
@@ -92,7 +101,8 @@ const TokenButton: React.FC<TokenProps> = ({
                 onClick={onDropDown}>
                 {(selectedChainId === DEVNET_BASE_CHAIN_ID || selectedChainId === MAINNET_BASE_CHAIN_ID) && (
                     <Flex ml='0px' mr='-1px' mt='-1px'>
-                        <BASE_LOGO width='22' height='22' />
+                        <NetworkIcon chainId={selectedChainId} width='22' height='22' />
+                        {/* <BASE_LOGO width='22' height='22' /> */}
                     </Flex>
                 )}
                 {asset.symbol === 'cbBTC' ? (

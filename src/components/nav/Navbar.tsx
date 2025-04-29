@@ -56,7 +56,10 @@ export const Navbar = ({}) => {
         if (!lowestFeeReservationParams) {
             return;
         }
-        const totalAmount = lowestFeeReservationParams?.amountsInMicroUsdtToReserve.reduce((acc, curr) => BigNumber.from(acc).add(curr), ethers.BigNumber.from(0));
+        const totalAmount = lowestFeeReservationParams?.amountsInMicroUsdtToReserve.reduce(
+            (acc, curr) => BigNumber.from(acc).add(curr),
+            ethers.BigNumber.from(0),
+        );
         setFormattedTotalAmount(formatUnits(totalAmount, selectedInputAsset.decimals));
     }, [lowestFeeReservationParams]);
 
@@ -81,18 +84,33 @@ export const Navbar = ({}) => {
                 py='2px'
                 position='relative'
                 alignItems='center'>
-                <Text color={router.pathname == route ? colors.offWhite : '#ccc'} fontSize={isTablet ? '0.9rem' : '19px'} fontFamily='Nostromo'>
+                <Text
+                    color={router.pathname == route ? colors.offWhite : '#ccc'}
+                    fontSize={isTablet ? '0.9rem' : '19px'}
+                    fontFamily='Nostromo'>
                     {text}
                 </Text>
                 {(router.pathname === route || (route === '/' && router.pathname.includes('/swap'))) && (
-                    <Flex position={'absolute'} top='31px' w='calc(100% - 20px)' height='2px' bgGradient={`linear(-90deg, #394AFF, #FF8F28)`} />
+                    <Flex
+                        position={'absolute'}
+                        top='31px'
+                        w='calc(100% - 20px)'
+                        height='2px'
+                        bgGradient={`linear(-90deg, #394AFF, #FF8F28)`}
+                    />
                 )}
             </Flex>
         );
     };
 
     const StatCard = ({ label, value, color = colors.RiftOrange }) => (
-        <Box borderWidth='1px' borderColor={colors.textGray} borderRadius='10px' bg={colors.offBlack} p={'10px'} textAlign='center'>
+        <Box
+            borderWidth='1px'
+            borderColor={colors.textGray}
+            borderRadius='10px'
+            bg={colors.offBlack}
+            p={'10px'}
+            textAlign='center'>
             <Text color={colors.textGray} fontSize='10px' mb={1}>
                 {label}
             </Text>
@@ -121,7 +139,11 @@ export const Navbar = ({}) => {
 
     return (
         <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
-            <Flex bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))' position='absolute' w='100%' h='130%'></Flex>
+            <Flex
+                bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))'
+                position='absolute'
+                w='100%'
+                h='130%'></Flex>
             {displayWarning == true && (
                 <>
                     <Flex
@@ -133,7 +155,7 @@ export const Navbar = ({}) => {
                         w='100%'
                         minH='40px'
                         position='relative'>
-                        <GlowingShimmerText>The Rift early alpha is awaiting audits - swaps are limited to 100 USDT - use at your own risk</GlowingShimmerText>
+                        <GlowingShimmerText text='The Rift early alpha is awaiting audits - swaps are limited to 100 USDT - use at your own risk' />
                         <Flex
                             // h='100%'
                             h='38px'
@@ -150,7 +172,10 @@ export const Navbar = ({}) => {
                                 onDismiss('dismissAlphaWarning');
                                 setDisplayWarning(false);
                             }}>
-                            <Text textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'} fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px'>
+                            <Text
+                                textShadow={'0px 0px 10px rgba(0, 0, 0, 0.5)'}
+                                fontFamily={FONT_FAMILIES.NOSTROMO}
+                                fontSize='16px'>
                                 {isSmallLaptop ? 'X' : 'DISMISS'}
                             </Text>
                         </Flex>
@@ -185,7 +210,15 @@ export const Navbar = ({}) => {
                     </Flex>
                 </Flex>
                 <Spacer />
-                <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
+                <Flex
+                    direction='column'
+                    fontFamily={FONT_FAMILIES.AUX_MONO}
+                    align='center'
+                    fontSize='12px'
+                    position='absolute'
+                    top={0}
+                    left={0}
+                    right={0}>
                     {/* {isLocalhost && ( */}
                     <Button
                         position={'absolute'}
@@ -209,7 +242,7 @@ export const Navbar = ({}) => {
                                         <Flex key={key} justify='space-between'>
                                             <Text>{asset.name}:</Text>
                                             <Text>{asset.riftExchangeContractAddress}</Text>
-                                            <Text>Chain: {getChainName(asset.contractChainID)}</Text>
+                                            <Text>Chain: {getChainName(asset.chainId)}</Text>
                                         </Flex>
                                     );
                                 })}

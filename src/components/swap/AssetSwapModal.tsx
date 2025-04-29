@@ -22,17 +22,16 @@ import {
 import { ArrowBackIcon, SearchIcon } from '@chakra-ui/icons';
 import { useStore } from '@/store';
 import { DEVNET_BASE_CHAIN_ID, MAINNET_BASE_CHAIN_ID } from '@/utils/constants';
-import type { TokenMeta, ValidAsset } from '@/types';
+import type { ValidAsset } from '@/types';
 import TokenCard from './TokenCard';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { fetchAndUpdatePriceByAddress, fetchTokenPrice } from '@/hooks/useLifiPriceUpdate';
+import { fetchAndUpdateValidAssetPrice } from '@/hooks/useLifiPriceUpdate';
 import { getEffectiveChainID } from '@/utils/dappHelper';
-import { useChainId } from 'wagmi';
+import { NetworkIcon } from '../other/NetworkIcon';
 
 interface AssetSwapModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onTokenSelected: (token: ValidAsset) => void;
 }
 
 // Network color mapping for custom styling
@@ -51,6 +50,8 @@ const networkColors = {
     56: { bg: 'rgba(240, 185, 11, 0.15)', border: 'rgba(240, 185, 11, 0.7)' },
     // Polygon - purple
     137: { bg: 'rgba(130, 71, 229, 0.15)', border: 'rgba(130, 71, 229, 0.7)' },
+    // Devnet - teal green
+    1337: { bg: 'rgba(0, 184, 148, 0.15)', border: 'rgba(0, 184, 148, 0.7)' },
 };
 
 const networks = [
@@ -89,59 +90,52 @@ const networks = [
         logo: 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/polygon.svg',
         id: 137,
     },
+    {
+        name: 'Devnet',
+        logo: '',
+        id: DEVNET_BASE_CHAIN_ID,
+        useNetworkIcon: true,
+    },
     { name: 'More', logo: '', isMore: true, id: 0 },
 ];
 
-const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onTokenSelected }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const uniswapTokens = useStore((state) => state.uniswapTokens);
-    const selectedChainID = useStore((state) => state.selectedChainID);
+const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose }) => {
+    // Zustand state
     const validAssets = useStore((state) => state.validAssets);
-    const findAssetByName = useStore((state) => state.findAssetByName);
-    const findAssetByAddress = useStore((state) => state.findAssetByAddress);
-    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
-    const effectiveChainID = getEffectiveChainID(selectedChainID);
+    const selectedChainID = useStore((state) => state.selectedChainID);
+    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
+
+    // Local state
+    const [searchTerm, setSearchTerm] = useState('');
     const [parent] = useAutoAnimate({ duration: 200 });
 
-    const [tokensForChain, setTokensForChain] = useState<TokenMeta[]>(
-        uniswapTokens.filter((t) => t.chainId === effectiveChainID),
+    // Derived state
+    const effectiveChainID = getEffectiveChainID(selectedChainID);
+
+    const [assetsForChain, setAssetsForChain] = useState<ValidAsset[]>(
+        Object.values(validAssets).filter((t) => t.chainId === effectiveChainID),
     );
-    const [selectedNetwork, setSelectedNetwork] = useState(effectiveChainID);
+    // This state is JUST for the UI, It doesn't effect the chain the user is
+    // connected to. It just defaults to that.
+    const [selectedNetwork, setSelectedNetwork] = useState(selectedChainID);
 
-    // Sync token list when network or chain changes
+    // Sync asset list when network or chain changes
     useEffect(() => {
-        // Deduplicate tokens by address to prevent duplicate entries
-        const addressMap = new Map<string, TokenMeta>();
-        uniswapTokens
+        // Filter assets by chain ID
+        const filtered = Object.values(validAssets)
             .filter((t) => t.chainId === selectedNetwork)
-            .forEach((token) => {
-                const lowerCaseAddress = token.address.toLowerCase();
-                // Only add if not already in the map, or replace if it's a newer/better entry
-                if (!addressMap.has(lowerCaseAddress)) {
-                    addressMap.set(lowerCaseAddress, token);
-                }
-            });
+            // Sort alphabetically by symbol
+            .sort((a, b) => a.symbol.toUpperCase().localeCompare(b.symbol.toUpperCase()));
 
-        // Convert to array and sort alphabetically by symbol
-        const filtered = Array.from(addressMap.values()).sort((a, b) =>
-            a.symbol.toUpperCase().localeCompare(b.symbol.toUpperCase()),
-        );
-
-        setTokensForChain(filtered);
+        setAssetsForChain(filtered);
         setSearchTerm('');
-    }, [selectedNetwork, uniswapTokens]);
-
-    // Update selected network whenever chainID updates externally
-    useEffect(() => {
-        setSelectedNetwork(effectiveChainID);
-    }, [effectiveChainID]);
+    }, [selectedNetwork, validAssets]);
 
     // Handle token price fetch
-    const handleTokenFetch = async (token: TokenMeta, cb: () => void) => {
+    const handleTokenFetch = async (token: ValidAsset, cb: () => void) => {
         try {
             // Use effective chain ID for price fetching
-            const effectiveTokenChainId = getEffectiveChainID(token.chainId);
-            fetchAndUpdatePriceByAddress(effectiveTokenChainId, token.address); // Purposefully don't await this
+            fetchAndUpdateValidAssetPrice(token); // Purposefully don't await this
             cb();
         } catch (e) {
             console.error('Error fetching price for', token.symbol, e);
@@ -149,25 +143,9 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
         }
     };
 
-    const handleTokenClick = (token: TokenMeta) => {
-        const effectiveTokenChainId = getEffectiveChainID(token.chainId);
-        // Try to find by name first
-        let asset = findAssetByName(token.name, effectiveTokenChainId);
-
-        // If not found by name, try by address
-        if (!asset) {
-            asset = findAssetByAddress(token.address, effectiveTokenChainId);
-        }
-
-        if (asset) {
-            onTokenSelected(asset);
-            handleTokenFetch(token, onClose);
-        } else {
-            console.error(
-                `Asset not found for token: ${token.name} (${token.address}) on chain ${effectiveTokenChainId} (original: ${token.chainId})`,
-            );
-            onClose();
-        }
+    const handleTokenClick = (token: ValidAsset) => {
+        setSelectedInputAsset(token);
+        handleTokenFetch(token, onClose);
     };
 
     const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,8 +155,8 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
         // Get the effective chain ID to ensure proper filtering
         const effectiveNetwork = getEffectiveChainID(selectedNetwork);
 
-        setTokensForChain(
-            uniswapTokens
+        setAssetsForChain(
+            Object.values(validAssets)
                 .filter((t) => t.chainId === effectiveNetwork)
                 .filter(
                     (t) =>
@@ -189,8 +167,8 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && tokensForChain.length > 0) {
-            handleTokenClick(tokensForChain[0]);
+        if (e.key === 'Enter' && assetsForChain.length > 0) {
+            handleTokenClick(assetsForChain[0]);
         }
     };
 
@@ -235,9 +213,9 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                 <ModalBody px={0} py={0} flex='1' display='flex' flexDirection='column' overflow='hidden'>
                     {/* Network Selection */}
                     <Box px={4} pt={3} pb={2}>
-                        <Grid templateColumns='repeat(2, 1fr)' gap={2}>
+                        <Grid templateColumns='repeat(3, 1fr)' gap={2}>
                             {networks
-                                .filter((net) => net.id === 1 || net.id === 8453)
+                                .filter((net) => net.id === 1 || net.id === 8453 || net.id === DEVNET_BASE_CHAIN_ID)
                                 .map((net) => (
                                     <GridItem key={net.id}>
                                         <Center
@@ -259,7 +237,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                                                     : 'none'
                                             }
                                             onClick={() => setSelectedNetwork(net.id)}>
-                                            <Image src={net.logo} alt={net.name} boxSize='32px' borderRadius='full' />
+                                            <NetworkIcon chainId={net.id} width='32' height='32' />
                                         </Center>
                                     </GridItem>
                                 ))}
@@ -309,7 +287,7 @@ const AssetSwapModal: React.FC<AssetSwapModalProps> = ({ isOpen, onClose, onToke
                             '&::-webkit-scrollbar-thumb:hover': { background: 'rgba(255,255,255,0.2)' },
                         }}>
                         <List spacing={0} ref={parent}>
-                            {tokensForChain.map((token) => (
+                            {assetsForChain.map((token) => (
                                 <ListItem
                                     key={`${token.symbol}-${token.address}`}
                                     cursor='pointer'

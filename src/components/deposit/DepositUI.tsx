@@ -114,10 +114,7 @@ export const DepositUI = () => {
     // New token stuff
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAssetSwapModalOpen, setIsAssetSwapModalOpen] = useState(false);
-    const uniswapTokens = useStore((state) => state.uniswapTokens);
-    const selectedUniswapInputAsset = useStore((state) => state.selectedUniswapInputAsset);
-    const setSelectedUniswapInputAsset = useStore((state) => state.setSelectedUniswapInputAsset);
-    const setSelectedInputAsset = useStore((state) => state.setSelectedInputAsset);
+
     const debouncedCoinbaseBtcDepositAmount = useDebounce(coinbaseBtcDepositAmount, 300);
 
     // Use the findAssetByName function for dynamic asset lookups
@@ -395,17 +392,15 @@ export const DepositUI = () => {
 
     // ---------- INITIATE DEPOSIT LOGIC ---------- //
     const initiateDeposit = async () => {
-        // this function ensures user is connected, and switched to the correct chain before proceeding with the deposit attempt
         if (!isConnected) {
-            setIsAwaitingConnection(true);
-            openConnectModal();
+            await openConnectModal();
             return;
         }
 
-        if (chainId !== selectedInputAsset.contractChainID) {
-            console.log('Deposit Switching or adding network');
-            console.log('Deposit current chainId:', chainId);
-            console.log('Deposit target chainId:', selectedInputAsset.contractChainID);
+        if (chainId !== selectedInputAsset.chainId) {
+            console.log('Switching or adding network');
+            console.log('current chainId:', chainId);
+            console.log('Deposit target chainId:', selectedInputAsset.chainId);
             setIsWaitingForCorrectNetwork(true);
 
             const client = createWalletClient({
@@ -413,11 +408,12 @@ export const DepositUI = () => {
             });
 
             // convert chainId to the proper hex format
-            const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
+            const hexChainId = `0x${selectedInputAsset.chainId.toString(16)}`;
 
             // check if the chain is already available in MetaMask
             try {
                 // attempt to switch to the target network
+                console.log('jsh3=Switching to chainId', hexChainId);
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: hexChainId }],
@@ -435,6 +431,7 @@ export const DepositUI = () => {
                         console.log('Deposit Network added successfully');
 
                         // after adding, attempt to switch to the new network
+                        console.log('jsh4=Switching to chainId', hexChainId);
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
                             params: [{ chainId: hexChainId }],
@@ -571,7 +568,6 @@ export const DepositUI = () => {
         proceedWithDepositRef.current = proceedWithDeposit;
     }, [proceedWithDeposit]);
 
-    console.log({ btcPriceUSD, btcOutputAmount, coinbaseBtcPriceUSD });
     // DEPOSIT INPUTS UI
     return (
         <>
@@ -940,6 +936,7 @@ export const DepositUI = () => {
 
                                 {/* BTC Payout Address */}
                                 <Text
+                                    as='div'
                                     ml='8px'
                                     display='flex'
                                     alignItems='center'
@@ -966,6 +963,7 @@ export const DepositUI = () => {
                                         </Flex>
                                     </Tooltip>
                                 </Text>
+
                                 <Flex
                                     mt='-4px'
                                     mb='10px'
@@ -1126,11 +1124,7 @@ export const DepositUI = () => {
                     error={depositLiquidityError}
                     txHash={txHash}
                 />
-                <AssetSwapModal
-                    isOpen={isAssetSwapModalOpen}
-                    onClose={() => setIsAssetSwapModalOpen(false)}
-                    onTokenSelected={setSelectedInputAsset}
-                />
+                <AssetSwapModal isOpen={isAssetSwapModalOpen} onClose={() => setIsAssetSwapModalOpen(false)} />
             </Flex>
         </>
     );

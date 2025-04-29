@@ -1,15 +1,14 @@
-'use client';
-
-import { Box, Text, Image, Flex } from '@chakra-ui/react';
+import { Box, Text, Flex } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import type { TokenMeta } from '../../types';
+import type { ValidAsset } from '../../types';
+import Image from 'next/image';
 
 // Framer Motion wrapper for Chakra UI
 const MotionBox = motion(Box);
 
-const TokenCard = ({ token, onClick }: { token: TokenMeta; onClick: (token: TokenMeta) => void }) => {
+const TokenCard = ({ token, onClick }: { token: ValidAsset; onClick: (token: ValidAsset) => void }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -29,10 +28,13 @@ const TokenCard = ({ token, onClick }: { token: TokenMeta; onClick: (token: Toke
             <Image
                 src={token.logoURI || '/placeholder.svg'}
                 alt={`${token.symbol} token`}
-                boxSize='36px'
-                borderRadius='full'
-                mr={3}
-                bgColor={token.symbol === 'WETH' || token.symbol === 'ETH' ? 'transparent' : 'white'}
+                width={36}
+                height={36}
+                style={{
+                    borderRadius: '50%',
+                    marginRight: '12px',
+                    backgroundColor: token.symbol === 'WETH' || token.symbol === 'ETH' ? 'transparent' : 'white',
+                }}
             />
 
             {/* Token Info */}

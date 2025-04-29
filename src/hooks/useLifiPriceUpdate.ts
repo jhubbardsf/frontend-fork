@@ -1,6 +1,7 @@
 // useLifiPriceUpdater.ts
 import { useQuery } from '@tanstack/react-query';
 import { useStore } from '@/store';
+import type { ValidAsset } from '@/types';
 
 export interface LifiToken {
     chainId: number;
@@ -20,25 +21,32 @@ interface LifiResponse {
 }
 
 /**
- * Fetches the price for a token by its address and updates it in the store
- * @param chainId The chain ID where the token exists
- * @param tokenAddress The token's contract address
+ * Fetches the price for a ValidAsset and updates it in the store
+ * @param asset The ValidAsset to update the price for
  * @returns A promise that resolves to a boolean indicating success or failure
  */
-export const fetchAndUpdatePriceByAddress = async (chainId: number, tokenAddress: string): Promise<boolean> => {
+export const fetchAndUpdateValidAssetPrice = async (asset: ValidAsset): Promise<boolean> => {
+    console.log('fetchAndUpdateValidAssetPrice', asset);
     try {
+        const chainId = asset.chainId;
+        const tokenAddress = asset.tokenAddress || asset.address;
+
+        if (!chainId || !tokenAddress) {
+            return false;
+        }
+
         const price = await fetchTokenPrice(chainId, tokenAddress);
 
         if (price !== null) {
             const store = useStore.getState();
-
-            store.updatePriceUSDByAddress(tokenAddress, price);
-
+            console.log('Updating price for asset', asset.symbol, price);
+            store.updatePriceForAsset(asset, price);
             return true;
         }
 
         return false;
     } catch (error) {
+        console.error('Error updating ValidAsset price:', error);
         return false;
     }
 };
@@ -57,12 +65,17 @@ export const fetchTokenPrice = async (chainId: number, tokenAddress: string): Pr
     }
 };
 
+/**
+ * @deprecated Use fetchTokenPrice or fetchAndUpdateValidAssetPrice instead
+ * This hook is deprecated and will be removed in a future version.
+ */
 export function useLifiPriceUpdater(chainId = 8453) {
     const LIFI_API_URL = `https://li.quest/v1/tokens?chains=${chainId}&chainTypes=EVM`;
-    const updatePriceUSD = useStore((state) => state.updatePriceUSD);
-    const validAssets = useStore.getState().validAssets;
+    const validAssets = useStore((state) => state.validAssets);
+    const findAssetByName = useStore((state) => state.findAssetByName);
+    const updatePriceForAsset = useStore((state) => state.updatePriceForAsset);
 
-    return useQuery<LifiResponse>({
+    return useQuery({
         queryKey: ['lifiTokens', chainId],
         queryFn: async () => {
             const response = await fetch(LIFI_API_URL, {
@@ -74,10 +87,11 @@ export function useLifiPriceUpdater(chainId = 8453) {
                 throw new Error('Network response was not ok');
             }
 
-            const json: LifiResponse = await response.json();
+            const json = (await response.json()) as LifiResponse;
             json.tokens[chainId]?.forEach((token) => {
-                if (validAssets[token.name] && parseFloat(token.priceUSD) > 0) {
-                    updatePriceUSD(token.name, parseFloat(token.priceUSD));
+                const asset = findAssetByName(token.name, chainId);
+                if (asset && parseFloat(token.priceUSD) > 0) {
+                    updatePriceForAsset(asset, parseFloat(token.priceUSD));
                 }
             });
 

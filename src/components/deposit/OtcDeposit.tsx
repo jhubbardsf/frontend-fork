@@ -182,7 +182,7 @@ export const OtcDeposit = ({}) => {
             proceedWithDeposit();
         }
 
-        if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
+        if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.chainId) {
             setIsWaitingForCorrectNetwork(false);
             proceedWithDeposit();
         }
@@ -330,10 +330,10 @@ export const OtcDeposit = ({}) => {
             return;
         }
 
-        if (chainId !== selectedInputAsset.contractChainID) {
+        if (chainId !== selectedInputAsset.chainId) {
             console.log('Switching or adding network');
             console.log('current chainId:', chainId);
-            console.log('target chainId:', selectedInputAsset.contractChainID);
+            console.log('target chainId:', selectedInputAsset.chainId);
             setIsWaitingForCorrectNetwork(true);
 
             const client = createWalletClient({
@@ -341,7 +341,7 @@ export const OtcDeposit = ({}) => {
             });
 
             // convert chainId to the proper hex format
-            const hexChainId = `0x${selectedInputAsset.contractChainID.toString(16)}`;
+            const hexChainId = `0x${selectedInputAsset.chainId.toString(16)}`;
 
             // check if the chain is already available in MetaMask
             try {

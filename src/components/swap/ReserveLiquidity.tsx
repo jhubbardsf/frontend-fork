@@ -118,7 +118,7 @@ export const ReserveLiquidity = ({}) => {
                 proceedWithReservationPayingFeesUsingEth();
             }
 
-            if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.contractChainID) {
+            if (isWaitingForCorrectNetwork && chainId === selectedInputAsset.chainId) {
                 setIsWaitingForCorrectNetwork(false);
                 proceedWithReservationPayingFeesUsingEth();
             }
@@ -133,9 +133,10 @@ export const ReserveLiquidity = ({}) => {
                 return;
             }
 
-            if (chainId !== selectedInputAsset.contractChainID) {
+            if (chainId !== selectedInputAsset.chainId) {
                 setIsWaitingForCorrectNetwork(true);
-                switchChain({ chainId: selectedInputAsset.contractChainID });
+                console.log('jsh=Switching network', selectedInputAsset.chainId);
+                switchChain({ chainId: selectedInputAsset.chainId });
                 return;
             }
             proceedWithReservationPayingFeesUsingEth();
@@ -317,6 +318,14 @@ export const ReserveLiquidity = ({}) => {
                 )}
             </Flex>
         );
+    };
+
+    const handleSwitchNetwork = () => {
+        if (chainId !== selectedInputAsset.chainId) {
+            setIsWaitingForCorrectNetwork(true);
+            console.log('jsh2=Switching to chainId');
+            switchChain({ chainId: selectedInputAsset.chainId });
+        }
     };
 
     return (

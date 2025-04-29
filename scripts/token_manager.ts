@@ -1,8 +1,10 @@
+// scripts/token_manager.ts
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 import crypto from 'crypto';
+1;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -10,6 +12,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TOKEN_LIST_URL = 'https://tokens.uniswap.org/';
 const TEMP_DIR = path.join(__dirname, '..', 'temp_images');
 const COMBINED_JSON_PATH = path.join(__dirname, '..', 'src', 'json', 'tokenData.json');
+
+// Chain IDs
+const BASE_CHAIN_ID = 8453;
+const RIFT_DEVNET_CHAIN_ID = 1337;
 
 // Optimization settings
 const MAX_CONCURRENT_OPERATIONS = 20; // Control parallelism
@@ -289,8 +295,21 @@ async function fetchAndProcessTokens() {
             throw new Error('Invalid token list format');
         }
 
-        // Process all tokens
-        const enhancedTokens = [...tokenList.tokens];
+        // Clone Base tokens to Rift Devnet
+        const baseTokens = tokenList.tokens.filter((token) => token.chainId === BASE_CHAIN_ID);
+        console.log(`Found ${baseTokens.length} tokens from Base (chainId ${BASE_CHAIN_ID})`);
+
+        // Create cloned tokens for Rift Devnet
+        const riftTokens = baseTokens.map((token) => ({
+            ...token,
+            chainId: RIFT_DEVNET_CHAIN_ID,
+        }));
+
+        // Process all tokens including original tokens and cloned tokens for Rift Devnet
+        const enhancedTokens = [...tokenList.tokens, ...riftTokens];
+        console.log(`Added ${riftTokens.length} cloned tokens for Rift Devnet (chainId ${RIFT_DEVNET_CHAIN_ID})`);
+        console.log(`Total tokens to process: ${enhancedTokens.length}`);
+
         const tokenStyleMap = {};
 
         console.log(`Processing ${enhancedTokens.length} tokens with optimized parallel processing...`);
@@ -312,7 +331,9 @@ async function fetchAndProcessTokens() {
             // Update tokens and style map
             for (const result of batchResults) {
                 const { token, style, fromCache } = result;
-                const index = enhancedTokens.findIndex((t) => t.address === token.address && t.symbol === token.symbol);
+                const index = enhancedTokens.findIndex(
+                    (t) => t.address === token.address && t.symbol === token.symbol && t.chainId === token.chainId,
+                );
 
                 if (index !== -1) {
                     enhancedTokens[index] = {
@@ -320,10 +341,10 @@ async function fetchAndProcessTokens() {
                         style,
                     };
 
-                    // Create keys for the style map
-                    const mainKey = `${token.address}-${token.symbol}`;
+                    // Create keys for the style map - include chainId for uniqueness
+                    const mainKey = `${token.chainId}-${token.address}-${token.symbol}`;
                     tokenStyleMap[mainKey] = style;
-                    tokenStyleMap[token.symbol] = style;
+                    tokenStyleMap[`${token.chainId}-${token.symbol}`] = style;
 
                     processedCount++;
                     if (fromCache) cacheHits++;
