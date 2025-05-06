@@ -215,7 +215,7 @@ const Home = () => {
                                                 },
                                             },
                                             interactivity: {
-                                                detect_on: 'canvas',
+                                                detect_on: 'window',
                                                 events: {
                                                     onhover: {
                                                         enable: true,

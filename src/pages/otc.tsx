@@ -36,7 +36,7 @@ const Home = () => {
 
     useEffect(() => {
         setSwapFlowState('0-not-started');
-        setDepositFlowState('1-confirm-deposit');
+        setDepositFlowState('0-not-started');
         setCoinbaseBtcDepositAmount('');
         setBtcInputSwapAmount('');
         setBtcOutputAmount('');

@@ -201,10 +201,10 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        const { swaps: rawSwaps, status } = await getSwapsForAddress(selectedInputAsset.dataEngineUrl, {
-            address: address,
-            page: 0,
-        });
+
+        const swaps = [];
+        const rawSwaps = [];
+        const status = 'loading';
 
         setUserSwapsLoadingState(status);
 
