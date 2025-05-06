@@ -119,6 +119,28 @@ function MyApp({ Component, pageProps }: AppProps) {
         }
     }, []);
 
+    // Add particles.js initialization
+    useEffect(() => {
+        // Check if window is defined (to avoid SSR issues)
+        if (typeof window !== 'undefined') {
+            // Dynamically import particles.js
+            const loadParticles = async () => {
+                try {
+                    // @ts-ignore
+                    await import('./particles.js');
+                    // @ts-ignore
+                    window.particlesJS.load('particles-js', '/assets/particles.json', function () {
+                        console.log('callback - particles.js config loaded');
+                    });
+                } catch (error) {
+                    console.error('Failed to load particles.js:', error);
+                }
+            };
+
+            loadParticles();
+        }
+    }, []);
+
     // TODO: The offline error is here
     // const setIsOnline = useStore((state) => state.setIsOnline);
 
@@ -145,6 +167,17 @@ function MyApp({ Component, pageProps }: AppProps) {
                 <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
                     <ChakraProvider theme={theme}>
                         <ContractDataProvider>
+                            {/* Add particles container */}
+                            <div
+                                id='particles-js'
+                                style={{
+                                    position: 'fixed',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    zIndex: -1,
+                                }}></div>
                             {/* <title>Rift Hyperbridge - </title> */}
                             <Component {...pageProps} />
                             <Toaster

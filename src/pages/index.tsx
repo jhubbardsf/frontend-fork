@@ -1,19 +1,27 @@
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { Flex, Spacer, Text, Box } from '@chakra-ui/react';
+import { Flex, Spacer, Text, Box, Spinner } from '@chakra-ui/react';
 import { Navbar } from '../components/nav/Navbar';
 import { colors } from '../utils/colors';
 import { OpenGraph } from '../components/background/OpenGraph';
 import { FONT_FAMILIES } from '../utils/font';
 import BlueText from '../components/other/BlueText';
 import OrangeText from '../components/other/OrangeText';
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useStore } from '../store';
 import { SwapContainer } from '../components/swap/SwapContainer';
 import { DepositUI } from '../components/deposit/DepositUI';
 import { ReserveLiquidityContainer } from '../components/swap/ReserveLiquidityContainer';
 import CurrencyModal from '../components/swap/CurrencyModal';
 import OfflinePage from '../components/background/OfflinePage';
+import { opaqueBackgroundColor } from '../utils/constants';
+import { SwapAmounts } from '../components/swap/SwapAmounts';
+import { AssetTag } from '../components/other/AssetTag';
+import { MdArrowRight } from 'react-icons/md';
+import { DummySwapAmounts } from '../components/other/DummySwapAmoutns';
+import Particles from 'react-tsparticles';
+import { loadSlim } from 'tsparticles-slim';
+import type { Engine } from 'tsparticles-engine';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -34,17 +42,41 @@ const Home = () => {
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const depositMode = useStore((state) => state.depositMode);
 
+    const [auctionStep, setAuctionStep] = useState(0);
+
     useEffect(() => {
         setSwapFlowState('0-not-started');
-        setDepositFlowState('0-not-started');
+        // setDepositFlowState('0-not-started');
         setCoinbaseBtcDepositAmount('');
         setBtcInputSwapAmount('');
         setBtcOutputAmount('');
     }, []);
 
+    useEffect(() => {
+        if (depositFlowState === '1-finding-liquidity') {
+            const auctionSteps = [
+                'initializing market maker auction...',
+                'broadcasting request to liquidity providers...',
+                'collecting price quotes...',
+                'comparing rates across providers...',
+                'finalizing optimal execution path...',
+            ];
+
+            const interval = setInterval(() => {
+                setAuctionStep((prev) => (prev + 1) % auctionSteps.length);
+            }, 3000);
+
+            return () => clearInterval(interval);
+        }
+    }, [depositFlowState]);
+
+    const particlesInit = useCallback(async (engine: Engine) => {
+        await loadSlim(engine);
+    }, []);
+
     const RiftSVG = () => {
         return (
-            <svg width={isTablet ? '50' : '90'} height={isTablet ? '30' : '40'} viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
+            <svg width={isTablet ? '50' : '250'} height={isTablet ? '30' : '40'} viewBox='0 0 2293 547' fill='none' xmlns='http://www.w3.org/2000/svg'>
                 <path
                     fillRule='evenodd'
                     clipRule='evenodd'
@@ -62,68 +94,221 @@ const Home = () => {
             <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' mt={swapFlowState === '0-not-started' ? '15vh' : '100px'}>
-                    {swapFlowState != '0-not-started' ? (
-                        <ReserveLiquidityContainer />
-                    ) : (
-                        // {/* LOGOS & TEXT */}
+                    {depositFlowState === '0-not-started' && (
+                        // 0 - MAIN SWAP UI
                         <>
-                            {depositFlowState === '0-not-started' && (
-                                <>
-                                    <RiftSVG />
-                                    <Flex
-                                        userSelect={'none'}
-                                        cursor={'default'}
-                                        sx={{
-                                            WebkitTextFillColor: 'transparent',
-                                            backgroundClip: 'text',
-                                            WebkitBackgroundClip: 'text',
-                                        }}
-                                        bgGradient={`linear(90deg, #394AFF, #FF8F28)`}
-                                        letterSpacing={isTablet ? '1px' : '2px'}
-                                        fontSize={isMobile ? '44px' : isTablet ? '60px' : '106px'}
-                                        fontFamily={'Klein'}
-                                        fontWeight='bold'
-                                        mt={isTablet ? '-18px' : '-25px'}>
-                                        <Text px='12px' as='h1'>
-                                            HyperBrid
-                                        </Text>
-                                        <Text ml={isTablet ? '-18px' : '-20px'} as='h1'>
-                                            ge
-                                        </Text>
-                                    </Flex>
+                            <Flex mt='15px'></Flex>
+                            <RiftSVG />
 
-                                    <Flex
-                                        flexDir={'column'}
-                                        textAlign={'center'}
-                                        userSelect={'none'}
-                                        fontSize={isTablet ? '12px' : '15px'}
-                                        mt={'8px'}
-                                        fontFamily={FONT_FAMILIES.AUX_MONO}
-                                        color={'#c3c3c3'}
-                                        cursor={'default'}
-                                        fontWeight={'normal'}
-                                        gap={'0px'}>
-                                        <Text>
-                                            The first trustless <OrangeText>Bitcoin</OrangeText> exchange
-                                        </Text>
-                                        <Text>
-                                            See{' '}
-                                            <Box
-                                                as='span'
-                                                // go to https://rift.exchange
-                                                onClick={() => (window.location.href = 'https://rift.exchange')}
-                                                style={{
-                                                    textDecoration: 'underline',
-                                                    cursor: 'pointer !important',
-                                                }}
-                                                fontWeight={'bold'}>
-                                                how it works
-                                            </Box>
+                            <Flex
+                                flexDir={'column'}
+                                textAlign={'center'}
+                                userSelect={'none'}
+                                fontSize={isTablet ? '12px' : '15px'}
+                                mt={'18px'}
+                                fontFamily={FONT_FAMILIES.AUX_MONO}
+                                color={'#c3c3c3'}
+                                cursor={'default'}
+                                fontWeight={'normal'}
+                                gap={'0px'}>
+                                <Text mt='15px'>
+                                    The first trustless <OrangeText>Bitcoin</OrangeText> exchange. See{' '}
+                                    <Box
+                                        as='span'
+                                        // go to https://rift.exchange
+                                        onClick={() => (window.location.href = 'https://rift.exchange')}
+                                        style={{
+                                            textDecoration: 'underline',
+                                            cursor: 'pointer !important',
+                                        }}
+                                        fontWeight={'bold'}>
+                                        how it works
+                                    </Box>
+                                </Text>
+                            </Flex>
+                            <SwapContainer />
+                        </>
+                    )}
+                    {depositFlowState === '1-finding-liquidity' && (
+                        // 1 - FINDING LIQUIDITY UI
+                        <>
+                            <DummySwapAmounts />
+                            <Flex
+                                direction='column'
+                                align='center'
+                                mt={'30px'}
+                                py={isMobile ? '20px' : '27px'}
+                                w={isMobile ? '100%' : '950px'}
+                                h='480px'
+                                borderRadius='40px'
+                                boxShadow='0px -1px 33.5px rgba(255, 160, 76, 0.46)'
+                                {...opaqueBackgroundColor}
+                                borderBottom={'2px solid #FFA04C'}
+                                borderLeft={'2px solid #FFA04C'}
+                                borderTop={'2px solid #FFA04C'}
+                                borderRight={'2px solid #FFA04C'}
+                                position='relative'
+                                justifyContent={'center'}
+                                overflow='hidden'>
+                                <Flex w='90%' direction={'column'} alignItems={'center'}>
+                                    <Flex align='center' justify='center' gap='15px'>
+                                        <Spinner color='#FFA04C' width='16px' height='16px' borderRadius={'200px'} thickness='3px' mt='-2px' speed='0.85s' position='relative' zIndex='1' />
+                                        <Text fontSize={'26px'} color={'#fff'} fontWeight={'bold'} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                            SEARCHING FOR the best price...
                                         </Text>
                                     </Flex>
-                                </>
-                            )}
-                            <SwapContainer />
+                                    <Text fontSize={'15px'} color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'} mt='10px' letterSpacing={'-1px'}>
+                                        {auctionStep === 0 && 'initializing market maker auction...'}
+                                        {auctionStep === 1 && 'broadcasting request to liquidity providers...'}
+                                        {auctionStep === 2 && 'collecting price quotes...'}
+                                        {auctionStep === 3 && 'comparing rates across providers...'}
+                                        {auctionStep === 4 && 'finalizing optimal execution path...'}
+                                    </Text>
+
+                                    {/* ADD PARTICLES HERE */}
+                                    <Particles
+                                        id='tsparticles'
+                                        init={particlesInit}
+                                        options={{
+                                            background: {
+                                                color: {
+                                                    value: 'transparent',
+                                                },
+                                            },
+                                            fpsLimit: 120,
+                                            particles: {
+                                                color: {
+                                                    value: '#FFA04C',
+                                                },
+                                                links: {
+                                                    color: '#FFA04C',
+                                                    distance: 150,
+                                                    enable: true,
+                                                    opacity: 0.8,
+                                                    width: 1,
+                                                },
+                                                move: {
+                                                    direction: 'none',
+                                                    enable: true,
+                                                    outModes: {
+                                                        default: 'bounce',
+                                                    },
+                                                    random: false,
+                                                    speed: 3,
+                                                    straight: false,
+                                                },
+                                                number: {
+                                                    density: {
+                                                        enable: true,
+                                                        area: 700,
+                                                    },
+                                                    value: 80,
+                                                },
+                                                opacity: {
+                                                    value: 0.8,
+                                                },
+                                                shape: {
+                                                    type: 'circle',
+                                                },
+                                                size: {
+                                                    value: { min: 0.8, max: 6 },
+                                                },
+                                            },
+                                            interactivity: {
+                                                detect_on: 'canvas',
+                                                events: {
+                                                    onhover: {
+                                                        enable: true,
+                                                        mode: 'grab',
+                                                    },
+                                                    onclick: {
+                                                        enable: true,
+                                                        mode: 'push',
+                                                    },
+                                                    resize: true,
+                                                },
+                                                modes: {
+                                                    grab: {
+                                                        distance: 200,
+                                                        line_linked: {
+                                                            opacity: 1,
+                                                        },
+                                                    },
+                                                    bubble: {
+                                                        distance: 400,
+                                                        size: 40,
+                                                        duration: 2,
+                                                        opacity: 8,
+                                                        speed: 3,
+                                                    },
+                                                    push: {
+                                                        particles_nb: 4,
+                                                    },
+                                                    remove: {
+                                                        particles_nb: 2,
+                                                    },
+                                                },
+                                            },
+                                            detectRetina: true,
+                                        }}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                        }}
+                                    />
+                                </Flex>
+                            </Flex>
+                        </>
+                    )}
+                    {depositFlowState === '2-awaiting-payment' && (
+                        // 2 - AWAITING PAYMENT UI
+                        <>
+                            <DummySwapAmounts />
+                            <Flex
+                                direction='column'
+                                align='center'
+                                mt={'30px'}
+                                py={isMobile ? '20px' : '27px'}
+                                w={isMobile ? '100%' : '950px'}
+                                h='480px'
+                                borderRadius='40px'
+                                boxShadow='0px -1px 33.5px rgba(255, 160, 76, 0.46)'
+                                {...opaqueBackgroundColor}
+                                borderBottom={'2px solid #FFA04C'}
+                                borderLeft={'2px solid #FFA04C'}
+                                borderTop={'2px solid #FFA04C'}
+                                borderRight={'2px solid #FFA04C'}>
+                                <Flex w='90%' direction={'column'} justifyContent={'center'} alignItems={'center'}>
+                                    <Text align={'center'}>Awaiting payment...</Text>
+                                </Flex>
+                            </Flex>
+                        </>
+                    )}
+                    {depositFlowState === '3-payment-recieved' && (
+                        // 3 - PAYMENT RECIEVED UI
+                        <>
+                            <DummySwapAmounts />
+                            <Flex
+                                direction='column'
+                                align='center'
+                                mt={'30px'}
+                                py={isMobile ? '20px' : '27px'}
+                                w={isMobile ? '100%' : '950px'}
+                                h='480px'
+                                borderRadius='40px'
+                                boxShadow='0px -1px 33.5px rgba(255, 160, 76, 0.46)'
+                                {...opaqueBackgroundColor}
+                                borderBottom={'2px solid #FFA04C'}
+                                borderLeft={'2px solid #FFA04C'}
+                                borderTop={'2px solid #FFA04C'}
+                                borderRight={'2px solid #FFA04C'}>
+                                <Flex w='90%' direction={'column'} justifyContent={'center'} alignItems={'center'}>
+                                    <Text align={'center'}>Payment received!</Text>
+                                </Flex>
+                            </Flex>
                         </>
                     )}
                 </Flex>

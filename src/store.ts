@@ -66,8 +66,8 @@ type Store = {
     // swap flow
     swapFlowState: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired';
     setSwapFlowState: (state: '0-not-started' | '1-reserve-liquidity' | '2-send-bitcoin' | '3-receive-evm-token' | '4-completed' | '5-expired') => void;
-    depositFlowState: '0-not-started' | '1-confirm-deposit';
-    setDepositFlowState: (state: '0-not-started' | '1-confirm-deposit') => void;
+    depositFlowState: '0-not-started' | '1-finding-liquidity' | '2-awaiting-payment' | '3-payment-recieved';
+    setDepositFlowState: (state: '0-not-started' | '1-finding-liquidity' | '2-awaiting-payment' | '3-payment-recieved') => void;
     btcInputSwapAmount: string;
     setBtcInputSwapAmount: (amount: string) => void;
     coinbaseBtcDepositAmount: string;
