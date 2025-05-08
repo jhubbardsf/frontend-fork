@@ -214,7 +214,7 @@ export const Navbar = ({}) => {
                 <Spacer />
                 <Flex mb='-5px' pr='5px' alignItems='center' gap='10px'>
                     {isLocalhost && (
-                        <Flex zIndex={1000} alignItems='center' bg={colors.offBlack} borderRadius='6px' p='5px 10px' borderWidth='1px' borderColor={colors.textGray}>
+                        <Flex userSelect={'none'} zIndex={1000} alignItems='center' bg={colors.offBlack} borderRadius='6px' p='5px 10px' borderWidth='1px' borderColor={colors.textGray}>
                             <Box
                                 as={IoChevronBack}
                                 color={colors.textGray}
@@ -228,7 +228,7 @@ export const Navbar = ({}) => {
                                     }
                                 }}
                             />
-                            <Text mx='10px' color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                            <Text mx='10px' userSelect={'none'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO}>
                                 {depositFlowState}
                             </Text>
                             <Box

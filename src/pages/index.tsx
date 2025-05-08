@@ -22,6 +22,7 @@ import { DummySwapAmounts } from '../components/other/DummySwapAmoutns';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
 import type { Engine } from 'tsparticles-engine';
+import { useRive, Layout, Fit, Alignment, useStateMachineInput } from '@rive-app/react-canvas';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -41,8 +42,20 @@ const Home = () => {
     const btcOutputAmount = useStore((state) => state.btcOutputAmount);
     const setBtcOutputAmount = useStore((state) => state.setBtcOutputAmount);
     const depositMode = useStore((state) => state.depositMode);
+    const { isLaptop, isSmallMobile, windowSize, isLargeDesktop } = useWindowSize();
 
     const [auctionStep, setAuctionStep] = useState(0);
+
+    const animationURL = '/rift.riv';
+    const { rive, RiveComponent } = useRive({
+        src: animationURL,
+        stateMachines: 'State Machine 1',
+        layout: new Layout({
+            fit: Fit.Cover,
+            alignment: Alignment.Center,
+        }),
+        autoplay: true,
+    });
 
     useEffect(() => {
         setSwapFlowState('0-not-started');
@@ -132,12 +145,12 @@ const Home = () => {
                     {depositFlowState === '1-finding-liquidity' && (
                         // 1 - FINDING LIQUIDITY UI
                         <>
+                            <Flex mt='20px'></Flex>
                             <DummySwapAmounts />
                             <Flex
                                 direction='column'
                                 align='center'
                                 mt={'30px'}
-                                py={isMobile ? '20px' : '27px'}
                                 w={isMobile ? '100%' : '950px'}
                                 h='480px'
                                 borderRadius='40px'
@@ -150,116 +163,125 @@ const Home = () => {
                                 position='relative'
                                 justifyContent={'center'}
                                 overflow='hidden'>
-                                <Flex w='90%' direction={'column'} alignItems={'center'}>
-                                    <Flex align='center' justify='center' gap='15px'>
-                                        <Spinner color='#FFA04C' width='16px' height='16px' borderRadius={'200px'} thickness='3px' mt='-2px' speed='0.85s' position='relative' zIndex='1' />
-                                        <Text fontSize={'26px'} color={'#fff'} fontWeight={'bold'} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                <Flex w='90%' direction={'column'} alignItems={'center'} zIndex='1'>
+                                    <Text
+                                        fontSize={'12px'}
+                                        color={'#aaa'}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                                        fontWeight={'normal'}
+                                        letterSpacing={'-1.5px'}
+                                        textShadow='0px 2px 4px rgba(0, 0, 0, 0.7)'>
+                                        ~ 20 seconds remaining
+                                    </Text>
+
+                                    <Flex align='center' justify='center'>
+                                        <Spinner color='#FFA04C' width='16px' height='16px' borderRadius={'200px'} thickness='3px' mr='10px' mt='-2px' speed='0.85s' position='relative' zIndex='1' />
+                                        <Text fontSize={'32px'} color={'#fff'} fontWeight={'bold'} fontFamily={FONT_FAMILIES.NOSTROMO} textShadow='0px 0px 4px rgba(150, 150, 150, 0.8)'>
                                             SEARCHING FOR the best price...
                                         </Text>
                                     </Flex>
-                                    <Text fontSize={'15px'} color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'} mt='10px' letterSpacing={'-1px'}>
+                                    <Text fontSize={'12px'} color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'} letterSpacing={'-1px'} textShadow='0px 2px 4px rgba(0, 0, 0, 0.7)'>
                                         {auctionStep === 0 && 'initializing market maker auction...'}
                                         {auctionStep === 1 && 'broadcasting request to liquidity providers...'}
                                         {auctionStep === 2 && 'collecting price quotes...'}
                                         {auctionStep === 3 && 'comparing rates across providers...'}
                                         {auctionStep === 4 && 'finalizing optimal execution path...'}
                                     </Text>
-
-                                    {/* ADD PARTICLES HERE */}
-                                    <Particles
-                                        id='tsparticles'
-                                        init={particlesInit}
-                                        options={{
-                                            background: {
-                                                color: {
-                                                    value: 'transparent',
-                                                },
-                                            },
-                                            fpsLimit: 120,
-                                            particles: {
-                                                color: {
-                                                    value: '#FFA04C',
-                                                },
-                                                links: {
-                                                    color: '#FFA04C',
-                                                    distance: 150,
-                                                    enable: true,
-                                                    opacity: 0.8,
-                                                    width: 1,
-                                                },
-                                                move: {
-                                                    direction: 'none',
-                                                    enable: true,
-                                                    outModes: {
-                                                        default: 'bounce',
-                                                    },
-                                                    random: false,
-                                                    speed: 3,
-                                                    straight: false,
-                                                },
-                                                number: {
-                                                    density: {
-                                                        enable: true,
-                                                        area: 700,
-                                                    },
-                                                    value: 80,
-                                                },
-                                                opacity: {
-                                                    value: 0.8,
-                                                },
-                                                shape: {
-                                                    type: 'circle',
-                                                },
-                                                size: {
-                                                    value: { min: 0.8, max: 6 },
-                                                },
-                                            },
-                                            interactivity: {
-                                                detect_on: 'window',
-                                                events: {
-                                                    onhover: {
-                                                        enable: true,
-                                                        mode: 'grab',
-                                                    },
-                                                    onclick: {
-                                                        enable: true,
-                                                        mode: 'push',
-                                                    },
-                                                    resize: true,
-                                                },
-                                                modes: {
-                                                    grab: {
-                                                        distance: 200,
-                                                        line_linked: {
-                                                            opacity: 1,
-                                                        },
-                                                    },
-                                                    bubble: {
-                                                        distance: 400,
-                                                        size: 40,
-                                                        duration: 2,
-                                                        opacity: 8,
-                                                        speed: 3,
-                                                    },
-                                                    push: {
-                                                        particles_nb: 4,
-                                                    },
-                                                    remove: {
-                                                        particles_nb: 2,
-                                                    },
-                                                },
-                                            },
-                                            detectRetina: true,
-                                        }}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                        }}
-                                    />
                                 </Flex>
+                                <Particles
+                                    id='tsparticles'
+                                    init={particlesInit}
+                                    options={{
+                                        background: {
+                                            color: {
+                                                value: 'transparent',
+                                            },
+                                        },
+                                        fpsLimit: 120,
+                                        particles: {
+                                            color: {
+                                                value: '#FFA04C',
+                                            },
+                                            links: {
+                                                color: '#FFA04C',
+                                                distance: 150,
+                                                enable: true,
+                                                opacity: 0.8,
+                                                width: 1,
+                                            },
+                                            move: {
+                                                direction: 'none',
+                                                enable: true,
+                                                outModes: {
+                                                    default: 'bounce',
+                                                },
+                                                random: false,
+                                                speed: 3,
+                                                straight: false,
+                                            },
+                                            number: {
+                                                density: {
+                                                    enable: true,
+                                                    area: 700,
+                                                },
+                                                value: 80,
+                                            },
+                                            opacity: {
+                                                value: 0.8,
+                                            },
+                                            shape: {
+                                                type: 'circle',
+                                            },
+                                            size: {
+                                                value: { min: 0.8, max: 6 },
+                                            },
+                                        },
+                                        interactivity: {
+                                            detect_on: 'window',
+                                            events: {
+                                                onhover: {
+                                                    enable: true,
+                                                    mode: 'grab',
+                                                },
+                                                onclick: {
+                                                    enable: true,
+                                                    mode: 'push',
+                                                },
+                                                resize: true,
+                                            },
+                                            modes: {
+                                                grab: {
+                                                    distance: 200,
+                                                    line_linked: {
+                                                        opacity: 1,
+                                                    },
+                                                },
+                                                bubble: {
+                                                    distance: 400,
+                                                    size: 40,
+                                                    duration: 2,
+                                                    opacity: 8,
+                                                    speed: 3,
+                                                },
+                                                push: {
+                                                    particles_nb: 4,
+                                                },
+                                                remove: {
+                                                    particles_nb: 2,
+                                                },
+                                            },
+                                        },
+                                        detectRetina: true,
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        zIndex: -1,
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                    }}
+                                />
                             </Flex>
                         </>
                     )}
@@ -276,13 +298,35 @@ const Home = () => {
                                 h='480px'
                                 borderRadius='40px'
                                 boxShadow='0px -1px 33.5px rgba(255, 160, 76, 0.46)'
-                                {...opaqueBackgroundColor}
+                                bg={'#000'}
+                                overflow={'hidden'}
                                 borderBottom={'2px solid #FFA04C'}
                                 borderLeft={'2px solid #FFA04C'}
                                 borderTop={'2px solid #FFA04C'}
                                 borderRight={'2px solid #FFA04C'}>
-                                <Flex w='90%' direction={'column'} justifyContent={'center'} alignItems={'center'}>
-                                    <Text align={'center'}>Awaiting payment...</Text>
+                                <Flex w='100%' h='100%' mt='-80px' justifyContent={'center'} alignItems={'center'} overflow={'clip'}>
+                                    <RiveComponent />
+                                </Flex>
+                                <Flex w='90%' direction={'column'} alignItems={'center'} mt='-20px' zIndex='1'>
+                                    <Text
+                                        fontSize={'12px'}
+                                        color={'#aaa'}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                                        fontWeight={'normal'}
+                                        letterSpacing={'-1.5px'}
+                                        textShadow='0px 2px 4px rgba(0, 0, 0, 0.7)'>
+                                        ~ 10 seconds remaining
+                                    </Text>
+
+                                    <Flex align='center' justify='center'>
+                                        {/* <Spinner color='#FFA04C' width='16px' height='16px' borderRadius={'200px'} thickness='3px' mr='10px' mt='-2px' speed='0.85s' position='relative' zIndex='1' /> */}
+                                        <Text fontSize={'30px'} color={'#fff'} fontWeight={'bold'} fontFamily={FONT_FAMILIES.NOSTROMO} textShadow='0px 0px 4px rgba(150, 150, 150, 0.8)'>
+                                            TRANSFERRING ASSETS TO YOUR WALLET...
+                                        </Text>
+                                    </Flex>
+                                    <Text fontSize={'12px'} color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} fontWeight={'normal'} letterSpacing={'-1px'} textShadow='0px 2px 4px rgba(0, 0, 0, 0.7)'>
+                                        We found you the best price! Assets are being transferred to your wallet...
+                                    </Text>
                                 </Flex>
                             </Flex>
                         </>
