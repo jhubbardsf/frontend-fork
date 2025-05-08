@@ -134,7 +134,7 @@ export const Navbar = ({}) => {
     if (isMobile) return null;
 
     return (
-        <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
+        <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1010}>
             <Flex bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))' position='absolute' w='100%' h='130%'></Flex>
             {displayWarning == true && (
                 <>

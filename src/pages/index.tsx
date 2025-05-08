@@ -1,6 +1,6 @@
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { Flex, Spacer, Text, Box, Spinner } from '@chakra-ui/react';
+import { Flex, Spacer, Text, Box, Spinner, Button } from '@chakra-ui/react';
 import { Navbar } from '../components/nav/Navbar';
 import { colors } from '../utils/colors';
 import { OpenGraph } from '../components/background/OpenGraph';
@@ -23,6 +23,11 @@ import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
 import type { Engine } from 'tsparticles-engine';
 import { useRive, Layout, Fit, Alignment, useStateMachineInput } from '@rive-app/react-canvas';
+import { IoIosCheckmarkCircle } from 'react-icons/io';
+import { BsCheckCircleFill } from 'react-icons/bs';
+import { LuCopy } from 'react-icons/lu';
+import { BTC_Logo } from '../components/other/SVGs';
+import { HiOutlineExternalLink } from 'react-icons/hi';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -52,6 +57,17 @@ const Home = () => {
         stateMachines: 'State Machine 1',
         layout: new Layout({
             fit: Fit.Cover,
+            alignment: Alignment.Center,
+        }),
+        autoplay: true,
+    });
+
+    const orangeButtonURL = '/orange_button.riv';
+    const { rive: orangeButtonRive, RiveComponent: OrangeButtonRiveComponent } = useRive({
+        src: orangeButtonURL,
+        stateMachines: 'State Machine 1',
+        layout: new Layout({
+            fit: Fit.Contain,
             alignment: Alignment.Center,
         }),
         autoplay: true,
@@ -145,7 +161,7 @@ const Home = () => {
                     {depositFlowState === '1-finding-liquidity' && (
                         // 1 - FINDING LIQUIDITY UI
                         <>
-                            <Flex mt='20px'></Flex>
+                            {/* <Flex mt='20px'></Flex> */}
                             <DummySwapAmounts />
                             <Flex
                                 direction='column'
@@ -349,8 +365,191 @@ const Home = () => {
                                 borderLeft={'2px solid #FFA04C'}
                                 borderTop={'2px solid #FFA04C'}
                                 borderRight={'2px solid #FFA04C'}>
-                                <Flex w='90%' direction={'column'} justifyContent={'center'} alignItems={'center'}>
-                                    <Text align={'center'}>Payment received!</Text>
+                                <Flex w='80%' h='100%' ml='60px' mt='-19px' justifyContent={'center'} alignItems={'center'} position='absolute' overflow={'clip'}>
+                                    <OrangeButtonRiveComponent />
+                                </Flex>
+
+                                <Flex w='90%' direction={'row'} justifyContent={'center'} alignItems={'center'}>
+                                    <Flex mt='-2px' mr='10px'>
+                                        <BsCheckCircleFill
+                                            size={29}
+                                            color={'#FFA04C'}
+                                            style={{
+                                                filter: 'drop-shadow(0px 0px 4.968px rgba(247, 147, 26, 0.43))',
+                                                fill: 'url(#orangeGradient)',
+                                            }}
+                                        />
+                                        <svg width='0' height='0'>
+                                            <defs>
+                                                <linearGradient id='orangeGradient' x1='0%' y1='0%' x2='0%' y2='100%'>
+                                                    <stop offset='0%' stopColor='#FFA74A' />
+                                                    <stop offset='100%' stopColor='#EF761A' />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                    </Flex>
+                                    <Text fontSize={'32px'} align={'center'}>
+                                        Payment received!
+                                    </Text>
+                                </Flex>
+                                <Flex w='70%' direction={'column'} alignItems={'center'} mt='4px' zIndex='1'>
+                                    <Text
+                                        fontSize={'12.25px'}
+                                        color={'#aaa'}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}
+                                        fontWeight={'normal'}
+                                        letterSpacing={'-1px'}
+                                        textShadow='0px 2px 4px rgba(0, 0, 0, 0.7)'>
+                                        Bitcoin has been sent to your wallet and should shortly!
+                                    </Text>
+                                </Flex>
+
+                                {/* PAYMENT DETAILS */}
+                                <Flex w='89%' direction={'row'} justifyContent={'space-between'} alignItems={'center'} mt='55px'>
+                                    <Flex direction={'column'} w='29.5%'>
+                                        <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
+                                            Status
+                                        </Text>
+                                        <Button
+                                            w='100%'
+                                            borderRadius={'10px'}
+                                            px='17px'
+                                            py='19px'
+                                            fontSize={'15px'}
+                                            fontWeight={'normal'}
+                                            justifyContent={'flex-start'}
+                                            onClick={() => window.open('https://mempool.space/tx/b3f89c0729bb16636af6bca2a0d0965e8b32663e9d091067e24f52a73d70e869', '_blank')}
+                                            letterSpacing={'-1.5px'}
+                                            fontFamily={FONT_FAMILIES.AUX_MONO}
+                                            border='2px solid #555'
+                                            background='linear-gradient(0deg, rgba(97, 97, 97, 0.25) 0%, rgba(0, 0, 0, 0.12) 100%)'
+                                            boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'
+                                            color='white'>
+                                            2 Block Confirmations
+                                        </Button>
+                                    </Flex>
+
+                                    <Flex direction={'column'} w='68%'>
+                                        <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
+                                            Your Address{' '}
+                                        </Text>
+                                        <Button
+                                            w='100%'
+                                            borderRadius={'10px'}
+                                            px='17px'
+                                            py='19px'
+                                            fontSize={'15px'}
+                                            onClick={() => window.open('https://mempool.space/tx/b3f89c0729bb16636af6bca2a0d0965e8b32663e9d091067e24f52a73d70e869', '_blank')}
+                                            fontWeight={'normal'}
+                                            letterSpacing={'-1.5px'}
+                                            fontFamily={FONT_FAMILIES.AUX_MONO}
+                                            border='2px solid #FF9E38'
+                                            background='linear-gradient(0deg, rgba(242, 119, 31, 0.16) 0%, rgba(111, 44, 15, 0.12) 100%)'
+                                            boxShadow='0px 2.566px 23.096px 3.208px rgba(254, 157, 56, 0.29)'
+                                            backdropFilter='blur(32.00636672973633px)'
+                                            color='white'>
+                                            <Flex w='100%' justifyContent='space-between' alignItems='center'>
+                                                <Text>bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</Text>
+
+                                                <LuCopy color='gray' />
+                                            </Flex>
+                                        </Button>
+                                    </Flex>
+                                </Flex>
+
+                                <Flex w='89%' direction={'row'} justifyContent={'space-between'} alignItems={'center'} mt='25px'>
+                                    <Flex direction={'column'} w='64%'>
+                                        <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
+                                            TXN HASH
+                                        </Text>
+                                        <Button
+                                            w='100%'
+                                            borderRadius={'10px'}
+                                            px='17px'
+                                            py='19px'
+                                            fontSize={'15px'}
+                                            fontWeight={'normal'}
+                                            letterSpacing={'-1.5px'}
+                                            fontFamily={FONT_FAMILIES.AUX_MONO}
+                                            border='2px solid #555'
+                                            background='linear-gradient(0deg, rgba(97, 97, 97, 0.25) 0%, rgba(0, 0, 0, 0.12) 100%)'
+                                            boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'
+                                            color='white'>
+                                            <Flex w='100%' justifyContent='space-between' alignItems='center'>
+                                                <Text>0cabaa52f2c2eb87d68f49b9a...40a1ddeffd296f34ca8b9c201</Text>
+
+                                                <LuCopy color='gray' />
+                                            </Flex>
+                                        </Button>
+                                    </Flex>
+                                    <Flex direction={'column'} w='33.5%'>
+                                        <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
+                                            BALANCE
+                                        </Text>
+
+                                        <Button
+                                            w='100%'
+                                            borderRadius={'10px'}
+                                            px='17px'
+                                            py='19px'
+                                            fontSize={'15px'}
+                                            fontWeight={'normal'}
+                                            letterSpacing={'-1.5px'}
+                                            fontFamily={FONT_FAMILIES.AUX_MONO}
+                                            border='2px solid #FF9E38'
+                                            background='linear-gradient(0deg, rgba(242, 119, 31, 0.16) 0%, rgba(111, 44, 15, 0.12) 100%)'
+                                            boxShadow='0px 2.566px 23.096px 3.208px rgba(254, 157, 56, 0.29)'
+                                            backdropFilter='blur(32.00636672973633px)'
+                                            color='white'>
+                                            <Flex w='100%' alignItems='center'>
+                                                <BTC_Logo width={'19px'} height={'19px'} />
+                                                <Text ml='8px' letterSpacing={'-1.5px'} fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'16px'} fontWeight={'normal'}>
+                                                    1.20240252
+                                                </Text>
+                                                <Spacer />
+                                                <Text ml='15px' fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'13px'} fontWeight={'normal'} color={'#999'}>
+                                                    $121,355.63
+                                                </Text>
+                                            </Flex>{' '}
+                                        </Button>
+                                    </Flex>
+                                </Flex>
+                                <Flex mt='70px' gap='10px'>
+                                    <Button
+                                        bg={colors.offBlackLighter}
+                                        borderWidth={'2px'}
+                                        borderColor={colors.borderGrayLight}
+                                        _hover={{ bg: colors.borderGray }}
+                                        borderRadius='12px'
+                                        px='20px'
+                                        h='40px'
+                                        border='2px solid #445BCB'
+                                        background='rgba(50, 66, 168, 0.30)'
+                                        boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'>
+                                        <Flex mt='-4px ' mr='8px'>
+                                            <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
+                                        </Flex>
+                                        <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
+                                            View on Mempool
+                                        </Text>
+                                    </Button>
+                                    <Button
+                                        borderRadius='12px'
+                                        h='40px'
+                                        onClick={() => setDepositFlowState('0-not-started')}
+                                        px='20px'
+                                        border='2px solid #FF9E38'
+                                        background='linear-gradient(0deg, rgba(255, 80, 2, 0.35) 0%, rgba(111, 44, 15, 0.12) 100%)'
+                                        boxShadow='0px 2.3px 20.7px 2.875px rgba(254, 157, 56, 0.38)'
+                                        backdropFilter='blur(28.685392379760742px)'
+                                        _hover={{ opacity: 0.9 }}>
+                                        <Flex mt='-4px ' mr='8px'>
+                                            <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
+                                        </Flex>
+                                        <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
+                                            Start New Swap
+                                        </Text>
+                                    </Button>
                                 </Flex>
                             </Flex>
                         </>
