@@ -1,3 +1,4 @@
+import { GoHomeFill } from 'react-icons/go';
 import useWindowSize from '../hooks/useWindowSize';
 import { useRouter } from 'next/router';
 import { Flex, Spacer, Text, Box, Spinner, Button } from '@chakra-ui/react';
@@ -27,7 +28,9 @@ import { IoIosCheckmarkCircle } from 'react-icons/io';
 import { BsCheckCircleFill } from 'react-icons/bs';
 import { LuCopy } from 'react-icons/lu';
 import { BTC_Logo } from '../components/other/SVGs';
-import { HiOutlineExternalLink } from 'react-icons/hi';
+import { HiOutlineExternalLink, HiOutlineHome } from 'react-icons/hi';
+import { useToast } from '@chakra-ui/react';
+import { copyToClipboard } from '../utils/frontendHelpers';
 
 const Home = () => {
     const { isTablet, isMobile } = useWindowSize();
@@ -375,7 +378,7 @@ const Home = () => {
                                             size={29}
                                             color={'#FFA04C'}
                                             style={{
-                                                filter: 'drop-shadow(0px 0px 4.968px rgba(247, 147, 26, 0.43))',
+                                                filter: 'drop-shadow(0px 0px 4.968px rgba(247, 147, 26, 0.33))',
                                                 fill: 'url(#orangeGradient)',
                                             }}
                                         />
@@ -405,15 +408,15 @@ const Home = () => {
                                 </Flex>
 
                                 {/* PAYMENT DETAILS */}
-                                <Flex w='89%' direction={'row'} justifyContent={'space-between'} alignItems={'center'} mt='55px'>
-                                    <Flex direction={'column'} w='29.5%'>
+                                <Flex w='89%' direction={'row'} justifyContent={'space-between'} alignItems={'center'} mt='55px' gap='15px'>
+                                    <Flex direction={'column'} w='100%'>
                                         <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
                                             Status
                                         </Text>
                                         <Button
                                             w='100%'
                                             borderRadius={'10px'}
-                                            px='17px'
+                                            px='15px'
                                             py='19px'
                                             fontSize={'15px'}
                                             fontWeight={'normal'}
@@ -421,44 +424,62 @@ const Home = () => {
                                             onClick={() => window.open('https://mempool.space/tx/b3f89c0729bb16636af6bca2a0d0965e8b32663e9d091067e24f52a73d70e869', '_blank')}
                                             letterSpacing={'-1.5px'}
                                             fontFamily={FONT_FAMILIES.AUX_MONO}
-                                            border='2px solid #555'
-                                            background='linear-gradient(0deg, rgba(97, 97, 97, 0.25) 0%, rgba(0, 0, 0, 0.12) 100%)'
+                                            border='2px solid rgb(64, 170, 90)'
+                                            position='relative'
+                                            overflow='hidden'
+                                            background='transparent'
                                             boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'
-                                            color='white'>
-                                            2 Block Confirmations
-                                        </Button>
-                                    </Flex>
-
-                                    <Flex direction={'column'} w='68%'>
-                                        <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
-                                            Your Address{' '}
-                                        </Text>
-                                        <Button
-                                            w='100%'
-                                            borderRadius={'10px'}
-                                            px='17px'
-                                            py='19px'
-                                            fontSize={'15px'}
-                                            onClick={() => window.open('https://mempool.space/tx/b3f89c0729bb16636af6bca2a0d0965e8b32663e9d091067e24f52a73d70e869', '_blank')}
-                                            fontWeight={'normal'}
-                                            letterSpacing={'-1.5px'}
-                                            fontFamily={FONT_FAMILIES.AUX_MONO}
-                                            border='2px solid #FF9E38'
-                                            background='linear-gradient(0deg, rgba(242, 119, 31, 0.16) 0%, rgba(111, 44, 15, 0.12) 100%)'
-                                            boxShadow='0px 2.566px 23.096px 3.208px rgba(254, 157, 56, 0.29)'
-                                            backdropFilter='blur(32.00636672973633px)'
-                                            color='white'>
-                                            <Flex w='100%' justifyContent='space-between' alignItems='center'>
-                                                <Text>bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</Text>
-
-                                                <LuCopy color='gray' />
+                                            color='rgb(235, 255, 236)'
+                                            _before={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgb(4, 36, 20)',
+                                                zIndex: -1,
+                                                transition: 'opacity 0.3s ease',
+                                            }}
+                                            _hover={{
+                                                _before: {
+                                                    opacity: 0.7,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                            }}
+                                            _active={{
+                                                _before: {
+                                                    opacity: 0.7,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                                background: 'transparent',
+                                            }}
+                                            _after={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgb(6, 46, 26)',
+                                                zIndex: -1,
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s ease',
+                                            }}>
+                                            <Flex alignItems={'center'} mt='-1px' mr={'8px'} position='relative' zIndex='1'>
+                                                <BsCheckCircleFill size={15.5} color={'rgb(64, 170, 90)'} />
                                             </Flex>
+                                            <Text mt='0.5px' position='relative' zIndex='1'>
+                                                2 Confirmations
+                                            </Text>
                                         </Button>
                                     </Flex>
-                                </Flex>
 
-                                <Flex w='89%' direction={'row'} justifyContent={'space-between'} alignItems={'center'} mt='25px'>
-                                    <Flex direction={'column'} w='64%'>
+                                    <Flex direction={'column'} w='100%'>
                                         <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
                                             TXN HASH
                                         </Text>
@@ -469,16 +490,210 @@ const Home = () => {
                                             py='19px'
                                             fontSize={'15px'}
                                             fontWeight={'normal'}
+                                            onClick={() => window.open('https://mempool.space/tx/b3f89c0729bb16636af6bca2a0d0965e8b32663e9d091067e24f52a73d70e869', '_blank')}
                                             letterSpacing={'-1.5px'}
                                             fontFamily={FONT_FAMILIES.AUX_MONO}
-                                            border='2px solid #555'
-                                            background='linear-gradient(0deg, rgba(97, 97, 97, 0.25) 0%, rgba(0, 0, 0, 0.12) 100%)'
+                                            border='2px solid #445BCB'
+                                            position='relative'
+                                            overflow='hidden'
+                                            background='transparent'
                                             boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'
-                                            color='white'>
-                                            <Flex w='100%' justifyContent='space-between' alignItems='center'>
-                                                <Text>0cabaa52f2c2eb87d68f49b9a...40a1ddeffd296f34ca8b9c201</Text>
+                                            color='white'
+                                            _before={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgba(50, 66, 168, 0.30)',
+                                                zIndex: -1,
+                                                transition: 'opacity 0.3s ease',
+                                            }}
+                                            _hover={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                            }}
+                                            _active={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                                background: 'transparent',
+                                            }}
+                                            _after={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgba(50, 66, 168, 0.45)',
+                                                zIndex: -1,
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s ease',
+                                            }}>
+                                            <Flex w='100%' justifyContent='space-between' alignItems='center' position='relative' zIndex='1'>
+                                                <Text mr='10px'>0cabaa52f2c2f49b9a...40a1ddeffb9c201</Text>
+                                                <Box
+                                                    as='span'
+                                                    cursor='pointer'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        copyToClipboard('0cabaa52f2c2f49b9a40a1ddeffb9c201', 'Transaction hash copied to clipboard!');
+                                                    }}>
+                                                    <LuCopy color='gray' />
+                                                </Box>
+                                            </Flex>
+                                        </Button>
+                                    </Flex>
+                                    <Flex direction={'column'} w='100%' mt='26px'>
+                                        <Button
+                                            onClick={() => window.open('https://mempool.space/tx/b3f89c0729bb16636af6bca2a0d0965e8b32663e9d091067e24f52a73d70e869', '_blank')}
+                                            bg={colors.offBlackLighter}
+                                            borderWidth={'2px'}
+                                            borderColor={colors.borderGrayLight}
+                                            borderRadius={'10px'}
+                                            px='20px'
+                                            py='19px'
+                                            border='2px solid #445BCB'
+                                            position='relative'
+                                            overflow='hidden'
+                                            background='transparent'
+                                            boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'
+                                            _before={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgba(50, 66, 168, 0.30)',
+                                                zIndex: -1,
+                                                transition: 'opacity 0.3s ease',
+                                            }}
+                                            _hover={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                                bg: 'transparent',
+                                            }}
+                                            _active={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                                bg: 'transparent',
+                                            }}
+                                            _after={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'rgba(50, 66, 168, 0.45)',
+                                                zIndex: -1,
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s ease',
+                                            }}>
+                                            <Flex mt='-2px ' mr='8px' position='relative' zIndex='1'>
+                                                <HiOutlineExternalLink size={'16px'} color={colors.offerWhite} />
+                                            </Flex>
+                                            <Text fontSize='13px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'} position='relative' zIndex='1'>
+                                                View on Mempool
+                                            </Text>
+                                        </Button>
+                                    </Flex>
+                                </Flex>
 
-                                                <LuCopy color='gray' />
+                                <Flex w='89%' direction={'row'} justifyContent={'space-between'} alignItems={'center'} mt='25px'>
+                                    <Flex direction={'column'} w='64%'>
+                                        <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize={'13px'} mb='7px' fontWeight={'bold'}>
+                                            Your Address{' '}
+                                        </Text>
+                                        <Button
+                                            w='100%'
+                                            borderRadius={'10px'}
+                                            px='17px'
+                                            py='19px'
+                                            fontSize={'15px'}
+                                            onClick={() => window.open('https://mempool.space/address/bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', '_blank')}
+                                            fontWeight={'normal'}
+                                            letterSpacing={'-1.5px'}
+                                            fontFamily={FONT_FAMILIES.AUX_MONO}
+                                            border='2px solid #FF9E38'
+                                            position='relative'
+                                            overflow='hidden'
+                                            color='white'
+                                            background='transparent'
+                                            boxShadow='0px 2.566px 23.096px 3.208px rgba(254, 157, 56, 0.29)'
+                                            backdropFilter='blur(32.00636672973633px)'
+                                            _before={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'linear-gradient(0deg, rgba(242, 119, 31, 0.16) 0%, rgba(111, 44, 15, 0.12) 100%)',
+                                                zIndex: -1,
+                                                transition: 'opacity 0.3s ease',
+                                            }}
+                                            _hover={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                            }}
+                                            _active={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                                background: 'transparent',
+                                            }}
+                                            _after={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'linear-gradient(0deg, rgba(242, 119, 31, 0.25) 0%, rgba(111, 44, 15, 0.2) 100%)',
+                                                zIndex: -1,
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s ease',
+                                            }}>
+                                            <Flex w='100%' justifyContent='space-between' alignItems='center' position='relative' zIndex='1'>
+                                                <Text>bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</Text>
+                                                <Text ml='-35px' fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'13px'} fontWeight={'normal'} color={'#999'}>
+                                                    P2PKSH
+                                                </Text>
+                                                <Box
+                                                    as='span'
+                                                    cursor='pointer'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        copyToClipboard('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', 'Bitcoin address copied to clipboard');
+                                                    }}>
+                                                    <LuCopy color='gray' />
+                                                </Box>
                                             </Flex>
                                         </Button>
                                     </Flex>
@@ -497,11 +712,54 @@ const Home = () => {
                                             letterSpacing={'-1.5px'}
                                             fontFamily={FONT_FAMILIES.AUX_MONO}
                                             border='2px solid #FF9E38'
-                                            background='linear-gradient(0deg, rgba(242, 119, 31, 0.16) 0%, rgba(111, 44, 15, 0.12) 100%)'
+                                            position='relative'
+                                            overflow='hidden'
+                                            background='transparent'
+                                            color='white'
+                                            onClick={() => window.open('https://mempool.space/address/bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', '_blank')}
                                             boxShadow='0px 2.566px 23.096px 3.208px rgba(254, 157, 56, 0.29)'
                                             backdropFilter='blur(32.00636672973633px)'
-                                            color='white'>
-                                            <Flex w='100%' alignItems='center'>
+                                            _before={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'linear-gradient(0deg, rgba(242, 119, 31, 0.16) 0%, rgba(111, 44, 15, 0.12) 100%)',
+                                                zIndex: -1,
+                                                transition: 'opacity 0.3s ease',
+                                            }}
+                                            _hover={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                            }}
+                                            _active={{
+                                                _before: {
+                                                    opacity: 0,
+                                                },
+                                                _after: {
+                                                    opacity: 1,
+                                                },
+                                                background: 'transparent',
+                                            }}
+                                            _after={{
+                                                content: '""',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                right: 0,
+                                                bottom: 0,
+                                                background: 'linear-gradient(0deg, rgba(242, 119, 31, 0.25) 0%, rgba(111, 44, 15, 0.2) 100%)',
+                                                zIndex: -1,
+                                                opacity: 0,
+                                                transition: 'opacity 0.3s ease',
+                                            }}>
+                                            <Flex w='100%' alignItems='center' position='relative' zIndex='1'>
                                                 <BTC_Logo width={'19px'} height={'19px'} />
                                                 <Text ml='8px' letterSpacing={'-1.5px'} fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'16px'} fontWeight={'normal'}>
                                                     1.20240252
@@ -510,44 +768,70 @@ const Home = () => {
                                                 <Text ml='15px' fontFamily={FONT_FAMILIES.AUX_MONO} fontSize={'13px'} fontWeight={'normal'} color={'#999'}>
                                                     $121,355.63
                                                 </Text>
-                                            </Flex>{' '}
+                                            </Flex>
                                         </Button>
                                     </Flex>
                                 </Flex>
-                                <Flex mt='70px' gap='10px'>
-                                    <Button
-                                        bg={colors.offBlackLighter}
-                                        borderWidth={'2px'}
-                                        borderColor={colors.borderGrayLight}
-                                        _hover={{ bg: colors.borderGray }}
-                                        borderRadius='12px'
-                                        px='20px'
-                                        h='40px'
-                                        border='2px solid #445BCB'
-                                        background='rgba(50, 66, 168, 0.30)'
-                                        boxShadow='0px 2.595px 23.351px 3.243px rgba(59, 59, 59, 0.33)'>
-                                        <Flex mt='-4px ' mr='8px'>
-                                            <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
-                                        </Flex>
-                                        <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
-                                            View on Mempool
-                                        </Text>
-                                    </Button>
+                                <Flex mt='45px' gap='10px' direction={'column'} alignItems={'center'}>
+                                    <Text fontSize='9px' mb='5px' color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} cursor={'pointer'} fontWeight={'normal'} position='relative' zIndex='1'>
+                                        damn that was easy!
+                                    </Text>
                                     <Button
                                         borderRadius='12px'
                                         h='40px'
                                         onClick={() => setDepositFlowState('0-not-started')}
-                                        px='20px'
+                                        px='29px'
                                         border='2px solid #FF9E38'
-                                        background='linear-gradient(0deg, rgba(255, 80, 2, 0.35) 0%, rgba(111, 44, 15, 0.12) 100%)'
+                                        position='relative'
+                                        overflow='hidden'
+                                        background='transparent'
                                         boxShadow='0px 2.3px 20.7px 2.875px rgba(254, 157, 56, 0.38)'
                                         backdropFilter='blur(28.685392379760742px)'
-                                        _hover={{ opacity: 0.9 }}>
-                                        <Flex mt='-4px ' mr='8px'>
-                                            <HiOutlineExternalLink size={'17px'} color={colors.offerWhite} />
+                                        _before={{
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            background: 'linear-gradient(0deg, rgba(255, 80, 2, 0.35) 0%, rgba(111, 44, 15, 0.12) 100%)',
+                                            zIndex: -1,
+                                            transition: 'opacity 0.3s ease',
+                                        }}
+                                        _hover={{
+                                            _before: {
+                                                opacity: 0,
+                                            },
+                                            _after: {
+                                                opacity: 1,
+                                            },
+                                        }}
+                                        _active={{
+                                            _before: {
+                                                opacity: 0,
+                                            },
+                                            _after: {
+                                                opacity: 1,
+                                            },
+                                            background: 'transparent',
+                                        }}
+                                        _after={{
+                                            content: '""',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            background: 'linear-gradient(0deg, rgba(255, 80, 2, 0.45) 0%, rgba(111, 44, 15, 0.2) 100%)',
+                                            zIndex: -1,
+                                            opacity: 0,
+                                            transition: 'opacity 0.3s ease',
+                                        }}>
+                                        <Flex mt='-1px' mr='6px' position='relative' zIndex='1'>
+                                            <GoHomeFill size={'15px'} color={colors.offerWhite} />
                                         </Flex>
-                                        <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'}>
-                                            Start New Swap
+                                        <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'} position='relative' zIndex='1'>
+                                            RETURN HOME
                                         </Text>
                                     </Button>
                                 </Flex>
