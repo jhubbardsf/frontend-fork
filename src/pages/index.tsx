@@ -772,15 +772,15 @@ const Home = () => {
                                         </Button>
                                     </Flex>
                                 </Flex>
-                                <Flex mt='45px' gap='10px' direction={'column'} alignItems={'center'}>
-                                    <Text fontSize='9px' mb='5px' color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} cursor={'pointer'} fontWeight={'normal'} position='relative' zIndex='1'>
+                                <Flex mt='75px' gap='10px' direction={'column'} alignItems={'center'}>
+                                    {/* <Text fontSize='9px' mb='5px' color={'#aaa'} fontFamily={FONT_FAMILIES.AUX_MONO} cursor={'pointer'} fontWeight={'normal'} position='relative' zIndex='1'>
                                         damn that was easy!
-                                    </Text>
+                                    </Text> */}
                                     <Button
                                         borderRadius='12px'
                                         h='40px'
                                         onClick={() => setDepositFlowState('0-not-started')}
-                                        px='29px'
+                                        px='45px'
                                         border='2px solid #FF9E38'
                                         position='relative'
                                         overflow='hidden'
@@ -831,7 +831,7 @@ const Home = () => {
                                             <GoHomeFill size={'15px'} color={colors.offerWhite} />
                                         </Flex>
                                         <Text fontSize='14px' color={colors.offerWhite} fontFamily={FONT_FAMILIES.NOSTROMO} cursor={'pointer'} fontWeight={'normal'} position='relative' zIndex='1'>
-                                            RETURN HOME
+                                            HOME
                                         </Text>
                                     </Button>
                                 </Flex>
