@@ -190,6 +190,7 @@ export function ContractDataProvider({ children }: { children: ReactNode }) {
         fetchUserSwapsFromAddress();
         const swapsInterval = setInterval(fetchUserSwapsFromAddress, 30000);
 
+
         return () => clearInterval(swapsInterval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedInputAsset, setUserSwapsFromAddress, setUserSwapsLoadingState]);

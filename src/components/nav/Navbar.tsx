@@ -2,7 +2,8 @@ import { Box, Button, Flex, FlexProps, Spacer, Text, Image, useClipboard, VStack
 import { colors } from '../../utils/colors';
 import useWindowSize from '../../hooks/useWindowSize';
 import { useRouter } from 'next/router';
-import { IoMenu } from 'react-icons/io5';
+import { IoMenu, IoChevronBack, IoChevronForward } from 'react-icons/io5';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from '../other/ConnectWalletButton';
 import { AssetBalanceDisplay } from '../other/AssetBalanceDisplay';
 import { FONT_FAMILIES } from '../../utils/font';
@@ -21,7 +22,6 @@ export const Navbar = ({}) => {
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
     const router = useRouter();
     const fontSize = isMobile ? '20px' : '20px';
-    const [showDeveloperMode, setShowDeveloperMode] = useState(false);
     const [isLocalhost, setIsLocalhost] = useState(false);
     const selectedInputAsset = useStore((state) => state.selectedInputAsset);
     const validAssets = useStore((state) => state.validAssets);
@@ -35,6 +35,8 @@ export const Navbar = ({}) => {
     const [isLoadingVault, setIsLoadingVault] = useState(false);
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
     const { address, isConnected } = useAccount();
+
+    const depositFlowState = useStore((state) => state.depositFlowState);
 
     const [displayWarning, setDisplayWarning] = useState<boolean | undefined>(undefined);
 
@@ -117,10 +119,26 @@ export const Navbar = ({}) => {
         }
     };
 
+    // Function to map numeric state to string literal
+    const mapStateNumberToString = (stateNumber: number): '0-not-started' | '1-finding-liquidity' | '2-awaiting-payment' | '3-payment-recieved' => {
+        switch (stateNumber) {
+            case 0:
+                return '0-not-started';
+            case 1:
+                return '1-finding-liquidity';
+            case 2:
+                return '2-awaiting-payment';
+            case 3:
+                return '3-payment-recieved';
+            default:
+                return '0-not-started'; // Default case
+        }
+    };
+
     if (isMobile) return null;
 
     return (
-        <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1000}>
+        <Flex width='100%' direction={'column'} position='fixed' top={0} left={0} right={0} zIndex={1010}>
             <Flex bgGradient='linear(0deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8))' position='absolute' w='100%' h='130%'></Flex>
             {displayWarning == true && (
                 <>
@@ -186,45 +204,53 @@ export const Navbar = ({}) => {
                 </Flex>
                 <Spacer />
                 <Flex direction='column' fontFamily={FONT_FAMILIES.AUX_MONO} align='center' fontSize='12px' position='absolute' top={0} left={0} right={0}>
-                    {/* {isLocalhost && ( */}
-                    <Button
-                        position={'absolute'}
-                        top={0}
-                        w='20px'
-                        mt='54px'
-                        _hover={{ background: 'rgba(150, 150, 150, 0.2)' }}
-                        color={colors.textGray}
-                        bg={'none'}
-                        onClick={() => {
-                            setShowDeveloperMode(!showDeveloperMode);
-                        }}></Button>
-                    {/* )} */}
-                    {showDeveloperMode && (
-                        <>
-                            <Text my='10px'>Current Rift Contracts:</Text>
-                            <VStack spacing={1} align='stretch' width='100%' maxWidth='600px'>
-                                {Object.keys(useStore.getState().validAssets).map((key) => {
-                                    const asset = useStore.getState().validAssets[key];
-                                    return (
-                                        <Flex key={key} justify='space-between'>
-                                            <Text>{asset.name}:</Text>
-                                            <Text>{asset.riftExchangeContractAddress}</Text>
-                                            <Text>Chain: {getChainName(asset.contractChainID)}</Text>
-                                        </Flex>
-                                    );
-                                })}
-                            </VStack>
-                            <Flex direction='column' mt='50vh' align='center' width='100%'>
-                                <Text fontFamily={FONT_FAMILIES.NOSTROMO} fontSize='16px' fontWeight='normal' mb={4}>
-                                    If you found this, you're a wizard
-                                </Text>
-                            </Flex>
-                        </>
+                    {depositFlowState !== '0-not-started' && (
+                        <Flex justify='center' align='center' mt='25px'>
+                            <svg width={isTablet ? '70' : '112'} height={isTablet ? '30' : '48'} viewBox='0 0 3190 674' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                                <path
+                                    d='M362.16 0.509766L708.992 1.01953C764.583 1.01988 854.441 35.3784 899.254 66.0684C946.209 98.2244 976.303 137.703 991.728 187.377C998.545 209.335 999.065 270.158 992.616 291.358C977.097 342.374 948.466 381.798 903.368 414.254C880.445 430.753 849.028 447.137 821.983 456.698C811.159 460.525 802.305 464.051 802.305 464.535C802.324 465.034 855.943 511.837 921.476 568.554C987.014 625.277 1040.64 672.038 1040.65 672.471C1040.65 672.896 989.297 673.212 926.534 673.17L812.423 673.096L709.3 578.507L606.177 483.921H326.44L231.556 373.886H462.542C577.817 373.886 657.812 373.229 672.215 372.168C764.603 365.355 822.541 317.06 822.541 246.859C822.541 191.068 785.958 148.878 721.28 130.076C691.254 121.348 696.678 121.509 432.987 121.479L188.463 121.451V673.246H0.960938V58.8457C0.960938 26.3598 27.3199 0.0372334 59.8057 0.0830078L362.16 0.509766ZM1358.4 673.242H1171.9V0H1358.4V673.242ZM2215.9 134.838H1680.88V269.92H2094.76L1997.96 382.709H1680.88V673.242H1493.72V67.4189C1493.72 48.8748 1502.88 33.0017 1521.21 19.8008C1539.53 6.60022 1561.56 5.19057e-05 1587.3 0H2337.08L2215.9 134.838ZM3189.12 134.834H2869.77V673.242H2697.47V134.834H2363.92L2485.05 0H3189.12V134.834Z'
+                                    fill='white'
+                                />
+                            </svg>
+                        </Flex>
                     )}
                 </Flex>
                 <Spacer />
                 <Flex mb='-5px' pr='5px' gap='8px' alignItems='center'>
                     {isConnected && <AssetBalanceDisplay />}
+<Flex>
+                <Flex mb='-5px' pr='5px' alignItems='center' gap='10px'>
+                    {isLocalhost && (
+                        <Flex userSelect={'none'} zIndex={1000} alignItems='center' bg={colors.offBlack} borderRadius='6px' p='5px 10px' borderWidth='1px' borderColor={colors.textGray}>
+                            <Box
+                                as={IoChevronBack}
+                                color={colors.textGray}
+                                cursor='pointer'
+                                fontSize='20px'
+                                onClick={() => {
+                                    const currentState = useStore.getState().depositFlowState;
+                                    const currentStateNumber = parseInt(currentState, 10);
+                                    if (currentStateNumber > 0) {
+                                        useStore.setState({ depositFlowState: mapStateNumberToString(currentStateNumber - 1) });
+                                    }
+                                }}
+                            />
+                            <Text mx='10px' userSelect={'none'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                {depositFlowState}
+                            </Text>
+                            <Box
+                                as={IoChevronForward}
+                                color={colors.textGray}
+                                cursor='pointer'
+                                fontSize='20px'
+                                onClick={() => {
+                                    const currentState = useStore.getState().depositFlowState;
+                                    const currentStateNumber = parseInt(currentState, 10);
+                                    useStore.setState({ depositFlowState: mapStateNumberToString(currentStateNumber + 1) });
+                                }}
+                            />
+                        </Flex>
+                    )}
                     <ConnectWalletButton />
                 </Flex>
             </Flex>

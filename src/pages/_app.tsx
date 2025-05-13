@@ -89,6 +89,28 @@ function MyApp({ Component, pageProps }: AppProps) {
         }
     }, []);
 
+    // Add particles.js initialization
+    useEffect(() => {
+        // Check if window is defined (to avoid SSR issues)
+        if (typeof window !== 'undefined') {
+            // Dynamically import particles.js
+            const loadParticles = async () => {
+                try {
+                    // @ts-ignore
+                    await import('./particles.js');
+                    // @ts-ignore
+                    window.particlesJS.load('particles-js', '/assets/particles.json', function () {
+                        console.log('callback - particles.js config loaded');
+                    });
+                } catch (error) {
+                    console.error('Failed to load particles.js:', error);
+                }
+            };
+
+            loadParticles();
+        }
+    }, []);
+
     // TODO: The offline error is here
     // const setIsOnline = useStore((state) => state.setIsOnline);
 
@@ -112,24 +134,25 @@ function MyApp({ Component, pageProps }: AppProps) {
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>
-                <ChakraProvider theme={theme}>
-                    <ContractDataProvider>
-                        {/* <title>Rift Hyperbridge - </title> */}
-                        <Component {...pageProps} />
-                        <Toaster
-                            toastOptions={{
-                                position: 'bottom-center',
-                                style: {
-                                    borderRadius: '10px',
-                                    background: '#333',
-                                    color: '#fff',
-                                    minWidth: '300px',
-                                    maxWidth: '500px',
-                                    transition: '0.2s all ease-in-out',
-                                    minHeight: '50px',
-                                    zIndex: 2,
-                                },
-                                success: {
+                <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
+                    <ChakraProvider theme={theme}>
+                        <ContractDataProvider>
+                            {/* Add particles container */}
+                            <div
+                                id='particles-js'
+                                style={{
+                                    position: 'fixed',
+                                    top: 0,
+                                    left: 0,
+                                    width: '100%',
+                                    height: '100%',
+                                    zIndex: -1,
+                                }}></div>
+                            {/* <title>Rift Hyperbridge - </title> */}
+                            <Component {...pageProps} />
+                            <Toaster
+                                toastOptions={{
+                                    position: 'bottom-center',
                                     style: {
                                         // backgroundColor: '#2ECC40',
                                         // background: 'linear-gradient(155deg, rgba(23,139,11,1) 0%, rgba(33,150,34,1) 42%, rgba(46,204,64,1) 100%)',

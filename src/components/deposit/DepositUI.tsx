@@ -575,7 +575,7 @@ export const DepositUI = () => {
     // DEPOSIT INPUTS UI
     return (
         <>
-            {depositFlowState === '1-confirm-deposit' && (
+            {depositFlowState === '2-awaiting-payment' && (
                 <Flex mt='-50px' mb='30px'>
                     <DepositAmounts />
                 </Flex>
@@ -584,7 +584,7 @@ export const DepositUI = () => {
                 direction='column'
                 align='center'
                 py={isMobile ? '20px' : '27px'}
-                w={isMobile ? '100%' : depositFlowState === '1-confirm-deposit' ? '800px' : '630px'}
+                w={isMobile ? '100%' : depositFlowState === '2-awaiting-payment' ? '800px' : '630px'}
                 borderRadius='20px'
                 {...opaqueBackgroundColor}
                 borderBottom={borderColor}
@@ -592,7 +592,7 @@ export const DepositUI = () => {
                 borderTop={borderColor}
                 borderRight={borderColor}>
                 <Flex w='90%' direction={'column'}>
-                    {depositFlowState === '1-confirm-deposit' ? (
+                    {depositFlowState === '2-awaiting-payment' ? (
                         <Flex>
                             <Flex w='100%' flexDir='column' position='relative'>
                                 <Flex>
@@ -677,8 +677,8 @@ export const DepositUI = () => {
                                                         userBalanceExceeded
                                                             ? colors.redHover
                                                             : !coinbaseBtcDepositAmount
-                                                              ? colors.offWhite
-                                                              : colors.textGray
+                                                            ? colors.offWhite
+                                                            : colors.textGray
                                                     }
                                                     fontSize={'14px'}
                                                     mt='6px'
@@ -735,8 +735,8 @@ export const DepositUI = () => {
                                                     {isAboveMaxSwapLimitCoinbaseBtcDeposit
                                                         ? `${satsToBtc(BigNumber.from(MAX_SWAP_AMOUNT_SATS))} cbBTC Max`
                                                         : isBelowMinCoinbaseBtcDeposit
-                                                          ? `${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC Min`
-                                                          : `${parseFloat(userCoinbaseBtcBalance).toFixed(4)} cbBTC Max`}
+                                                        ? `${satsToBtc(BigNumber.from(MIN_SWAP_AMOUNT_SATS))} cbBTC Min`
+                                                        : `${parseFloat(userCoinbaseBtcBalance).toFixed(4)} cbBTC Max`}
                                                 </Text>
                                             )}
                                         </Flex>
@@ -1114,6 +1114,7 @@ export const DepositUI = () => {
                                     color={canProceedWithDeposit() ? colors.offWhite : colors.darkerGray}
                                     fontFamily='Nostromo'>
                                     {canProceedWithDeposit() ? 'Exchange' : 'Deposits Disabled'}
+
                                 </Text>
                             </Flex>
                         </>
