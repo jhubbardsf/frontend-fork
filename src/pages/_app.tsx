@@ -134,25 +134,35 @@ function MyApp({ Component, pageProps }: AppProps) {
     return (
         <WagmiProvider config={wagmiAdapter.wagmiConfig}>
             <QueryClientProvider client={queryClient}>
-                <RainbowKitProvider theme={myCustomTheme} modalSize='compact'>
-                    <ChakraProvider theme={theme}>
-                        <ContractDataProvider>
-                            {/* Add particles container */}
-                            <div
-                                id='particles-js'
-                                style={{
-                                    position: 'fixed',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    zIndex: -1,
-                                }}></div>
-                            {/* <title>Rift Hyperbridge - </title> */}
-                            <Component {...pageProps} />
-                            <Toaster
-                                toastOptions={{
-                                    position: 'bottom-center',
+                <ChakraProvider theme={theme}>
+                    <ContractDataProvider>
+                        {/* Add particles container */}
+                        <div
+                            id='particles-js'
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                zIndex: -1,
+                            }}></div>
+                        {/* <title>Rift Hyperbridge - </title> */}
+                        <Component {...pageProps} />
+                        <Toaster
+                            toastOptions={{
+                                position: 'bottom-center',
+                                style: {
+                                    borderRadius: '10px',
+                                    background: '#333',
+                                    color: '#fff',
+                                    minWidth: '300px',
+                                    maxWidth: '500px',
+                                    transition: '0.2s all ease-in-out',
+                                    minHeight: '50px',
+                                    zIndex: 2,
+                                },
+                                success: {
                                     style: {
                                         // backgroundColor: '#2ECC40',
                                         // background: 'linear-gradient(155deg, rgba(23,139,11,1) 0%, rgba(33,150,34,1) 42%, rgba(46,204,64,1) 100%)',
