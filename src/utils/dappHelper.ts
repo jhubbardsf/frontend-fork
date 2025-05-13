@@ -4,7 +4,16 @@ import { ReservationState } from '../types';
 import { useStore } from '../store';
 import * as bitcoin from 'bitcoinjs-lib';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
-import { BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, MAX_SWAP_LP_OUTPUTS, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR, SATS_PER_BTC } from './constants';
+import {
+    BITCOIN_DECIMALS,
+    DEVNET_BASE_CHAIN_ID,
+    FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS,
+    MAINNET_BASE_CHAIN_ID,
+    MAX_SWAP_LP_OUTPUTS,
+    PROTOCOL_FEE,
+    PROTOCOL_FEE_DENOMINATOR,
+    SATS_PER_BTC,
+} from './constants';
 import { format } from 'path';
 import swapReservationsAggregatorABI from '../abis/SwapReservationsAggregator.json';
 import depositVaultAggregatorABI from '../abis/DepositVaultsAggregator.json';
@@ -45,9 +54,16 @@ export function unBufferFrom18Decimals(amount, tokenDecimals) {
     return bigAmount;
 }
 
-export function calculateBtcOutputAmountFromExchangeRate(depositAmountFromContract, depositAssetDecimals, exchangeRateFromContract) {
+export function calculateBtcOutputAmountFromExchangeRate(
+    depositAmountFromContract,
+    depositAssetDecimals,
+    exchangeRateFromContract,
+) {
     // [0] buffer deposit amount to 18 decimals
-    const depositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(depositAmountFromContract, depositAssetDecimals);
+    const depositAmountInSmallestTokenUnitsBufferedTo18Decimals = bufferTo18Decimals(
+        depositAmountFromContract,
+        depositAssetDecimals,
+    );
 
     // [1] divide by exchange rate (which is already in smallest token units buffered to 18 decimals per sat)
     const outputAmountInSats = depositAmountInSmallestTokenUnitsBufferedTo18Decimals.div(exchangeRateFromContract);
@@ -60,10 +76,16 @@ export function calculateBtcOutputAmountFromExchangeRate(depositAmountFromContra
 
 export function formatBtcExchangeRate(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat, depositAssetDecimals) {
     // [0] convert to smallest token amount per btc
-    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(), BITCOIN_DECIMALS);
+    const exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc = parseUnits(
+        BigNumber.from(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerSat).toString(),
+        BITCOIN_DECIMALS,
+    );
 
     // [1] unbuffer from 18 decimals
-    const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc, depositAssetDecimals);
+    const exchangeRateInSmallestTokenUnitPerBtc = unBufferFrom18Decimals(
+        exchangeRateInSmallestTokenUnitBufferedTo18DecimalsPerBtc,
+        depositAssetDecimals,
+    );
 
     // [2] convert to btc per smallest token amount
     const exchangeRateInStandardUnitsPerBtc = formatUnits(exchangeRateInSmallestTokenUnitPerBtc, depositAssetDecimals);
@@ -91,7 +113,12 @@ export function convertLockingScriptToBitcoinAddress(lockingScript: string): str
         }
 
         // P2SH
-        if (scriptBuffer.length === 23 && scriptBuffer[0] === bitcoin.opcodes.OP_HASH160 && scriptBuffer[1] === 0x14 && scriptBuffer[22] === bitcoin.opcodes.OP_EQUAL) {
+        if (
+            scriptBuffer.length === 23 &&
+            scriptBuffer[0] === bitcoin.opcodes.OP_HASH160 &&
+            scriptBuffer[1] === 0x14 &&
+            scriptBuffer[22] === bitcoin.opcodes.OP_EQUAL
+        ) {
             const scriptHash = scriptBuffer.slice(2, 22);
             return bitcoin.address.toBase58Check(scriptHash, bitcoin.networks.bitcoin.scriptHash);
         }
@@ -147,7 +174,13 @@ export function convertToBitcoinLockingScript(address: string): string {
 
             // P2PKH
             if (version === bitcoin.networks.bitcoin.pubKeyHash) {
-                script = bitcoin.script.compile([bitcoin.opcodes.OP_DUP, bitcoin.opcodes.OP_HASH160, hash, bitcoin.opcodes.OP_EQUALVERIFY, bitcoin.opcodes.OP_CHECKSIG]);
+                script = bitcoin.script.compile([
+                    bitcoin.opcodes.OP_DUP,
+                    bitcoin.opcodes.OP_HASH160,
+                    hash,
+                    bitcoin.opcodes.OP_EQUALVERIFY,
+                    bitcoin.opcodes.OP_CHECKSIG,
+                ]);
             }
 
             // P2SH
@@ -282,3 +315,7 @@ export const validateBitcoinPayoutAddress = (address: string): boolean => {
         return false;
     }
 };
+
+// Helper: compute effective chain id.
+export const getEffectiveChainID = (selectedChainID: number): number =>
+    selectedChainID === DEVNET_BASE_CHAIN_ID ? MAINNET_BASE_CHAIN_ID : selectedChainID;

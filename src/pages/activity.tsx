@@ -1,5 +1,5 @@
 import { Flex, Text } from '@chakra-ui/react';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useConnectModal } from '../hooks/useReownConnect';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId } from 'wagmi';
@@ -28,7 +28,11 @@ const Activity = () => {
     const handleNavigation = (route: string) => {
         router.push(route);
     };
-    const { options: optionsButton, selected: selectedButton, setSelected: setSelectedButton } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
+    const {
+        options: optionsButton,
+        selected: selectedButton,
+        setSelected: setSelectedButton,
+    } = useHorizontalSelectorInput(['Create a Vault', 'Manage Vaults'] as const);
 
     const userSwapsFromAddress = useStore((state) => state.userSwapsFromAddress);
 
@@ -50,7 +54,6 @@ const Activity = () => {
     useEffect(() => {
         if (showManageDepositVaultsScreen) {
             setSelectedButton('Manage Vaults');
-            console.log('Switching to manage vaults screen', selectedButton);
             setShowManageDepositVaultsScreen(false);
         }
     }, [showManageDepositVaultsScreen, selectedButton]);
@@ -62,14 +65,20 @@ const Activity = () => {
         }
     }, [selectedButton]);
 
-    const handleButtonSelection = (selection) => {
+    const handleButtonSelection = (selection: typeof selectedButton) => {
         setSelectedButton(selection);
     };
 
     return (
         <>
             <OpenGraph title='Liquidity' />
-            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
+            <Flex
+                h='100vh'
+                width='100%'
+                direction='column'
+                backgroundImage={'/images/rift_background_low.webp'}
+                backgroundSize='cover'
+                backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' h='100%' mt='105px'>
                     {/* LOGOS & TEXT */}
@@ -84,7 +93,13 @@ const Activity = () => {
                             opacity={0.9}
                             letterSpacing={'2px'}
                             mt='-10px'>
-                            <Text userSelect={'none'} fontSize='60px' fontFamily={'Klein'} fontWeight='bold' px='12px' as='h1'>
+                            <Text
+                                userSelect={'none'}
+                                fontSize='60px'
+                                fontFamily={'Klein'}
+                                fontWeight='bold'
+                                px='12px'
+                                as='h1'>
                                 Activity
                             </Text>
                         </Flex>

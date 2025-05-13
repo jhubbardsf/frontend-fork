@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { IoMenu, IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ConnectWalletButton } from '../other/ConnectWalletButton';
+import { AssetBalanceDisplay } from '../other/AssetBalanceDisplay';
 import { FONT_FAMILIES } from '../../utils/font';
 import { useStore } from '../../store';
 import { weiToEth } from '../../utils/dappHelper';
@@ -15,6 +16,7 @@ import { formatUnits } from 'ethers/lib/utils';
 import { isDismissWarning, onDismiss } from '../../utils/warningHelper';
 import GlowingShimmerText from '../other/GlowingText';
 import riftExchangeABI from '../../abis/RiftExchange.json';
+import { useAccount } from 'wagmi';
 
 export const Navbar = ({}) => {
     const { isMobile, isTablet, isSmallLaptop, windowSize } = useWindowSize();
@@ -32,6 +34,8 @@ export const Navbar = ({}) => {
     const [localSelectedVaultToManage, setLocalSelectedVaultToManage] = useState<number | null>(null);
     const [isLoadingVault, setIsLoadingVault] = useState(false);
     const ethersRpcProvider = useStore.getState().ethersRpcProvider;
+    const { address, isConnected } = useAccount();
+
     const depositFlowState = useStore((state) => state.depositFlowState);
 
     const [displayWarning, setDisplayWarning] = useState<boolean | undefined>(undefined);
@@ -212,6 +216,9 @@ export const Navbar = ({}) => {
                     )}
                 </Flex>
                 <Spacer />
+                <Flex mb='-5px' pr='5px' gap='8px' alignItems='center'>
+                    {isConnected && <AssetBalanceDisplay />}
+<Flex>
                 <Flex mb='-5px' pr='5px' alignItems='center' gap='10px'>
                     {isLocalhost && (
                         <Flex userSelect={'none'} zIndex={1000} alignItems='center' bg={colors.offBlack} borderRadius='6px' p='5px 10px' borderWidth='1px' borderColor={colors.textGray}>

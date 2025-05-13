@@ -32,13 +32,11 @@ export const toastApiError = (
         description: 'Something Went Wrong',
     },
 ) => {
-    console.log(e, details);
     const { description } = details;
     if (e && e.response && e.response.data && e.response.data.detail) {
         const m = e.response.data.detail;
         if (m == 'Could not validate credentials') return;
         if (m == 'Not authenticated') return;
-        console.log('HEre');
         toaster.error(`${m};;${description}`);
     } else {
         toastError(e, details);
@@ -92,7 +90,8 @@ export const toastPromise = <T>(
         loading: `${loadingDetails.title};;${loadingDetails.description}`,
         success: `${successDetails.title};;${successDetails.description}`,
         error: (e) => {
-            if (e && e.response && e.response.data && e.response.data.detail) return `${e.response.data.detail};;${errorDetails.description}`;
+            if (e && e.response && e.response.data && e.response.data.detail)
+                return `${e.response.data.detail};;${errorDetails.description}`;
             if (e && e.message) return `${e.message};;${errorDetails.description}`;
             if (e && typeof e == 'string') return `${e};;${errorDetails.description}`;
             return `${errorDetails.title};;${errorDetails.description}`;
@@ -104,7 +103,11 @@ export const toastLoad = () => {
     return toaster.loading('Loading...', { duration: 10000 });
 };
 
-export const toastUpdateLoad = (toastId: string, type: 'Success' | 'Error' | 'Remove' | 'Warning', details: ToastDetails = { title: 'Success', description: undefined }) => {
+export const toastUpdateLoad = (
+    toastId: string,
+    type: 'Success' | 'Error' | 'Remove' | 'Warning',
+    details: ToastDetails = { title: 'Success', description: undefined },
+) => {
     const { title, description } = details;
     if (type == 'Success') toaster.success(`${title};;${description}`, { id: toastId });
     else if (type == 'Error') toaster.error(`${title};;${description}`, { id: toastId });

@@ -4,7 +4,11 @@ import { useStore } from '../../../store';
 import { Text, Flex, Image, Center, Box, Button, color, Spinner, Input } from '@chakra-ui/react';
 import { Navbar } from '../../../components/nav/Navbar';
 import { colors } from '../../../utils/colors';
-import { bufferTo18Decimals, calculateBtcOutputAmountFromExchangeRate, decodeReservationUrl } from '../../../utils/dappHelper';
+import {
+    bufferTo18Decimals,
+    calculateBtcOutputAmountFromExchangeRate,
+    decodeReservationUrl,
+} from '../../../utils/dappHelper';
 import CurrencyModal from '../../../components/swap/CurrencyModal';
 import { MainSwapFlow } from '../../../components/swap/MainSwapFlow';
 import { SwapStatusTimeline } from '../../../components/swap/SwapStatusTimeline';
@@ -13,7 +17,14 @@ import { SwapAmounts } from '../../../components/swap/SwapAmounts';
 import { OpenGraph } from '../../../components/background/OpenGraph';
 import { ChromeLogoSVG, WarningSVG } from '../../../components/other/SVGs';
 import { FONT_FAMILIES } from '../../../utils/font';
-import { bitcoin_dark_bg_color, BITCOIN_DECIMALS, FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS, opaqueBackgroundColor, PROTOCOL_FEE, PROTOCOL_FEE_DENOMINATOR } from '../../../utils/constants';
+import {
+    bitcoin_dark_bg_color,
+    BITCOIN_DECIMALS,
+    FRONTEND_RESERVATION_EXPIRATION_WINDOW_IN_SECONDS,
+    opaqueBackgroundColor,
+    PROTOCOL_FEE,
+    PROTOCOL_FEE_DENOMINATOR,
+} from '../../../utils/constants';
 import { formatUnits } from 'ethers/lib/utils';
 import QRCode from 'qrcode.react';
 import swapReservationsAggregatorABI from '../../../abis/SwapReservationsAggregator.json';
@@ -262,7 +273,13 @@ const ReservationDetails = () => {
     return (
         <>
             <OpenGraph />
-            <Flex h='100vh' width='100%' direction='column' backgroundImage={'/images/rift_background_low.webp'} backgroundSize='cover' backgroundPosition='center'>
+            <Flex
+                h='100vh'
+                width='100%'
+                direction='column'
+                backgroundImage={'/images/rift_background_low.webp'}
+                backgroundSize='cover'
+                backgroundPosition='center'>
                 <Navbar />
                 <Flex direction={'column'} align='center' w='100%' mt={'130px'}>
                     <Flex width='1000px' align={'center'} direction={'column'}>
@@ -279,7 +296,11 @@ const ReservationDetails = () => {
                             mt='20px'
                             borderRadius='30px'
                             px='40px'
-                            boxShadow={currentReservationState === 'Completed' ? `0px 0px 15px 1px ${colors.greenOutline}` : '0px 0px 20px 2px rgba(0, 0, 0, 0.1)'}
+                            boxShadow={
+                                currentReservationState === 'Completed'
+                                    ? `0px 0px 15px 1px ${colors.greenOutline}`
+                                    : '0px 0px 20px 2px rgba(0, 0, 0, 0.1)'
+                            }
                             direction='column'
                             py='35px'
                             align='center'
@@ -288,7 +309,15 @@ const ReservationDetails = () => {
                             {loadingState ? (
                                 swapReservationNotFound ? (
                                     <Flex mb='20px' mt='20px' direction={'column'} align='center'>
-                                        <Text fontSize='18px' textAlign='center' w='800px' mt='-4px' mb='0px' fontWeight={'normal'} color={colors.offWhite} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        <Text
+                                            fontSize='18px'
+                                            textAlign='center'
+                                            w='800px'
+                                            mt='-4px'
+                                            mb='0px'
+                                            fontWeight={'normal'}
+                                            color={colors.offWhite}
+                                            fontFamily={FONT_FAMILIES.NOSTROMO}>
                                             Invalid Swap Reservation
                                         </Text>
                                         <Flex>
@@ -322,7 +351,13 @@ const ReservationDetails = () => {
                                     </Flex>
                                 ) : (
                                     <Flex mb='20px' mt='20px'>
-                                        <Spinner color={colors.textGray} h={'50px'} w={'50px'} thickness='3px' speed='0.65s' />
+                                        <Spinner
+                                            color={colors.textGray}
+                                            h={'50px'}
+                                            w={'50px'}
+                                            thickness='3px'
+                                            speed='0.65s'
+                                        />
                                     </Flex>
                                 )
                             ) : swapFlowState === '3-receive-evm-token' ||
@@ -334,14 +369,25 @@ const ReservationDetails = () => {
                                 <MainSwapFlow />
                             ) : proxyWalletSwapInternalID ? (
                                 <>
-                                    <Flex alignItems='center' fontFamily={FONT_FAMILIES.NOSTROMO} fontWeight={'bold'} fontSize={'24px'} mt='-5px' mb='18px'>
+                                    <Flex
+                                        alignItems='center'
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}
+                                        fontWeight={'bold'}
+                                        fontSize={'24px'}
+                                        mt='-5px'
+                                        mb='18px'>
                                         <Flex mr='10px' mt='-1px'>
                                             <FaClock size={'22px'} color={colors.darkerGray} />
                                         </Flex>
                                         <Text marginRight='4px'>Reservation Locked for:</Text>
                                         <span
                                             style={{
-                                                color: minutesLeft >= 20 ? colors.greenOutline : minutesLeft >= 10 ? 'yellow' : 'red',
+                                                color:
+                                                    minutesLeft >= 20
+                                                        ? colors.greenOutline
+                                                        : minutesLeft >= 10
+                                                          ? 'yellow'
+                                                          : 'red',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                             }}>
@@ -352,22 +398,48 @@ const ReservationDetails = () => {
                                                 </>
                                             ) : (
                                                 <Flex ml='6px' mt='-1px'>
-                                                    <Spinner color={colors.textGray} h={'18px'} w={'18px'} thickness='3px' speed='0.65s' />
+                                                    <Spinner
+                                                        color={colors.textGray}
+                                                        h={'18px'}
+                                                        w={'18px'}
+                                                        thickness='3px'
+                                                        speed='0.65s'
+                                                    />
                                                 </Flex>
                                             )}
                                         </span>
                                     </Flex>
-                                    <Text fontSize='16px' textAlign='center' w='800px' mt='0px' mb='20px' fontWeight={'normal'} color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                        Your reservation is confirmed! Send the following amount of Bitcoin to the address below within 1 hour to initiate the swap:
+                                    <Text
+                                        fontSize='16px'
+                                        textAlign='center'
+                                        w='800px'
+                                        mt='0px'
+                                        mb='20px'
+                                        fontWeight={'normal'}
+                                        color={colors.darkerGray}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        Your reservation is confirmed! Send the following amount of Bitcoin to the
+                                        address below within 1 hour to initiate the swap:
                                     </Text>
                                     <Flex mt='10px' mx='10px'>
                                         {bitcoinUri && bitcoinUri !== '' && (
-                                            <Flex py='10px' px='10px' w={'270px'} borderRadius='10px' bg='white' mr='40px' boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
+                                            <Flex
+                                                py='10px'
+                                                px='10px'
+                                                w={'270px'}
+                                                borderRadius='10px'
+                                                bg='white'
+                                                mr='40px'
+                                                boxShadow={'0px 15px 15px rgba(0, 16, 118, 0.4)'}>
                                                 <QRCode value={bitcoinUri} size={250} />
                                             </Flex>
                                         )}
                                         <Flex direction={'column'}>
-                                            <Text mt='8px' fontSize='16px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                            <Text
+                                                mt='8px'
+                                                fontSize='16px'
+                                                color={colors.textGray}
+                                                fontFamily={FONT_FAMILIES.NOSTROMO}>
                                                 Bitcoin Address:
                                             </Text>
                                             <Flex direction='column' alignItems='flex-start' maxW='200px'>
@@ -386,7 +458,12 @@ const ReservationDetails = () => {
                                                             {address.slice(0, Math.floor((2 / 3) * address.length))}
                                                         </Text>
                                                         <Flex alignItems='center'>
-                                                            <Text letterSpacing={'-1px'} fontSize='25px' display='inline-flex' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                            <Text
+                                                                letterSpacing={'-1px'}
+                                                                fontSize='25px'
+                                                                display='inline-flex'
+                                                                color={colors.offWhite}
+                                                                fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                                 {address.slice(Math.floor((2 / 3) * address.length))}
                                                             </Text>
                                                             <LuCopy
@@ -401,13 +478,22 @@ const ReservationDetails = () => {
                                                         </Flex>
                                                     </>
                                                 ) : (
-                                                    <Text mt='2px' fontSize='25px' color={colors.offWhite} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                                    <Text
+                                                        mt='2px'
+                                                        fontSize='25px'
+                                                        color={colors.offWhite}
+                                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
                                                         Loading...
                                                     </Text>
                                                 )}
                                             </Flex>
 
-                                            <Text mt='25px' fontSize='16px' mb='-18px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                            <Text
+                                                mt='25px'
+                                                fontSize='16px'
+                                                mb='-18px'
+                                                color={colors.textGray}
+                                                fontFamily={FONT_FAMILIES.NOSTROMO}>
                                                 Deposit Amount:{' '}
                                             </Text>
                                             <Flex alignItems='center'>
@@ -431,7 +517,14 @@ const ReservationDetails = () => {
                                                                     cursor: 'pointer',
                                                                     marginLeft: '10px',
                                                                 }}
-                                                                onClick={() => navigator.clipboard.writeText(formatUnits(totalSwapAmountInSats, BITCOIN_DECIMALS).toString())}
+                                                                onClick={() =>
+                                                                    navigator.clipboard.writeText(
+                                                                        formatUnits(
+                                                                            totalSwapAmountInSats,
+                                                                            BITCOIN_DECIMALS,
+                                                                        ).toString(),
+                                                                    )
+                                                                }
                                                             />
                                                             <Flex ml='20px' mt='-1px'>
                                                                 <AssetTag assetName='BTC' width='75px' />
@@ -445,27 +538,50 @@ const ReservationDetails = () => {
                                         </Flex>
                                     </Flex>
                                     {aggregateProxyBalance > 0 && (
-                                        <Flex mt='32px' bg={colors.offBlackLighter2} onClick={() => setDumpWalletMode(!dumpWalletMode)} _hover={{ cursor: 'pointer' }}>
+                                        <Flex
+                                            mt='32px'
+                                            bg={colors.offBlackLighter2}
+                                            onClick={() => setDumpWalletMode(!dumpWalletMode)}
+                                            _hover={{ cursor: 'pointer' }}>
                                             <Text>Dump Proxy wallet balance: {aggregateProxyBalance} </Text>
                                         </Flex>
                                     )}
-                                    <Text mt={aggregateProxyBalance <= 0 ? '32px' : '0px'} fontWeight={'normal'} fontSize='13px' color={colors.RiftOrange} fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                    <Text
+                                        mt={aggregateProxyBalance <= 0 ? '32px' : '0px'}
+                                        fontWeight={'normal'}
+                                        fontSize='13px'
+                                        color={colors.RiftOrange}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
                                         WARNING: Do not clear browser cache or cookies until the swap is complete.
                                     </Text>
-                                    <Text fontWeight={'normal'} fontSize='13px' mt='0px' color={colors.darkerGray} fontFamily={FONT_FAMILIES.AUX_MONO}>
-                                        {proxyWalletSwapInternalID ? 'Internal ID - ' + proxyWalletSwapInternalID : 'Loading internal id...'}
+                                    <Text
+                                        fontWeight={'normal'}
+                                        fontSize='13px'
+                                        mt='0px'
+                                        color={colors.darkerGray}
+                                        fontFamily={FONT_FAMILIES.AUX_MONO}>
+                                        {proxyWalletSwapInternalID
+                                            ? 'Internal ID - ' + proxyWalletSwapInternalID
+                                            : 'Loading internal id...'}
                                     </Text>
                                     {dumpWalletMode && (
                                         <Flex>
                                             <Flex alignItems='center' mt='10px'>
-                                                <Button bg='none' textColor={'white'} mr='10px' onClick={() => setDumpWalletMode(false)}>
+                                                <Button
+                                                    bg='none'
+                                                    textColor={'white'}
+                                                    mr='10px'
+                                                    onClick={() => setDumpWalletMode(false)}>
                                                     X
                                                 </Button>
                                                 <Input
                                                     value={dumpWalletAddress}
                                                     onChange={(e) => setDumpWalletAddress(e.target.value)}
                                                     placeholder='Enter BTC Address'
-                                                    _placeholder={{ color: 'white', fontFamily: FONT_FAMILIES.NOSTROMO }}
+                                                    _placeholder={{
+                                                        color: 'white',
+                                                        fontFamily: FONT_FAMILIES.NOSTROMO,
+                                                    }}
                                                     mr='10px'
                                                     width='700px'
                                                     fontFamily={FONT_FAMILIES.AUX_MONO}
@@ -504,64 +620,101 @@ const ReservationDetails = () => {
                                 </Flex>
                             )}
                         </Flex>
-                        {proxyWalletSwapInternalID && !loadingState && swapFlowState === '2-send-bitcoin' && currentReservationState !== 'Proved' && currentReservationState !== 'Completed' && (
-                            <Flex
-                                bg={colors.purpleBackgroundDisabled}
-                                borderColor={colors.purpleBorderDark}
-                                borderWidth={3}
-                                borderRadius='14px'
-                                px='20px'
-                                w='540px'
-                                py='4px'
-                                mt={'20px'}
-                                h={'60px'}
-                                align={'center'}
-                                justify={'center'}>
-                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                    AWAITING BITCOIN PAYMENT
-                                </Text>
-                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
-                            </Flex>
-                        )}
-                        {currentReservationState === 'Created' && swapFlowState === '3-receive-evm-token' && currentTotalBlockConfirmations < confirmationBlocksNeeded && (
-                            <Flex
-                                bg={colors.purpleBackgroundDisabled}
-                                borderColor={colors.purpleBorderDark}
-                                borderWidth={3}
-                                borderRadius='14px'
-                                px='20px'
-                                w='540px'
-                                py='4px'
-                                mt={'20px'}
-                                h={'60px'}
-                                align={'center'}
-                                justify={'center'}>
-                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                    Awaiting Block Confirmation
-                                    {confirmationBlocksNeeded - currentTotalBlockConfirmations > 1 ? 's' : ''}
-                                </Text>
-                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
-                            </Flex>
-                        )}{' '}
-                        {currentReservationState === 'Created' && currentTotalBlockConfirmations >= confirmationBlocksNeeded && (
-                            <Flex
-                                bg={colors.purpleBackgroundDisabled}
-                                borderColor={colors.purpleBorderDark}
-                                borderWidth={3}
-                                borderRadius='14px'
-                                px='20px'
-                                w='540px'
-                                py='4px'
-                                mt={'20px'}
-                                h={'60px'}
-                                align={'center'}
-                                justify={'center'}>
-                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
-                                    Generating Transaction Proof
-                                </Text>
-                                <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
-                            </Flex>
-                        )}
+                        {proxyWalletSwapInternalID &&
+                            !loadingState &&
+                            swapFlowState === '2-send-bitcoin' &&
+                            currentReservationState !== 'Proved' &&
+                            currentReservationState !== 'Completed' && (
+                                <Flex
+                                    bg={colors.purpleBackgroundDisabled}
+                                    borderColor={colors.purpleBorderDark}
+                                    borderWidth={3}
+                                    borderRadius='14px'
+                                    px='20px'
+                                    w='540px'
+                                    py='4px'
+                                    mt={'20px'}
+                                    h={'60px'}
+                                    align={'center'}
+                                    justify={'center'}>
+                                    <Text
+                                        fontSize={'18px'}
+                                        mr='15px'
+                                        color={colors.textGray}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        AWAITING BITCOIN PAYMENT
+                                    </Text>
+                                    <Spinner
+                                        w={'18px'}
+                                        h={'18px'}
+                                        thickness='3px'
+                                        color={colors.textGray}
+                                        speed='0.65s'
+                                    />
+                                </Flex>
+                            )}
+                        {currentReservationState === 'Created' &&
+                            swapFlowState === '3-receive-evm-token' &&
+                            currentTotalBlockConfirmations < confirmationBlocksNeeded && (
+                                <Flex
+                                    bg={colors.purpleBackgroundDisabled}
+                                    borderColor={colors.purpleBorderDark}
+                                    borderWidth={3}
+                                    borderRadius='14px'
+                                    px='20px'
+                                    w='540px'
+                                    py='4px'
+                                    mt={'20px'}
+                                    h={'60px'}
+                                    align={'center'}
+                                    justify={'center'}>
+                                    <Text
+                                        fontSize={'18px'}
+                                        mr='15px'
+                                        color={colors.textGray}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        Awaiting Block Confirmation
+                                        {confirmationBlocksNeeded - currentTotalBlockConfirmations > 1 ? 's' : ''}
+                                    </Text>
+                                    <Spinner
+                                        w={'18px'}
+                                        h={'18px'}
+                                        thickness='3px'
+                                        color={colors.textGray}
+                                        speed='0.65s'
+                                    />
+                                </Flex>
+                            )}{' '}
+                        {currentReservationState === 'Created' &&
+                            currentTotalBlockConfirmations >= confirmationBlocksNeeded && (
+                                <Flex
+                                    bg={colors.purpleBackgroundDisabled}
+                                    borderColor={colors.purpleBorderDark}
+                                    borderWidth={3}
+                                    borderRadius='14px'
+                                    px='20px'
+                                    w='540px'
+                                    py='4px'
+                                    mt={'20px'}
+                                    h={'60px'}
+                                    align={'center'}
+                                    justify={'center'}>
+                                    <Text
+                                        fontSize={'18px'}
+                                        mr='15px'
+                                        color={colors.textGray}
+                                        fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                        Generating Transaction Proof
+                                    </Text>
+                                    <Spinner
+                                        w={'18px'}
+                                        h={'18px'}
+                                        thickness='3px'
+                                        color={colors.textGray}
+                                        speed='0.65s'
+                                    />
+                                </Flex>
+                            )}
                         {currentReservationState === 'Proved' && (
                             <Flex
                                 bg={'rgba(8, 34, 22, 0.8)'}
@@ -575,7 +728,11 @@ const ReservationDetails = () => {
                                 h={'60px'}
                                 align={'center'}
                                 justify={'center'}>
-                                <Text fontSize={'18px'} mr='15px' color={colors.textGray} fontFamily={FONT_FAMILIES.NOSTROMO}>
+                                <Text
+                                    fontSize={'18px'}
+                                    mr='15px'
+                                    color={colors.textGray}
+                                    fontFamily={FONT_FAMILIES.NOSTROMO}>
                                     RELEASING FUNDS
                                 </Text>
                                 <Spinner w={'18px'} h={'18px'} thickness='3px' color={colors.textGray} speed='0.65s' />
