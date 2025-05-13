@@ -89,28 +89,6 @@ function MyApp({ Component, pageProps }: AppProps) {
         }
     }, []);
 
-    // Add particles.js initialization
-    useEffect(() => {
-        // Check if window is defined (to avoid SSR issues)
-        if (typeof window !== 'undefined') {
-            // Dynamically import particles.js
-            const loadParticles = async () => {
-                try {
-                    // @ts-ignore
-                    await import('./particles.js');
-                    // @ts-ignore
-                    window.particlesJS.load('particles-js', '/assets/particles.json', function () {
-                        console.log('callback - particles.js config loaded');
-                    });
-                } catch (error) {
-                    console.error('Failed to load particles.js:', error);
-                }
-            };
-
-            loadParticles();
-        }
-    }, []);
-
     // TODO: The offline error is here
     // const setIsOnline = useStore((state) => state.setIsOnline);
 

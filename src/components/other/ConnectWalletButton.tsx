@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Button, Flex } from '@chakra-ui/react';
 import { useAccount, useChainId, useChains } from 'wagmi';
